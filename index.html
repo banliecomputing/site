@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BanlieComputing - Store & Service</title>
+    <style>
+        :root {
+            --bg-color: #0f172a; 
+            --card-bg: #1e293b;  
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8; 
+            --input-bg: #0f172a;
+            --border-color: #334155;
+            --accent-color: #3b82f6; 
+            --accent-hover: #2563eb;
+            --success-bg: #10b981; 
+            --info-bg: #3b82f6;
+            --warning-bg: #f59e0b;
+            --danger-bg: #ef4444;
+            --purple-bg: #8b5cf6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-main); display: flex;
+            justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px;
+        }
+
+        .main-container {
+            background-color: var(--card-bg); padding: 2rem; border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);
+            width: 100%; max-width: 1050px; 
+            margin-top: 2vh;
+        }
+
+        .tab-nav {
+            display: flex; flex-wrap: wrap; gap: 5px; background-color: var(--input-bg);
+            padding: 6px; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1 1 auto; background: transparent; color: var(--text-muted); border: none;
+            padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover { background-color: rgba(255, 255, 255, 0.05); color: var(--text-main); }
+        .tab-btn.active { background-color: var(--accent-color); color: #ffffff; }
+
+        .page-content { display: none; animation: fadeIn 0.3s ease; }
+        .page-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header-title { text-align: center; margin-bottom: 1.5rem; }
+        .header-title h2 { font-size: 1.5rem; font-weight: 700; color: var(--accent-color); }
+        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+        .input-group { margin-bottom: 1.1rem; }
+        .input-group label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--border-color);
+            background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; outline: none; resize: vertical;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--accent-color); }
+        .form-row { display: flex; gap: 12px; margin-bottom: 1.1rem; }
+        .form-row > .input-group { flex: 1; margin-bottom: 0; }
+
+        button.submit-btn {
+            width: 100%; padding: 0.875rem; background-color: var(--accent-color); color: #ffffff;
+            border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        button.submit-btn:hover { background-color: var(--accent-hover); }
+
+        /* Tabel Styling */
+        .table-responsive { overflow-x: auto; margin-top: 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        th { background-color: var(--input-bg); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+        tr:hover { background-color: rgba(255,255,255,0.03); }
+        
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: white; display: inline-block; }
+        .bg-masuk { background-color: var(--info-bg); }
+        .bg-proses { background-color: var(--warning-bg); }
+        .bg-selesai { background-color: var(--success-bg); }
+        .bg-batal { background-color: var(--danger-bg); }
+
+        .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; border: none; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-sm:hover { filter: brightness(1.1); }
+        .btn-danger { background-color: var(--danger-bg); }
+        .btn-success { background-color: var(--success-bg); }
+        .btn-edit { background-color: var(--warning-bg); color: #fff; }
+        .btn-jual { background-color: var(--purple-bg); color: #fff; }
+        .select-status { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px; border-radius: 6px; font-size: 0.8rem; width: 100%; outline: none;}
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background-color: var(--success-bg); color: white; padding: 12px 24px; border-radius: 30px;
+            font-weight: 500; font-size: 0.95rem; z-index: 3000; opacity: 0; transition: 0.4s;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        /* --- Modal (Popup) Styling --- */
+        .modal-overlay { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease-out; }
+        .modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 12px; width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
+        .close-modal { position: absolute; right: 20px; top: 20px; font-size: 1.5rem; font-weight: bold; color: var(--text-muted); cursor: pointer; line-height: 1; transition: 0.2s; }
+        .close-modal:hover { color: var(--danger-bg); }
+
+        /* --- Tampilan Tracking & Katalog --- */
+        .tracking-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-top: 15px; }
+        .tracking-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px; }
+        .tracking-id { font-family: monospace; color: var(--accent-color); font-weight: bold; background: rgba(59, 130, 246, 0.1); padding: 4px 8px; border-radius: 6px; }
+        
+        .timeline { display: flex; justify-content: space-between; position: relative; margin: 30px 0; }
+        .timeline::before { content: ''; position: absolute; top: 12px; left: 10%; right: 10%; height: 3px; background: var(--border-color); z-index: 1; }
+        .timeline-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+        .step-circle { width: 28px; height: 28px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-color); transition: 0.3s; }
+        .step-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        
+        .step-active .step-circle { border-color: var(--accent-color); background: var(--accent-color); box-shadow: 0 0 10px var(--accent-color); }
+        .step-active .step-label { color: var(--text-main); }
+        .step-done .step-circle { border-color: var(--success-bg); background: var(--success-bg); }
+        .step-done .step-label { color: var(--success-bg); }
+        .step-cancel .step-circle { border-color: var(--danger-bg); background: var(--danger-bg); }
+        .step-cancel .step-label { color: var(--danger-bg); }
+        
+        .history-list { margin-top: 15px; border-left: 2px solid var(--border-color); padding-left: 15px; margin-left: 5px; }
+        .history-item { position: relative; margin-bottom: 15px; }
+        .history-item::before { content: ''; position: absolute; left: -21px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-color); border: 2px solid var(--card-bg); }
+        .history-time { font-size: 0.75rem; color: var(--text-muted); }
+        .history-action { font-size: 0.85rem; font-weight: bold; color: var(--text-main); margin-top: 2px; }
+        .history-note { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; white-space: pre-wrap; }
+        .history-by { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; margin-left: 5px; color: var(--text-main); }
+
+        .input-catatan { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: white; font-size: 0.8rem; outline: none; }
+        .input-catatan:focus { border-color: var(--accent-color); }
+        .btn-update { background: var(--info-bg); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; margin-top: 5px; width: 100%; transition: 0.2s;}
+        .btn-update:hover { background-color: #2563eb; }
+
+        .katalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 15px; }
+        .katalog-card { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; transition: 0.3s; display: flex; flex-direction: column; }
+        .katalog-card:hover { transform: translateY(-5px); border-color: var(--accent-color); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        .katalog-img { width: 100%; height: 180px; background-color: #1a2235; object-fit: cover; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 2rem; }
+        .katalog-content { padding: 15px; display: flex; flex-direction: column; flex: 1; }
+        .katalog-title { font-size: 1.1rem; font-weight: bold; color: var(--text-main); margin-bottom: 8px; }
+        .katalog-spek { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; white-space: pre-wrap; line-height: 1.4; flex: 1; }
+        .katalog-harga { font-size: 1.25rem; font-weight: 700; color: var(--success-bg); margin-bottom: 10px; }
+        .katalog-garansi { display: inline-block; background: rgba(59, 130, 246, 0.1); color: var(--accent-color); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-bottom: 15px; align-self: flex-start; }
+        .katalog-stok { font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; }
+        .btn-beli { width: 100%; padding: 10px; background: var(--success-bg); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: block; }
+        .btn-beli:hover { background: #059669; }
+
+        /* Gallery Styles untuk Store */
+        .katalog-img-real { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid var(--border-color); }
+        .katalog-thumb-container { display: flex; gap: 8px; padding: 10px 15px 0 15px; overflow-x: auto; }
+        .katalog-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .katalog-thumb:hover { border-color: var(--accent-color); transform: scale(1.05); }
+
+        @media (max-width: 600px) { .form-row { flex-direction: column; gap: 1.1rem; } }
+    </style>
+</head>
+<body>
+
+    <!-- HALAMAN LOGIN -->
+    <div id="loginPage" class="main-container" style="display: none;">
+        <div class="header-title">
+            <h2>BanlieComputing Portal</h2>
+            <p>Sistem Internal Admin & Teknisi</p>
+        </div>
+
+        <form id="formLogin">
+            <div class="input-group">
+                <label>Username / ID Karyawan</label>
+                <input type="text" id="loginUsername" placeholder="Cth: linda / ardy" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <button type="submit" class="submit-btn">Login Internal</button>
+            <button type="button" onclick="showPublicView()" class="submit-btn" style="background: transparent; border: 1px solid var(--border-color); margin-top: 10px;">Kembali ke Publik (Cek Status & Store)</button>
+            
+            <div style="margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                <strong>Akun Demo (Password semua: <code>123</code>):</strong><br>
+                Admin: <code>linda</code><br>
+                Teknisi: <code>ardy</code>, <code>aiman</code>, <code>devid</code>, <code>andri</code>
+            </div>
+        </form>
+    </div>
+
+    <!-- HALAMAN APLIKASI UTAMA -->
+    <div id="appPage" class="main-container">
+        
+        <!-- Top Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+            <div style="font-size: 0.95rem; color: var(--text-muted);">
+                <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">BanlieComputing Layanan</span>
+                <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
+            </div>
+            <button id="btnLogout" type="button" onclick="showLoginForm()" style="background: transparent; border: 1px solid var(--info-bg); color: var(--info-bg); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Login Staff</button>
+        </div>
+
+        <!-- Menu Navigasi Tab -->
+        <div id="tabNavContainer" class="tab-nav">
+            <!-- Publik -->
+            <button id="tabKatalogPublik" class="tab-btn public-only active" onclick="openTab('katalog-publik', this); renderKatalogPublik();">Store & Laptop</button>
+            <button id="tabStatusPublik" class="tab-btn public-only" onclick="openTab('status', this)">Cek Status Servis</button>
+            
+            <!-- Internal -->
+            <button id="tabDataServis" class="tab-btn tech-only" onclick="openTab('data-servis', this); renderTechServices();" style="display: none;">Kelola Servisan</button>
+            <button id="tabPenjualan" class="tab-btn internal-only" onclick="openTab('penjualan', this)" style="display: none;">Katalog & Penjualan</button>
+            
+            <button id="tabAdminServis" class="tab-btn admin-only" onclick="openTab('admin-servis', this); renderAdminServices();" style="display: none;">Semua Servisan</button>
+            <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">Kelola Teknisi</button>
+        </div>
+
+
+        <!-- ================= HALAMAN KONTEN ================= -->
+
+        <!-- 1B. KATALOG LAPTOP (Publik - Default Awal) -->
+        <div id="katalog-publik" class="page-content active">
+            <div class="header-title"><h2>BanlieComputing Store</h2><p>Katalog Laptop & Komputer Tersedia</p></div>
+            <div id="katalogGrid" class="katalog-grid"></div>
+        </div>
+
+        <!-- 1. CEK STATUS (Publik) -->
+        <div id="status" class="page-content">
+            <div class="header-title"><h2>Lacak Servisan Anda</h2><p>Masukkan nomor WhatsApp atau ID Tiket</p></div>
+            <form id="formCekStatus">
+                <div class="input-group">
+                    <input type="text" id="cek_no_wa" placeholder="Cth: 0812... atau SRV-123" required style="padding: 1rem; font-size: 1.1rem; text-align: center;">
+                </div>
+                <button type="submit" class="submit-btn" style="padding: 1rem;">Cari Perangkat Saya</button>
+            </form>
+            <div id="hasilPencarian" style="display:none; margin-top: 1.5rem; padding: 1rem; border-radius: 10px; background-color: rgba(255,255,255,0.05); border: 1px solid var(--border-color);"></div>
+        </div>
+
+        <!-- 2. KELOLA DATA LAPTOP (Admin & Teknisi) -->
+        <div id="penjualan" class="page-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="header-title" style="margin-bottom: 0; text-align: left;">
+                    <h2 style="font-size: 1.3rem;">Manajemen Katalog & Stok</h2>
+                    <p>Kelola etalase dan rekapan penjualan toko</p>
+                </div>
+                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahLaptop')">+ Tambah Laptop Baru</button>
+            </div>
+
+            <!-- TABEL 1: STOK TERSEDIA (INVENTORY) -->
+            <div class="header-title" style="margin-top: 1rem; text-align: left;">
+                <h2 style="font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">🟢 Inventory / Stok Tersedia</h2>
+                <p style="text-align: left; font-size: 0.8rem; margin-top: 2px;">Tampil di halaman publik Store</p>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>ID & Tgl Masuk</th><th>Merek & Tipe</th><th>Harga Dasar</th><th>Sisa Stok</th><th>Aksi Jual & Edit</th></tr></thead>
+                    <tbody id="tbodyKatalogTersedia"></tbody>
+                </table>
+            </div>
+
+            <!-- TABEL 2: LAPTOP TERJUAL -->
+            <div class="header-title" style="margin-top: 3rem; text-align: left;">
+                <h2 style="font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: var(--danger-bg);">🔴 Rekap Penjualan (Terjual)</h2>
+                <p style="text-align: left; font-size: 0.8rem; margin-top: 2px;">Data barang yang sudah laku (Privat Admin)</p>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>ID & Merek</th><th>Detail Transaksi</th><th>Data Pembeli & Sensitif</th><th>Aksi</th></tr></thead>
+                    <tbody id="tbodyKatalogTerjual"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. DATA SERVISAN SAYA (Hanya Teknisi) -->
+        <div id="data-servis" class="page-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="header-title" style="margin-bottom: 0; text-align: left;">
+                    <h2 style="font-size: 1.3rem;">Kelola Servisan</h2>
+                    <p>Perbarui progres perangkat pelanggan</p>
+                </div>
+                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahServis')">+ Buat Tiket Servis</button>
+            </div>
+            
+            <!-- Pencarian Teknisi -->
+            <div class="input-group" style="margin-bottom: 15px;">
+                <input type="text" id="searchTech" placeholder="🔍 Cari ID Tiket, Nama, WA, atau Merek..." onkeyup="renderTechServices()" style="max-width: 400px; border-radius: 30px; padding: 10px 20px;">
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Log Terakhir</th></tr></thead>
+                    <tbody id="tbodyTechServices"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. KELOLA SEMUA SERVISAN (Hanya Admin) -->
+        <div id="admin-servis" class="page-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="header-title" style="margin-bottom: 0; text-align: left;">
+                    <h2 style="font-size: 1.3rem;">Semua Data Servis</h2>
+                    <p>Pantau dan kelola tiket seluruh pelanggan</p>
+                </div>
+                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahServis')">+ Buat Tiket Servis</button>
+            </div>
+            
+            <!-- Pencarian Admin -->
+            <div class="input-group" style="margin-bottom: 15px;">
+                <input type="text" id="searchAdmin" placeholder="🔍 Cari ID Tiket, Nama, WA, Merek, atau Teknisi..." onkeyup="renderAdminServices()" style="max-width: 400px; border-radius: 30px; padding: 10px 20px;">
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Log Terakhir</th></tr></thead>
+                    <tbody id="tbodyAdminServices"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 6. KELOLA TEKNISI / USER (Hanya Admin) -->
+        <div id="kelola-user" class="page-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="header-title" style="margin-bottom: 0; text-align: left;">
+                    <h2 style="font-size: 1.3rem;">Kelola Karyawan</h2>
+                    <p>Ubah hak akses atau password tim Anda</p>
+                </div>
+                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahUser')">+ Tambah Karyawan</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Password</th><th>Aksi</th></tr></thead>
+                    <tbody id="tbodyUsers"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= KUMPULAN MODAL (POPUP FORMS) ================= -->
+
+    <!-- MODAL 1: TAMBAH LAPTOP BARU (INVENTORY) -->
+    <div id="modalTambahLaptop" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modalTambahLaptop')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tambah Stok Laptop (Etalase)</h3>
+            <form id="formPenjualan">
+                <div class="form-row">
+                    <div class="input-group"><label>Merek</label><input type="text" id="lapMerek" placeholder="Cth: Lenovo, Asus" required></div>
+                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="lapTipe" placeholder="Cth: Thinkpad T480" required></div>
+                </div>
+                <div class="input-group">
+                    <label>Deskripsi & Spesifikasi (Ditampilkan ke publik)</label>
+                    <textarea id="lapSpek" rows="3" placeholder="Processor, RAM, SSD, Kondisi fisik..." required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Harga Jual (Rp)</label><input type="number" id="lapHarga" required></div>
+                    <div class="input-group"><label>Total Stok Baru</label><input type="number" id="lapStok" value="1" min="1" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Status Garansi</label>
+                        <select id="lapGaransi">
+                            <option value="Garansi Toko 1 Bulan">Garansi Toko 1 Bulan</option>
+                            <option value="Garansi Resmi">Garansi Resmi</option>
+                            <option value="Non-Garansi">Non-Garansi</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>Tanggal Masuk Toko</label><input type="date" id="lapTgl" required></div>
+                </div>
+                <!-- Input Multi Foto -->
+                <div class="input-group">
+                    <label>Upload Foto (1 - 4 Gambar)</label>
+                    <input type="file" id="lapFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">*Tahan tombol Ctrl/Shift untuk pilih s/d 4 foto sekaligus.</div>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 10px;">+ Simpan ke Etalase</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2A: EDIT LAPTOP (KHUSUS INVENTORY TERSEDIA) -->
+    <div id="modalEditLaptop" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modalEditLaptop')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Edit Detail Inventory</h3>
+            <form id="formEditLaptop">
+                <div class="form-row">
+                    <div class="input-group"><label>Merek</label><input type="text" id="mEditMerek" required></div>
+                    <div class="input-group"><label>Tipe</label><input type="text" id="mEditTipe" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Harga Dasar (Rp)</label><input type="number" id="mEditHarga" required></div>
+                    <div class="input-group"><label>Sisa Stok</label><input type="number" id="mEditStok" min="1" required></div>
+                </div>
+                <div class="input-group"><label>Spesifikasi</label><textarea id="mEditSpek" rows="2" required></textarea></div>
+                <div class="input-group"><label>Garansi</label><input type="text" id="mEditGaransi" required></div>
+                <button type="submit" class="submit-btn" style="margin-top: 10px;">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2B: TRANSAKSI JUAL 1 UNIT (POINT OF SALE) -->
+    <div id="modalJualLaptop" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modalJualLaptop')">&times;</span>
+            <h3 style="margin-bottom: 5px; color: var(--purple-bg);">Proses Transaksi Penjualan</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Masukkan detail pembeli untuk 1 unit yang terjual ini.</p>
+            
+            <form id="formJualLaptop">
+                <input type="hidden" id="jLapId">
+                <div class="form-row">
+                    <div class="input-group"><label>Tanggal Terjual</label><input type="date" id="jTanggalJual" required></div>
+                    <div class="input-group"><label>Harga Deal / Akhir (Rp)</label><input type="number" id="jHargaJual" required></div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Siapa yang Menjual (Kasir)?</label>
+                    <select id="jPenjual">
+                        <!-- Akan diisi otomatis lewat JavaScript -->
+                    </select>
+                </div>
+
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-color); margin-top: 10px;">
+                    <h4 style="font-size: 0.85rem; color: var(--accent-color); margin-bottom: 10px;">🛡️ Data Pembeli & Info Sensitif</h4>
+                    <div class="form-row">
+                        <div class="input-group" style="margin-bottom: 0;"><label>Akun Microsoft (Email)</label><input type="text" id="jEmail" placeholder="Boleh kosong"></div>
+                        <div class="input-group" style="margin-bottom: 0;"><label>Password Microsoft</label><input type="text" id="jPass" placeholder="Boleh kosong"></div>
+                    </div>
+                    <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
+                        <label>Catatan Pembeli</label>
+                        <input type="text" id="jCatatan" placeholder="Nama pembeli, WA, bonus mouse, dll..." required>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 20px; background: var(--purple-bg);">Selesaikan Transaksi & Simpan</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2C: EDIT DATA LAPTOP TERJUAL -->
+    <div id="modalEditTerjual" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modalEditTerjual')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--danger-bg);">Revisi Data Penjualan</h3>
+            <form id="formEditTerjual">
+                <input type="hidden" id="etLapId">
+                <div class="form-row">
+                    <div class="input-group"><label>Merek</label><input type="text" id="etMerek" required></div>
+                    <div class="input-group"><label>Tipe</label><input type="text" id="etTipe" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Tanggal Terjual (Revisi)</label><input type="date" id="etTanggalJual" required></div>
+                    <div class="input-group"><label>Harga Akhir (Rp)</label><input type="number" id="etHarga" required></div>
+                </div>
+                <div class="input-group">
+                    <label>Penjual</label>
+                    <select id="etPenjual">
+                        <!-- Akan diisi otomatis lewat JavaScript -->
+                    </select>
+                </div>
+                <div style="background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 8px; border: 1px dashed var(--border-color); margin-top: 10px;">
+                    <div class="form-row">
+                        <div class="input-group" style="margin-bottom: 0;"><label>Email Microsoft</label><input type="text" id="etEmail"></div>
+                        <div class="input-group" style="margin-bottom: 0;"><label>Password Microsoft</label><input type="text" id="etPass"></div>
+                    </div>
+                    <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
+                        <label>Catatan / Nama Pembeli</label>
+                        <textarea id="etCatatan" rows="2"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 20px;">Simpan Revisi Data Terjual</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: TAMBAH TIKET SERVIS -->
+    <div id="modalTambahServis" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modalTambahServis')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Buat Tiket Servis Baru</h3>
+            <form id="formServisan">
+                <div class="form-row">
+                    <div class="input-group"><label>Nama Pelanggan</label><input type="text" id="srvNama" required></div>
+                    <div class="input-group"><label>Kontak (WA)</label><input type="tel" id="srvWA" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Jenis Perangkat</label>
+                        <select id="srvJenis" required><option value="Laptop">Laptop</option><option value="Handphone">Handphone</option><option value="PC">PC/Komputer</option><option value="Printer">Printer</option><option value="Lainnya">Lainnya</option></select>
+                    </div>
+                    <div class="input-group"><label>Merek</label><input type="text" id="srvMerek" placeholder="Cth: Samsung, Asus" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="srvTipe" placeholder="Cth: S23 Ultra" required></div>
+                    <div class="input-group"><label>SNID / Serial Number</label><input type="text" id="srvSNID" placeholder="Opsional"></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Kelengkapan</label><input type="text" id="srvKelengkapan" placeholder="Cth: Unit, Dus, Charger" required></div>
+                    <div class="input-group"><label>Estimasi Biaya Awal (Rp)</label><input type="number" id="srvBiaya" placeholder="Opsional"></div>
+                </div>
+                <div class="input-group"><label>Masalah Utama</label><input type="text" id="srvMasalah" placeholder="Cth: Mati Total, Ganti LCD" required></div>
+                <div class="input-group">
+                    <label>Deskripsi Detail (Kronologi / Catatan Fisik)</label>
+                    <textarea id="srvDeskripsi" rows="2" placeholder="Jelaskan detail kerusakan, goresan fisik, dll..." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 10px;">Buat Tiket Servis</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: TAMBAH USER/TEKNISI -->
+    <div id="modalTambahUser" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeModal('modalTambahUser')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tambah Karyawan Baru</h3>
+            <form id="formAddUser">
+                <div class="input-group"><label>Username</label><input type="text" id="newUsername" placeholder="Cth: andi22" required></div>
+                <div class="input-group"><label>Nama Lengkap</label><input type="text" id="newNama" placeholder="Nama asli" required></div>
+                <div class="input-group"><label>Password Akun</label><input type="password" id="newPass" required></div>
+                <button type="submit" class="submit-btn" style="margin-top: 10px;">+ Daftarkan Akun</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: UPDATE PROGRES SERVISAN -->
+    <div id="modalUpdateServis" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="closeModal('modalUpdateServis')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--info-bg);">Update Progres Servis</h3>
+            
+            <form id="formUpdateServis">
+                <input type="hidden" id="uSrvId">
+                
+                <!-- Opsi Tugaskan Teknisi (Hanya Muncul Jika Admin) -->
+                <div id="uSrvTechGroup" class="input-group" style="display:none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent-color);">
+                    <label>Tugaskan / Pindah Teknisi</label>
+                    <select id="uSrvTech"></select>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Status Saat Ini</label>
+                        <select id="uSrvStatus">
+                            <option value="Masuk">Masuk (Antrean)</option>
+                            <option value="Proses">Proses Dikerjakan</option>
+                            <option value="Selesai">Selesai / Diambil</option>
+                            <option value="Batal">Batal / Tidak Bisa</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Biaya Akhir / Estimasi (Rp)</label>
+                        <input type="number" id="uSrvBiaya">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Status Garansi Penjualan / Servis</label>
+                    <input type="text" id="uSrvGaransi" placeholder="Cth: Garansi 1 Minggu">
+                </div>
+                
+                <div class="input-group">
+                    <label>Catatan Baru (Wajib Diisi)</label>
+                    <textarea id="uSrvCatatan" rows="3" placeholder="Contoh: Sedang membongkar mesin... atau Part baru sudah dipasang." required></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn" style="margin-top: 10px;">Simpan & Log Timeline</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 6: FULL HISTORY TIMELINE -->
+    <div id="modalHistoryServis" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="closeModal('modalHistoryServis')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">📜 Full History Timeline</h3>
+            <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 15px;" id="hSrvTitle">ID Tiket</div>
+            <div id="hSrvContainer" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; max-height: 50vh; overflow-y: auto;">
+                <!-- Full history akan dirender di sini -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFIKASI -->
+    <div id="toast" class="toast">Notifikasi!</div>
+
+    <script>
+        // ================= DATABASE LOKAL (SIMULASI) =================
+        let usersDB = [
+            { username: 'linda', password: '123', role: 'admin', nama: 'Linda (Admin)' },
+            { username: 'ardy', password: '123', role: 'teknisi', nama: 'Ardy' }
+        ];
+
+        let servicesDB = [
+            { 
+                id: 'SRV-001', tanggalMasuk: new Date().toLocaleDateString('id-ID'), wa: '0812', nama: 'Bapak Budi', 
+                jenis: 'Laptop', merek: 'Lenovo', tipe: 'Ideapad 3', snid: 'LN12345', kelengkapan: 'Unit, Charger',
+                masalah: 'Keyboard sebagian tidak bisa', deskripsi: 'Tombol A,S,D mati. Fisik mulus.', biaya: '350000', garansi: 'Garansi 1 Minggu',
+                status: 'Proses', techId: 'ardy', catatan: 'Sedang memesan part keyboard, besok tiba.',
+                history: [
+                    { time: new Date().toLocaleString('id-ID'), action: 'Tiket Servis Dibuat', note: 'Barang diterima dan antre.', by: 'linda' }
+                ]
+            }
+        ];
+
+        let laptopKatalogDB = [
+            {
+                id: 'LAP-001', merek: 'Asus', tipe: 'ROG Strix G15', spek: 'Ryzen 7 6800H\nRAM 16GB DDR5\nSSD 512GB NVMe\nRTX 3050 4GB',
+                harga: 12500000, stok: 2, garansi: 'Garansi Resmi Asus', tanggal: '2025-05-10', 
+                email: '', pass: '', catatanInternal: '', penjual: '', tanggalTerjual: '', statusJual: 'Tersedia',
+                fotos: ['https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=400&q=80']
+            },
+            {
+                id: 'LAP-SOLD-002', merek: 'Lenovo', tipe: 'Thinkpad T480', spek: 'Intel Core i5 Gen 8\nRAM 8GB\nSSD 256GB',
+                harga: 4200000, stok: 1, garansi: 'Garansi Toko 1 Bulan', tanggal: '2025-06-01', 
+                email: 'user_t480@outlook.com', pass: 'Leno123!', catatanInternal: 'Bapak Andi WA 08123', penjual: 'Admin', tanggalTerjual: '2025-06-15', statusJual: 'Terjual',
+                fotos: []
+            }
+        ];
+
+        let currentUser = null; 
+        let currentEditLapId = null;
+
+        // ================= FUNGSI UTILITAS & UI =================
+        function showToast(msg, isError=false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.style.backgroundColor = isError ? 'var(--danger-bg)' : 'var(--success-bg)';
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function generateID(prefix) { return prefix + '-' + Math.floor(Math.random() * 9000 + 1000); }
+
+        function openTab(tabId, btnElement = null) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (btnElement) btnElement.classList.add('active');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            if(modalId === 'modalEditLaptop' || modalId === 'modalEditTerjual' || modalId === 'modalJualLaptop') {
+                currentEditLapId = null;
+            }
+        }
+
+        // Default Hari Ini untuk input tanggal
+        function getTodayDate() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        // ================= LOGIKA LOGIN & AKSES =================
+        function showLoginForm() {
+            document.getElementById('appPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'block';
+        }
+
+        function showPublicView() {
+            currentUser = null;
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appPage').style.display = 'block';
+            
+            document.getElementById('welcomeText').textContent = 'BanlieComputing Layanan';
+            document.getElementById('userRoleDisplay').style.display = 'none';
+            
+            let btnLogout = document.getElementById('btnLogout');
+            btnLogout.textContent = 'Login Staff';
+            btnLogout.onclick = showLoginForm;
+            btnLogout.style.borderColor = 'var(--info-bg)';
+            btnLogout.style.color = 'var(--info-bg)';
+            
+            document.querySelectorAll('.internal-only, .admin-only, .tech-only').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.public-only').forEach(el => el.style.display = 'block');
+            
+            openTab('katalog-publik', document.getElementById('tabKatalogPublik'));
+            renderKatalogPublik();
+        }
+
+        document.getElementById('formLogin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUsername').value;
+            const p = document.getElementById('loginPassword').value;
+            
+            const user = usersDB.find(x => x.username === u && x.password === p);
+            if(user) {
+                currentUser = user;
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appPage').style.display = 'block';
+                
+                document.getElementById('welcomeText').innerHTML = `Halo, <strong style="color:#fff">${user.nama}</strong>`;
+                document.getElementById('userRoleDisplay').textContent = user.role.toUpperCase();
+                document.getElementById('userRoleDisplay').style.display = 'inline-block';
+                
+                let btnLogout = document.getElementById('btnLogout');
+                btnLogout.textContent = 'Logout / Keluar';
+                btnLogout.onclick = showPublicView;
+                btnLogout.style.borderColor = 'var(--danger-bg)';
+                btnLogout.style.color = 'var(--danger-bg)';
+                
+                document.querySelectorAll('.public-only').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.internal-only').forEach(el => el.style.display = 'block');
+                
+                if(user.role === 'admin') {
+                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+                    document.querySelectorAll('.tech-only').forEach(el => el.style.display = 'none');
+                    openTab('admin-servis', document.getElementById('tabAdminServis'));
+                    renderAdminServices();
+                    renderAdminKatalog();
+                } else {
+                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.tech-only').forEach(el => el.style.display = 'block');
+                    openTab('data-servis', document.getElementById('tabDataServis'));
+                    renderTechServices();
+                    renderAdminKatalog();
+                }
+                showToast(`Login berhasil sebagai ${user.role}`);
+                this.reset();
+            } else {
+                showToast('Username atau password salah', true);
+            }
+        });
+
+        // ================= LOGIKA CEK STATUS (PUBLIK) =================
+        document.getElementById('formCekStatus').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const q = document.getElementById('cek_no_wa').value.toLowerCase();
+            const resDiv = document.getElementById('hasilPencarian');
+            
+            const found = servicesDB.find(s => s.wa.includes(q) || s.id.toLowerCase() === q);
+            if(found) {
+                let s1 = '', s2 = '', s3 = '';
+                if(found.status === 'Masuk') { s1 = 'step-active'; }
+                else if(found.status === 'Proses') { s1 = 'step-done'; s2 = 'step-active'; }
+                else if(found.status === 'Selesai') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-done'; }
+                else if(found.status === 'Batal') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-cancel'; }
+
+                let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
+                let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
+
+                resDiv.innerHTML = `
+                    <div class="tracking-card">
+                        <div class="tracking-header">
+                            <div>
+                                <h3 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">${found.merek} ${found.tipe}</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">${found.jenis} | A/n: ${found.nama}</span>
+                            </div>
+                            <span class="tracking-id">${found.id}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; margin-bottom: 20px;">
+                            <strong>Tgl Masuk:</strong> ${found.tanggalMasuk} <br>
+                            <strong>Kelengkapan:</strong> ${found.kelengkapan} <br>
+                            <strong>SNID:</strong> ${found.snid || '-'} <br><br>
+                            <strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>
+                            ${garansiHTML}
+                            <strong>${found.status === 'Selesai' ? 'Biaya Akhir' : 'Estimasi Biaya'}:</strong> Rp ${Number(found.biaya).toLocaleString('id-ID')}
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step ${s1}"><div class="step-circle"></div><div class="step-label">Masuk</div></div>
+                            <div class="timeline-step ${s2}"><div class="step-circle"></div><div class="step-label">Proses</div></div>
+                            <div class="timeline-step ${s3}"><div class="step-circle"></div><div class="step-label">${step3Label}</div></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resDiv.innerHTML = `<div style="color:var(--danger-bg); padding: 10px; text-align: center; font-weight: 500;">Data tidak ditemukan.</div>`;
+            }
+            resDiv.style.display = 'block';
+        });
+
+        // ================= LOGIKA KATALOG (PUBLIK) =================
+        function renderKatalogPublik() {
+            const grid = document.getElementById('katalogGrid');
+            grid.innerHTML = '';
+            
+            const tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
+
+            if(tersediaDB.length === 0) {
+                grid.innerHTML = `<div style="text-align:center; width: 100%; padding: 40px; color: var(--text-muted);">Belum ada produk di etalase toko.</div>`;
+                return;
+            }
+
+            tersediaDB.forEach(lap => {
+                let badgeStok = lap.stok > 0 ? `<div class="katalog-stok" style="color:var(--success-bg);">Stok: ${lap.stok} Unit</div>` : `<div class="katalog-stok" style="color:var(--danger-bg);">Stok Habis</div>`;
+                let btnState = lap.stok <= 0 ? 'pointer-events: none; opacity: 0.5; background: var(--text-muted);' : '';
+                let btnText = lap.stok <= 0 ? '❌ Habis' : '🛒 Hubungi WhatsApp';
+
+                let imagesHTML = `<div class="katalog-img">💻</div>`; 
+                if (lap.fotos && lap.fotos.length > 0) {
+                    let mainImg = lap.fotos[0];
+                    let thumbs = lap.fotos.map(f => `<img src="${f}" class="katalog-thumb" onclick="changeMainImg('${f}', '${lap.id}')">`).join('');
+                    imagesHTML = `
+                        <img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama">
+                        <div class="katalog-thumb-container">${thumbs}</div>
+                    `;
+                }
+
+                grid.innerHTML += `
+                    <div class="katalog-card">
+                        ${imagesHTML}
+                        <div class="katalog-content">
+                            <div class="katalog-title">${lap.merek} ${lap.tipe}</div>
+                            <div class="katalog-garansi">${lap.garansi}</div>
+                            <div class="katalog-spek">${lap.spek}</div>
+                            ${badgeStok}
+                            <div class="katalog-harga">Rp ${Number(lap.harga).toLocaleString('id-ID')}</div>
+                            <a href="https://wa.me/6281234567890?text=Halo BanlieComputing, saya tertarik dengan laptop ${lap.merek} ${lap.tipe} (ID: ${lap.id})" target="_blank" class="btn-beli" style="${btnState}">${btnText}</a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function changeMainImg(src, lapId) {
+            document.getElementById(`mainImg-${lapId}`).src = src;
+        }
+
+        // ================= LOGIKA MANAJEMEN LAPTOP ADMIN =================
+        function renderAdminKatalog() {
+            const tbTersedia = document.getElementById('tbodyKatalogTersedia');
+            const tbTerjual = document.getElementById('tbodyKatalogTerjual');
+            if(!tbTersedia || !tbTerjual) return;
+            
+            tbTersedia.innerHTML = ''; tbTerjual.innerHTML = '';
+            let countTersedia = 0, countTerjual = 0;
+
+            laptopKatalogDB.forEach((lap) => {
+                if(lap.statusJual === 'Tersedia') {
+                    countTersedia++;
+                    tbTersedia.innerHTML += `
+                        <tr>
+                            <td><strong style="color:var(--accent-color);">${lap.id}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">Masuk: ${lap.tanggal}</span></td>
+                            <td><strong style="color:var(--text-main);">${lap.merek}</strong><br>${lap.tipe}</td>
+                            <td>Rp ${Number(lap.harga).toLocaleString('id-ID')}<br><span style="font-size:0.75rem;">${lap.garansi}</span></td>
+                            <td><span style="font-weight:bold; font-size: 1.1rem; color:${lap.stok > 0 ? 'var(--success-bg)' : 'var(--danger-bg)'}">${lap.stok}</span> Unit</td>
+                            <td style="display:flex; flex-direction:column; gap:6px;">
+                                <button class="btn-sm btn-jual" onclick="bukaModalJual('${lap.id}')">🛒 Jual 1 Unit</button>
+                                <button class="btn-sm btn-edit" onclick="openModalEditInventory('${lap.id}')">✏️ Edit Etalase</button>
+                                <button class="btn-sm btn-danger" onclick="hapusLaptop('${lap.id}')">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    countTerjual++;
+                    tbTerjual.innerHTML += `
+                        <tr>
+                            <td>
+                                <strong style="color:var(--danger-bg);">${lap.id}</strong><br>
+                                <span style="font-weight:bold; color:var(--text-main);">${lap.merek} ${lap.tipe}</span>
+                            </td>
+                            <td>
+                                <strong>Rp ${Number(lap.harga).toLocaleString('id-ID')}</strong><br>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Tgl Jual: ${lap.tanggalTerjual}</span>
+                            </td>
+                            <td>
+                                <div style="font-size:0.8rem; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; border:1px dashed var(--danger-bg);">
+                                    <span style="color:var(--text-muted);">Email:</span> ${lap.email || '-'}<br>
+                                    <span style="color:var(--text-muted);">Pass:</span> <code style="color:var(--text-main);">${lap.pass || '-'}</code><br>
+                                    <span style="color:var(--text-muted);">Catatan:</span> ${lap.catatanInternal || '-'}<br>
+                                    <span style="color:var(--text-muted);">Kasir/Penjual:</span> <strong style="color:var(--accent-color);">${lap.penjual || '-'}</strong>
+                                </div>
+                            </td>
+                            <td style="display:flex; flex-direction:column; gap:6px;">
+                                <button class="btn-sm btn-edit" onclick="openModalEditTerjual('${lap.id}')">✏️ Edit Transaksi</button>
+                                <button class="btn-sm btn-danger" onclick="hapusLaptop('${lap.id}')">Hapus Data</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if(countTersedia === 0) tbTersedia.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px;">Stok kosong.</td></tr>`;
+            if(countTerjual === 0) tbTerjual.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">Belum ada riwayat penjualan laptop.</td></tr>`;
+        }
+
+        // ================= FUNGSI QUICK ACTION & MODAL JUAL =================
+        function getPenjualOptions() {
+            let options = usersDB.map(u => `<option value="${u.nama}">${u.nama} (${u.role})</option>`);
+            options.push(`<option value="Bos/Lainnya">Bos/Lainnya</option>`);
+            return options.join('');
+        }
+
+        function bukaModalJual(lapId) {
+            const lap = laptopKatalogDB.find(l => l.id === lapId);
+            if(lap.stok <= 0) { showToast('Stok habis!', true); return; }
+
+            document.getElementById('jLapId').value = lapId;
+            document.getElementById('jTanggalJual').value = getTodayDate();
+            document.getElementById('jHargaJual').value = lap.harga; // Default harga dasar
+            
+            // Generate list karyawan dan otomatis pilih akun yang sedang login
+            document.getElementById('jPenjual').innerHTML = getPenjualOptions();
+            document.getElementById('jPenjual').value = currentUser.nama;
+
+            document.getElementById('jEmail').value = '';
+            document.getElementById('jPass').value = '';
+            document.getElementById('jCatatan').value = '';
+
+            openModal('modalJualLaptop');
+        }
+
+        document.getElementById('formJualLaptop').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const lapId = document.getElementById('jLapId').value;
+            const originalIdx = laptopKatalogDB.findIndex(l => l.id === lapId);
+            if(originalIdx === -1) return;
+
+            let originalLap = laptopKatalogDB[originalIdx];
+
+            // Detail Penjualan Baru
+            let dataTerjual = {
+                id: generateID('LAP-SOLD'), 
+                merek: originalLap.merek, tipe: originalLap.tipe, spek: originalLap.spek, 
+                garansi: originalLap.garansi, tanggal: originalLap.tanggal, fotos: originalLap.fotos,
+                stok: 1, // unit yang dijual adalah 1
+                statusJual: 'Terjual',
+                harga: document.getElementById('jHargaJual').value,
+                tanggalTerjual: document.getElementById('jTanggalJual').value,
+                penjual: document.getElementById('jPenjual').value,
+                email: document.getElementById('jEmail').value,
+                pass: document.getElementById('jPass').value,
+                catatanInternal: document.getElementById('jCatatan').value
+            };
+
+            if (originalLap.stok > 1) {
+                // Kurangi stok asli
+                laptopKatalogDB[originalIdx].stok -= 1;
+                // Masukkan entri baru untuk 1 unit yang laku ini
+                laptopKatalogDB.push(dataTerjual);
+            } else {
+                // Jika stok tinggal 1, timpa data aslinya dan pindahkan statusnya
+                laptopKatalogDB[originalIdx] = dataTerjual;
+                // Tetap simpan ID original jika dibutuhkan, atau pakai yang baru. Kita pakai dataTerjual saja
+            }
+
+            showToast('Sip! Transaksi penjualan berhasil dicatat.');
+            closeModal('modalJualLaptop');
+            renderAdminKatalog();
+            renderKatalogPublik();
+        });
+
+        // ================= FUNGSI EDIT INVENTORY (TERSEDIA) =================
+        function openModalEditInventory(lapId) {
+            currentEditLapId = lapId;
+            const lap = laptopKatalogDB.find(l => l.id === lapId);
+            
+            document.getElementById('mEditMerek').value = lap.merek;
+            document.getElementById('mEditTipe').value = lap.tipe;
+            document.getElementById('mEditHarga').value = lap.harga;
+            document.getElementById('mEditStok').value = lap.stok;
+            document.getElementById('mEditSpek').value = lap.spek;
+            document.getElementById('mEditGaransi').value = lap.garansi;
+
+            openModal('modalEditLaptop');
+        }
+
+        document.getElementById('formEditLaptop').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if(!currentEditLapId) return;
+            const idx = laptopKatalogDB.findIndex(l => l.id === currentEditLapId);
+            
+            if(idx > -1) {
+                laptopKatalogDB[idx].merek = document.getElementById('mEditMerek').value;
+                laptopKatalogDB[idx].tipe = document.getElementById('mEditTipe').value;
+                laptopKatalogDB[idx].harga = document.getElementById('mEditHarga').value;
+                laptopKatalogDB[idx].stok = document.getElementById('mEditStok').value;
+                laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value;
+                laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
+                
+                showToast('Etalase berhasil diperbarui!');
+                closeModal('modalEditLaptop');
+                renderAdminKatalog();
+                renderKatalogPublik();
+            }
+        });
+
+        // ================= FUNGSI EDIT DATA TERJUAL (REVISI) =================
+        function openModalEditTerjual(lapId) {
+            currentEditLapId = lapId;
+            const lap = laptopKatalogDB.find(l => l.id === lapId);
+            
+            document.getElementById('etMerek').value = lap.merek;
+            document.getElementById('etTipe').value = lap.tipe;
+            document.getElementById('etTanggalJual').value = lap.tanggalTerjual || getTodayDate();
+            document.getElementById('etHarga').value = lap.harga;
+            
+            // Generate list karyawan dan set ke data yang sudah tersimpan
+            document.getElementById('etPenjual').innerHTML = getPenjualOptions();
+            
+            // Jika penjual lama tidak ada di daftar (misal dihapus), fallback ke nama akun saat ini
+            if (lap.penjual) document.getElementById('etPenjual').value = lap.penjual;
+            else document.getElementById('etPenjual').value = currentUser.nama;
+
+            document.getElementById('etEmail').value = lap.email;
+            document.getElementById('etPass').value = lap.pass;
+            document.getElementById('etCatatan').value = lap.catatanInternal;
+
+            openModal('modalEditTerjual');
+        }
+
+        document.getElementById('formEditTerjual').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if(!currentEditLapId) return;
+            const idx = laptopKatalogDB.findIndex(l => l.id === currentEditLapId);
+            
+            if(idx > -1) {
+                laptopKatalogDB[idx].merek = document.getElementById('etMerek').value;
+                laptopKatalogDB[idx].tipe = document.getElementById('etTipe').value;
+                laptopKatalogDB[idx].tanggalTerjual = document.getElementById('etTanggalJual').value;
+                laptopKatalogDB[idx].harga = document.getElementById('etHarga').value;
+                laptopKatalogDB[idx].penjual = document.getElementById('etPenjual').value;
+                laptopKatalogDB[idx].email = document.getElementById('etEmail').value;
+                laptopKatalogDB[idx].pass = document.getElementById('etPass').value;
+                laptopKatalogDB[idx].catatanInternal = document.getElementById('etCatatan').value;
+                
+                showToast('Revisi data penjualan berhasil!');
+                closeModal('modalEditTerjual');
+                renderAdminKatalog();
+            }
+        });
+
+        // ================= HAPUS LAPTOP =================
+        function hapusLaptop(id) {
+            if(confirm('Yakin ingin menghapus data laptop ini secara permanen?')) {
+                const idx = laptopKatalogDB.findIndex(l => l.id === id);
+                if(idx > -1) {
+                    laptopKatalogDB.splice(idx, 1);
+                    showToast('Data laptop dihapus!');
+                    renderAdminKatalog();
+                    renderKatalogPublik();
+                }
+            }
+        }
+
+        // ================= LOGIKA INPUT LAPTOP (TAMBAH DATA BARU) =================
+        document.getElementById('formPenjualan').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let tgl = document.getElementById('lapTgl').value;
+            
+            let fileInput = document.getElementById('lapFotos');
+            let lapFotosArray = [];
+            if (fileInput.files.length > 0) {
+                let limit = Math.min(fileInput.files.length, 4); 
+                for (let i = 0; i < limit; i++) {
+                    lapFotosArray.push(URL.createObjectURL(fileInput.files[i]));
+                }
+            }
+
+            const newLap = {
+                id: generateID('LAP'), merek: document.getElementById('lapMerek').value, tipe: document.getElementById('lapTipe').value,
+                spek: document.getElementById('lapSpek').value, harga: document.getElementById('lapHarga').value, stok: document.getElementById('lapStok').value,
+                garansi: document.getElementById('lapGaransi').value, tanggal: tgl, email: '', pass: '', catatanInternal: '', penjual: '', tanggalTerjual: '', techId: currentUser.username,
+                statusJual: 'Tersedia', fotos: lapFotosArray
+            };
+            laptopKatalogDB.push(newLap);
+            showToast('Laptop berhasil ditambahkan ke Etalase Store!');
+            this.reset();
+            closeModal('modalTambahLaptop');
+            renderAdminKatalog();
+            renderKatalogPublik();
+        });
+
+        // ================= LOGIKA INPUT SERVISAN BARU =================
+        document.getElementById('formServisan').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newSrv = {
+                id: generateID('SRV'), tanggalMasuk: new Date().toLocaleDateString('id-ID'),
+                nama: document.getElementById('srvNama').value, wa: document.getElementById('srvWA').value,
+                jenis: document.getElementById('srvJenis').value, merek: document.getElementById('srvMerek').value,
+                tipe: document.getElementById('srvTipe').value, snid: document.getElementById('srvSNID').value,
+                kelengkapan: document.getElementById('srvKelengkapan').value, masalah: document.getElementById('srvMasalah').value,
+                deskripsi: document.getElementById('srvDeskripsi').value, biaya: document.getElementById('srvBiaya').value || 0,
+                garansi: '', status: 'Masuk', techId: currentUser.username, catatan: 'Barang diterima, menunggu antrean pengecekan.',
+                history: [
+                    { time: new Date().toLocaleString('id-ID'), action: 'Tiket Servis Dibuat', note: 'Barang masuk dan antre pengecekan', by: currentUser.username }
+                ]
+            };
+            servicesDB.push(newSrv);
+            showToast(`Tiket Servis Dibuat: ${newSrv.id}`);
+            this.reset();
+            closeModal('modalTambahServis');
+            
+            if(currentUser.role === 'teknisi') renderTechServices();
+            if(currentUser.role === 'admin') renderAdminServices();
+        });
+
+        // ================= LOGIKA TEKNISI =================
+        function renderTechServices() {
+            const tbody = document.getElementById('tbodyTechServices');
+            tbody.innerHTML = '';
+            
+            // Logika Pencarian
+            const q = document.getElementById('searchTech').value.toLowerCase();
+            const myData = servicesDB.filter(s => s.techId === currentUser.username && 
+                (s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || s.wa.includes(q) || s.merek.toLowerCase().includes(q))
+            );
+            
+            if(myData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">Tidak ada data ditemukan</td></tr>`; return;
+            }
+
+            myData.forEach(s => {
+                let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
+                
+                // History Ringkas (Max 3)
+                let compactHistoryHTML = '';
+                if(s.history && s.history.length > 0) {
+                    compactHistoryHTML = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
+                    let displayHistory = s.history.slice(-3); // Ambil 3 terakhir
+                    if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
+                    
+                    displayHistory.forEach(h => {
+                        compactHistoryHTML += `
+                            <div class="history-item" style="margin-bottom: 8px;">
+                                <div class="history-time" style="font-size:0.7rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:1px 4px; border-radius:3px;">${h.by}</span></div>
+                                <div class="history-action" style="font-size:0.75rem; color:var(--accent-color);">${h.action}</div>
+                                ${h.note ? `<div class="history-note" style="font-size:0.75rem; color:var(--text-muted); margin-top:0;">"${h.note}"</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    compactHistoryHTML += '</div>';
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${s.tanggalMasuk}</span></td>
+                        <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div>
+                            <div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;">
+                                <strong>Masalah:</strong> ${s.masalah}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
+                            ${compactHistoryHTML}
+                            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">✏️ Update Progres</button>
+                                <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= LOGIKA ADMIN SERVISAN =================
+        function renderAdminServices() {
+            const tbody = document.getElementById('tbodyAdminServices');
+            tbody.innerHTML = '';
+            
+            // Logika Pencarian
+            const q = document.getElementById('searchAdmin').value.toLowerCase();
+            const myData = servicesDB.filter(s => 
+                s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || 
+                s.wa.includes(q) || s.merek.toLowerCase().includes(q) || s.techId.toLowerCase().includes(q)
+            );
+
+            if(myData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">Tidak ada data ditemukan</td></tr>`; return;
+            }
+
+            myData.forEach(s => {
+                let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
+                
+                // History Ringkas (Max 3)
+                let compactHistoryHTML = '';
+                if(s.history && s.history.length > 0) {
+                    compactHistoryHTML = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
+                    let displayHistory = s.history.slice(-3); // Ambil 3 terakhir
+                    if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
+                    
+                    displayHistory.forEach(h => {
+                        compactHistoryHTML += `
+                            <div class="history-item" style="margin-bottom: 8px;">
+                                <div class="history-time" style="font-size:0.7rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:1px 4px; border-radius:3px;">${h.by}</span></div>
+                                <div class="history-action" style="font-size:0.75rem; color:var(--accent-color);">${h.action}</div>
+                                ${h.note ? `<div class="history-note" style="font-size:0.75rem; color:var(--text-muted); margin-top:0;">"${h.note}"</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    compactHistoryHTML += '</div>';
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${s.tanggalMasuk}</span><br>
+                            <span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: var(--info-bg); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Teknisi: ${s.techId}</span>
+                        </td>
+                        <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div>
+                            <div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;">
+                                <strong>Masalah:</strong> ${s.masalah}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
+                            ${compactHistoryHTML}
+                            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">✏️ Update Progres</button>
+                                <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= LOGIKA MODAL UPDATE SERVISAN & HISTORY =================
+        function openModalUpdateServis(id) {
+            const s = servicesDB.find(x => x.id === id);
+            if(!s) return;
+
+            document.getElementById('uSrvId').value = id;
+            document.getElementById('uSrvStatus').value = s.status;
+            document.getElementById('uSrvBiaya').value = s.biaya;
+            document.getElementById('uSrvGaransi').value = s.garansi;
+            document.getElementById('uSrvCatatan').value = ''; // Kosongkan agar bisa isi log baru
+            
+            // Jika Admin, tampilkan menu ganti teknisi
+            const techGroup = document.getElementById('uSrvTechGroup');
+            if(currentUser.role === 'admin') {
+                techGroup.style.display = 'block';
+                let techOptions = usersDB.map(u => `<option value="${u.username}">${u.nama} (${u.role})</option>`).join('');
+                document.getElementById('uSrvTech').innerHTML = techOptions;
+                document.getElementById('uSrvTech').value = s.techId;
+            } else {
+                techGroup.style.display = 'none';
+            }
+
+            openModal('modalUpdateServis');
+        }
+
+        document.getElementById('formUpdateServis').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('uSrvId').value;
+            const idx = servicesDB.findIndex(s => s.id === id);
+            if(idx === -1) return;
+
+            let oldStatus = servicesDB[idx].status;
+            let newStatus = document.getElementById('uSrvStatus').value;
+            let newCatatan = document.getElementById('uSrvCatatan').value;
+            let logMessages = [];
+
+            if(oldStatus !== newStatus) { logMessages.push(`Status berubah: ${oldStatus} ➔ ${newStatus}`); }
+
+            // Cek jika pindah teknisi (hanya admin)
+            if(currentUser.role === 'admin') {
+                let oldTech = servicesDB[idx].techId;
+                let newTech = document.getElementById('uSrvTech').value;
+                if(oldTech !== newTech) {
+                    logMessages.push(`Ditugaskan ulang dari [${oldTech}] ke [${newTech}]`);
+                    servicesDB[idx].techId = newTech;
+                }
+            }
+
+            let finalActionLog = logMessages.length > 0 ? logMessages.join(' | ') : 'Pembaruan Progres (Update Catatan)';
+
+            servicesDB[idx].status = newStatus;
+            servicesDB[idx].biaya = document.getElementById('uSrvBiaya').value;
+            servicesDB[idx].garansi = document.getElementById('uSrvGaransi').value;
+            servicesDB[idx].catatan = newCatatan;
+            
+            if(!servicesDB[idx].history) servicesDB[idx].history = [];
+            servicesDB[idx].history.push({ time: new Date().toLocaleString('id-ID'), action: finalActionLog, note: newCatatan, by: currentUser.username });
+            
+            showToast(`Update & Log Timeline data berhasil!`);
+            this.reset();
+            closeModal('modalUpdateServis');
+            
+            if (currentUser.role === 'admin') renderAdminServices(); else renderTechServices();
+        });
+
+        // Tampilkan modal full history
+        function openModalHistory(id) {
+            const s = servicesDB.find(x => x.id === id);
+            if(!s) return;
+            
+            document.getElementById('hSrvTitle').textContent = `Servis ID: ${s.id} - ${s.merek} ${s.tipe}`;
+            
+            let html = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
+            if(s.history && s.history.length > 0) {
+                s.history.forEach(h => {
+                    html += `
+                        <div class="history-item" style="margin-bottom: 15px;">
+                            <div class="history-time" style="font-size:0.75rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">Operator: ${h.by}</span></div>
+                            <div class="history-action" style="font-size:0.9rem; color:var(--accent-color); font-weight:bold;">${h.action}</div>
+                            ${h.note ? `<div class="history-note" style="font-size:0.85rem; color:var(--text-main); margin-top:4px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">"${h.note}"</div>` : ''}
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div style="color: var(--text-muted);">Belum ada riwayat.</div>';
+            }
+            html += '</div>';
+            
+            document.getElementById('hSrvContainer').innerHTML = html;
+            openModal('modalHistoryServis');
+        }
+
+        // ================= LOGIKA KELOLA USER =================
+        function renderUsers() {
+            const tbody = document.getElementById('tbodyUsers');
+            tbody.innerHTML = '';
+            
+            usersDB.forEach((u, index) => {
+                const isMe = u.username === currentUser.username;
+                const disableRole = u.username === 'linda' ? 'disabled' : ''; 
+                const btnDelete = (isMe || u.username === 'linda') 
+                    ? `<span style="color:var(--text-muted); font-size:10px;">Akses Penuh</span>` 
+                    : `<button class="btn-sm btn-danger" onclick="deleteUser(${index})">Hapus</button>`;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="vertical-align: middle;"><code>${u.username}</code> ${isMe ? '<br><span style="font-size:0.7rem; color:var(--success-bg);">(Anda)</span>' : ''}</td>
+                        <td><input type="text" id="editNama-${index}" class="input-catatan" value="${u.nama}" style="min-width:120px;"></td>
+                        <td>
+                            <select id="editRole-${index}" class="select-status" style="min-width:100px;" ${disableRole}>
+                                <option value="teknisi" ${u.role === 'teknisi' ? 'selected' : ''}>Teknisi</option>
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>
+                        </td>
+                        <td><input type="text" id="editPass-${index}" class="input-catatan" value="${u.password}" style="min-width:80px;" placeholder="Password"></td>
+                        <td style="display:flex; gap:5px; flex-direction:column;">
+                            <button class="btn-sm btn-success" onclick="updateUser(${index})">Simpan</button>
+                            ${btnDelete}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('formAddUser').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('newUsername').value;
+            const n = document.getElementById('newNama').value;
+            const p = document.getElementById('newPass').value;
+            
+            if(usersDB.find(x => x.username === u)) { showToast('Username sudah dipakai!', true); return; }
+            
+            usersDB.push({ username: u, password: p, role: 'teknisi', nama: n });
+            showToast('Karyawan berhasil ditambahkan!');
+            this.reset();
+            closeModal('modalTambahUser');
+            renderUsers();
+        });
+
+        function updateUser(index) {
+            usersDB[index].nama = document.getElementById(`editNama-${index}`).value;
+            if(usersDB[index].username !== 'linda') {
+                usersDB[index].role = document.getElementById(`editRole-${index}`).value;
+            }
+            usersDB[index].password = document.getElementById(`editPass-${index}`).value;
+            
+            showToast('Perubahan data Karyawan berhasil disimpan!');
+            renderUsers();
+        }
+
+        function deleteUser(index) {
+            if(confirm('Yakin ingin menghapus karyawan ini?')) {
+                usersDB.splice(index, 1);
+                showToast('Karyawan dihapus!');
+                renderUsers();
+            }
+        }
+        
+        window.onload = function() {
+            renderKatalogPublik();
+        };
+    </script>
+</body>
+</html>
