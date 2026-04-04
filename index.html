@@ -104,10 +104,10 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-        /* --- Modal (Popup) Styling --- */
-        .modal-overlay { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        /* --- Modal (Popup) Styling FIX HP ANDROID/IOS --- */
+        .modal-overlay { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: flex-start; justify-content: center; padding: 5vh 15px; overflow-y: auto; backdrop-filter: blur(3px); -webkit-overflow-scrolling: touch; }
         .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease-out; }
-        .modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 12px; width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
+        .modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 12px; width: 100%; max-width: 650px; margin: auto; border: 1px solid var(--border-color); position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
         .close-modal { position: absolute; right: 20px; top: 20px; font-size: 1.5rem; font-weight: bold; color: var(--text-muted); cursor: pointer; line-height: 1; transition: 0.2s; }
         .close-modal:hover { color: var(--danger-bg); }
 
@@ -743,7 +743,9 @@
                 servicesDB = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
                     try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
                     try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
-                    if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
+                    // FIX: Agar tidak error jika value boolean murni diterima dari Google Sheet
+                    if (s.butuhKonfirmasi !== undefined) s.butuhKonfirmasi = (String(s.butuhKonfirmasi).toLowerCase() === 'true');
+                    
                     if (!Array.isArray(s.history)) s.history = [];
                     if (!Array.isArray(s.pesanChat)) s.pesanChat = [];
                     return s;
@@ -1101,7 +1103,8 @@
             const srv = servicesDB.find(s => s.id === id);
             if (!srv) return;
             
-            let text = textOverride || document.getElementById('inputPesanKonsumen_' + id).value;
+            let inputEl = document.getElementById('inputPesanKonsumen_' + id);
+            let text = textOverride || (inputEl ? inputEl.value : '');
             if(!text.trim()) return;
 
             if(!srv.pesanChat) srv.pesanChat = [];
@@ -1112,6 +1115,9 @@
                 if(!srv.history) srv.history = [];
                 srv.history.push({ time: formatDateWIB(), action: 'Konfirmasi Konsumen', note: text, by: 'Konsumen' });
             }
+
+            // Kosongkan kolom chat setelah kirim
+            if (inputEl) inputEl.value = '';
 
             sendToServer('saveService', srv);
             showToast('Pesan berhasil dikirim ke teknisi!');
@@ -1131,6 +1137,7 @@
             if(!srv.pesanChat) srv.pesanChat = [];
             if(text.trim()) { srv.pesanChat.push({ sender: 'teknisi', text: text, time: formatDateWIB() }); }
             srv.butuhKonfirmasi = butuhKonfirm;
+            
             sendToServer('saveService', srv);
             showToast('Pesan terkirim ke pelanggan!');
             document.getElementById('uSrvKirimPesan').value = '';
@@ -1353,6 +1360,24 @@
             }
         }
 
+        // ================= LOGIKA HAPUS SERVISAN =================
+        function hapusServis(id) {
+            if(confirm(`Yakin ingin menghapus data tiket servis ${id} ini secara permanen? Tindakan ini tidak dapat dibatalkan.`)) {
+                const idx = servicesDB.findIndex(s => s.id === id);
+                if(idx > -1) {
+                    servicesDB.splice(idx, 1);
+                    showToast('Data tiket servis dihapus!');
+                    populateDatalists();
+                    
+                    if (currentUser.role === 'admin') renderAdminServices();
+                    renderTechServices();
+                    renderDashboard();
+                    
+                    sendToServer('deleteService', { id: id }); 
+                }
+            }
+        }
+
         // ================= LOGIKA INPUT SERVISAN BARU =================
         document.getElementById('formServisan')?.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1402,7 +1427,15 @@
                         <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${s.tanggalMasuk}</span></td>
                         <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
                         <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
-                        <td><div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}<div style="display: flex; gap: 6px; margin-top: 10px;"><button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button><button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button></div></td>
+                        <td>
+                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
+                            ${compactHistoryHTML}
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
+                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button>
+                                <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
+                                <button class="btn-sm btn-danger" onclick="hapusServis('${s.id}')">🗑️ Hapus</button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -1435,7 +1468,15 @@
                         <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${s.tanggalMasuk}</span><br><span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: var(--info-bg); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Teknisi: ${s.techId}</span></td>
                         <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
                         <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
-                        <td><div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}<div style="display: flex; gap: 6px; margin-top: 10px;"><button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button><button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button></div></td>
+                        <td>
+                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
+                            ${compactHistoryHTML}
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
+                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button>
+                                <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
+                                <button class="btn-sm btn-danger" onclick="hapusServis('${s.id}')">🗑️ Hapus</button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
