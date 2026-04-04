@@ -662,7 +662,7 @@
             <span class="close-modal" onclick="closeModal('modalHistoryServis')">&times;</span>
             <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">📜 Full History Timeline</h3>
             <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 15px;" id="hSrvTitle">ID Tiket</div>
-            <div id="hSrvContainer" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; max-height: 50vh; overflow-y: auto;">
+            <div id="hSrvContainer" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; max-height: 60vh; overflow-y: auto;">
                 <!-- Full history akan dirender di sini -->
             </div>
         </div>
@@ -771,7 +771,7 @@
             document.getElementById('dlMasalah').innerHTML = [...masalahs].map(m => `<option value="${m}">`).join('');
         }
 
-        // ================= FUNGSI LOAD DATA AWAL =================
+        // ================= FUNGSI LOAD DATA AWAL & PERBAIKAN GOOGLE SHEETS =================
         async function fetchInitialData() {
             try {
                 const [resUsers, resServices, resKatalog] = await Promise.all([
@@ -781,8 +781,24 @@
                 ]);
                 
                 usersDB = Array.isArray(resUsers) ? resUsers.filter(u => u.username && String(u.username).trim() !== '') : [];
-                servicesDB = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '') : [];
-                laptopKatalogDB = Array.isArray(resKatalog) ? resKatalog.filter(l => l.id && String(l.id).trim() !== '') : [];
+                
+                // Mencegah error "object Object" dari Google Sheets dengan mem-parsing otomatis
+                servicesDB = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
+                    try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
+                    try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
+                    
+                    if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
+                    
+                    if (!Array.isArray(s.history)) s.history = [];
+                    if (!Array.isArray(s.pesanChat)) s.pesanChat = [];
+                    return s;
+                }) : [];
+
+                laptopKatalogDB = Array.isArray(resKatalog) ? resKatalog.filter(l => l.id && String(l.id).trim() !== '').map(l => {
+                    try { if (typeof l.fotos === 'string') l.fotos = JSON.parse(l.fotos); } catch(e) { l.fotos = []; }
+                    if (!Array.isArray(l.fotos)) l.fotos = [];
+                    return l;
+                }) : [];
 
                 if(usersDB.length === 0) {
                     let defaultAdmin = { username: 'admin', password: '123', role: 'admin', nama: 'Admin Toko' };
@@ -815,8 +831,21 @@
             }
         }
 
+        // Mengamankan Data Kompleks (Object/Array) sebelum dikirim ke Google Sheets
         async function sendToServer(action, dataObj) {
-            try { fetch(API_URL + "?action=" + action, { method: 'POST', body: JSON.stringify(dataObj) }); } 
+            try { 
+                // Buat duplikat agar data lokal tidak terganggu
+                let payload = JSON.parse(JSON.stringify(dataObj));
+                
+                // Google Sheets tidak mendukung Array JSON secara native, kita ubah jadi string aman
+                ['history', 'pesanChat', 'fotos'].forEach(key => {
+                    if (payload[key] !== undefined && typeof payload[key] !== 'string') {
+                        payload[key] = JSON.stringify(payload[key]);
+                    }
+                });
+
+                fetch(API_URL + "?action=" + action, { method: 'POST', body: JSON.stringify(payload) }); 
+            } 
             catch (error) { console.error("Error saving data:", error); }
         }
 
@@ -1667,12 +1696,32 @@
             sendToServer('saveService', servicesDB[idx]); 
         });
 
+        // Modifikasi Full History Untuk Tampilkan History System & Chat Terpisah
         function openModalHistory(id) {
             const s = servicesDB.find(x => x.id === id);
             if(!s) return;
             document.getElementById('hSrvTitle').textContent = `Servis ID: ${s.id} - ${s.merek} ${s.tipe}`;
             
-            let html = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
+            let html = '<div style="margin-bottom: 20px;">';
+            
+            // Bagian Riwayat Chat
+            html += '<h4 style="color:var(--info-bg); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">💬 Riwayat Chat & Konfirmasi</h4>';
+            if(s.pesanChat && s.pesanChat.length > 0) {
+                html += '<div class="chat-area" style="max-height:200px; margin-bottom: 20px;">';
+                s.pesanChat.forEach(p => {
+                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
+                    let senderName = p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Konsumen';
+                    html += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
+                });
+                html += '</div>';
+            } else {
+                html += '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Belum ada riwayat percakapan.</div>';
+            }
+
+            // Bagian Log System
+            html += '<h4 style="color:var(--accent-color); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">📜 Timeline Aktivitas Sistem</h4>';
+            html += '<div class="history-list" style="border-left: 2px solid var(--accent-color); padding-left: 10px;">';
+            
             if(s.history && s.history.length > 0) {
                 s.history.forEach(h => {
                     html += `
@@ -1683,8 +1732,8 @@
                         </div>
                     `;
                 });
-            } else { html += '<div style="color: var(--text-muted);">Belum ada riwayat.</div>'; }
-            html += '</div>';
+            } else { html += '<div style="color: var(--text-muted); font-size: 0.85rem;">Belum ada riwayat log.</div>'; }
+            html += '</div></div>';
             
             document.getElementById('hSrvContainer').innerHTML = html;
             openModal('modalHistoryServis');
