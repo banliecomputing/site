@@ -120,7 +120,7 @@
         .timeline::before { content: ''; position: absolute; top: 12px; left: 10%; right: 10%; height: 3px; background: var(--border-color); z-index: 1; }
         .timeline-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
         .step-circle { width: 28px; height: 28px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-color); transition: 0.3s; }
-        .step-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .step-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; text-align: center; }
         
         .step-active .step-circle { border-color: var(--accent-color); background: var(--accent-color); box-shadow: 0 0 10px var(--accent-color); }
         .step-active .step-label { color: var(--text-main); }
@@ -178,6 +178,10 @@
         .chat-time { font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; text-align: right; opacity: 0.8; }
         .konfirmasi-box { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-bg); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+
+        /* --- Konfirmasi Button Fix untuk Mobile --- */
+        .konfirmasi-btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+        .konfirmasi-btn-group button { flex: 1 1 auto; min-width: 140px; padding: 12px 15px; font-size: 0.85rem; }
 
         @media (max-width: 600px) { .form-row { flex-direction: column; gap: 1.1rem; } .chart-container { height: 250px; } }
     </style>
@@ -241,7 +245,6 @@
             <button id="tabPenjualan" class="tab-btn internal-only" onclick="openTab('penjualan', this)" style="display: none;">Katalog & Penjualan</button>
             
             <button id="tabAdminServis" class="tab-btn admin-only" onclick="openTab('admin-servis', this); renderAdminServices();" style="display: none;">Semua Servisan</button>
-            <!-- Tab Baru Dashboard Khusus Admin -->
             <button id="tabDashboard" class="tab-btn admin-only" onclick="openTab('dashboard', this); renderDashboard();" style="display: none;">📊 Dashboard</button>
             <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">Kelola Teknisi</button>
         </div>
@@ -511,40 +514,6 @@
         </div>
     </div>
 
-    <!-- MODAL 2C: EDIT DATA LAPTOP TERJUAL -->
-    <div id="modalEditTerjual" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal('modalEditTerjual')">&times;</span>
-            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--danger-bg);">Revisi Data Penjualan</h3>
-            <form id="formEditTerjual">
-                <input type="hidden" id="etLapId">
-                <div class="form-row">
-                    <div class="input-group"><label>Merek</label><input type="text" id="etMerek" list="dlMerek" required></div>
-                    <div class="input-group"><label>Tipe</label><input type="text" id="etTipe" list="dlTipe" required></div>
-                </div>
-                <div class="form-row">
-                    <div class="input-group"><label>Tanggal Terjual (Revisi)</label><input type="date" id="etTanggalJual" required></div>
-                    <div class="input-group"><label>Harga Akhir</label><input type="text" id="etHarga" class="input-rupiah" inputmode="numeric" required></div>
-                </div>
-                <div class="input-group">
-                    <label>Penjual</label>
-                    <select id="etPenjual"></select>
-                </div>
-                <div style="background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 8px; border: 1px dashed var(--border-color); margin-top: 10px;">
-                    <div class="form-row">
-                        <div class="input-group" style="margin-bottom: 0;"><label>Email Microsoft</label><input type="text" id="etEmail"></div>
-                        <div class="input-group" style="margin-bottom: 0;"><label>Password Microsoft</label><input type="text" id="etPass"></div>
-                    </div>
-                    <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
-                        <label>Catatan / Nama Pembeli</label>
-                        <textarea id="etCatatan" rows="2"></textarea>
-                    </div>
-                </div>
-                <button type="submit" class="submit-btn" style="margin-top: 20px;">Simpan Revisi Data Terjual</button>
-            </form>
-        </div>
-    </div>
-
     <!-- MODAL 3: TAMBAH TIKET SERVIS -->
     <div id="modalTambahServis" class="modal-overlay">
         <div class="modal-content">
@@ -674,7 +643,7 @@
     <script>
         // ================= KONEKSI DATABASE SERVER =================
         const API_URL = "https://script.google.com/macros/s/AKfycbwa8s0Xv7x_eNuHVdZgvblB1uf4Zpvuj4EfkAH-up_D_cI9nf6N3kSm2Gi7di0o8P54Lw/exec";
-        const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 Menit dalam Milidetik
+        const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 Menit
 
         let usersDB = [];
         let servicesDB = [];
@@ -682,14 +651,13 @@
 
         let currentUser = null; 
         let currentEditLapId = null;
+        let lastFoundArray = []; // Untuk navigasi tombol kembali ke daftar pencarian
 
         // ================= SISTEM AKTIVITAS & AUTO LOGOUT =================
         function updateActivity() {
             if(currentUser) {
                 let last = parseInt(localStorage.getItem('lastActivity') || 0);
-                if(Date.now() - last > 5000) {
-                    localStorage.setItem('lastActivity', Date.now());
-                }
+                if(Date.now() - last > 5000) localStorage.setItem('lastActivity', Date.now());
             }
         }
 
@@ -749,22 +717,12 @@
 
         // ================= FUNGSI AUTOCOMPLETE SUGGESTIONS =================
         function populateDatalists() {
-            let mereks = new Set();
-            let tipes = new Set();
-            let kelengkapans = new Set();
-            let masalahs = new Set();
-
-            laptopKatalogDB.forEach(l => { 
-                if(l.merek) mereks.add(l.merek.trim()); 
-                if(l.tipe) tipes.add(l.tipe.trim()); 
-            });
+            let mereks = new Set(); let tipes = new Set(); let kelengkapans = new Set(); let masalahs = new Set();
+            laptopKatalogDB.forEach(l => { if(l.merek) mereks.add(l.merek.trim()); if(l.tipe) tipes.add(l.tipe.trim()); });
             servicesDB.forEach(s => { 
-                if(s.merek) mereks.add(s.merek.trim()); 
-                if(s.tipe) tipes.add(s.tipe.trim()); 
-                if(s.kelengkapan) kelengkapans.add(s.kelengkapan.trim()); 
-                if(s.masalah) masalahs.add(s.masalah.trim()); 
+                if(s.merek) mereks.add(s.merek.trim()); if(s.tipe) tipes.add(s.tipe.trim()); 
+                if(s.kelengkapan) kelengkapans.add(s.kelengkapan.trim()); if(s.masalah) masalahs.add(s.masalah.trim()); 
             });
-
             document.getElementById('dlMerek').innerHTML = [...mereks].map(m => `<option value="${m}">`).join('');
             document.getElementById('dlTipe').innerHTML = [...tipes].map(t => `<option value="${t}">`).join('');
             document.getElementById('dlKelengkapan').innerHTML = [...kelengkapans].map(k => `<option value="${k}">`).join('');
@@ -782,13 +740,10 @@
                 
                 usersDB = Array.isArray(resUsers) ? resUsers.filter(u => u.username && String(u.username).trim() !== '') : [];
                 
-                // Mencegah error "object Object" dari Google Sheets dengan mem-parsing otomatis
                 servicesDB = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
                     try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
                     try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
-                    
                     if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
-                    
                     if (!Array.isArray(s.history)) s.history = [];
                     if (!Array.isArray(s.pesanChat)) s.pesanChat = [];
                     return s;
@@ -803,27 +758,20 @@
                 if(usersDB.length === 0) {
                     let defaultAdmin = { username: 'admin', password: '123', role: 'admin', nama: 'Admin Toko' };
                     usersDB.push(defaultAdmin);
-                    sendToServer('saveUser', defaultAdmin); // Auto Save ke Sheet
+                    sendToServer('saveUser', defaultAdmin);
                 }
 
                 document.getElementById('globalLoader').style.display = 'none';
-                populateDatalists(); // Isi autocomplete
+                populateDatalists();
 
-                // Cek status sesi lokal
                 let savedUser = localStorage.getItem('currentUser');
                 let lastAct = localStorage.getItem('lastActivity');
                 if (savedUser && lastAct && (Date.now() - parseInt(lastAct) < SESSION_TIMEOUT)) {
                     let userObj = JSON.parse(savedUser);
-                    // Validasi apakah user masih ada di DB (misal tidak dihapus boss)
                     if(usersDB.find(u => u.username === userObj.username && u.password === userObj.password)) {
-                        applyLoginUI(userObj);
-                        localStorage.setItem('lastActivity', Date.now()); // Perbarui waktu
-                    } else {
-                        logoutUser();
-                    }
-                } else {
-                    logoutUser(); // jika sesi expired/kosong, tampilkan layar publik
-                }
+                        applyLoginUI(userObj); localStorage.setItem('lastActivity', Date.now());
+                    } else { logoutUser(); }
+                } else { logoutUser(); }
 
             } catch (err) {
                 console.error("Gagal koneksi ke Google Sheets:", err);
@@ -831,19 +779,12 @@
             }
         }
 
-        // Mengamankan Data Kompleks (Object/Array) sebelum dikirim ke Google Sheets
         async function sendToServer(action, dataObj) {
             try { 
-                // Buat duplikat agar data lokal tidak terganggu
                 let payload = JSON.parse(JSON.stringify(dataObj));
-                
-                // Google Sheets tidak mendukung Array JSON secara native, kita ubah jadi string aman
                 ['history', 'pesanChat', 'fotos'].forEach(key => {
-                    if (payload[key] !== undefined && typeof payload[key] !== 'string') {
-                        payload[key] = JSON.stringify(payload[key]);
-                    }
+                    if (payload[key] !== undefined && typeof payload[key] !== 'string') { payload[key] = JSON.stringify(payload[key]); }
                 });
-
                 fetch(API_URL + "?action=" + action, { method: 'POST', body: JSON.stringify(payload) }); 
             } 
             catch (error) { console.error("Error saving data:", error); }
@@ -852,12 +793,8 @@
         // ================= FUNGSI FORMAT RUPIAH & TANGGAL =================
         function formatRupiahText(value) {
             if(!value) return "";
-            let number_string = value.replace(/[^,\d]/g, '').toString(),
-            split = number_string.split(','),
-            sisa = split[0].length % 3,
-            rupiah = split[0].substr(0, sisa),
-            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
+            let number_string = value.replace(/[^,\d]/g, '').toString(), split = number_string.split(','),
+            sisa = split[0].length % 3, rupiah = split[0].substr(0, sisa), ribuan = split[0].substr(sisa).match(/\d{3}/gi);
             if(ribuan){ separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
             rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
             return rupiah ? 'Rp ' + rupiah : '';
@@ -869,17 +806,11 @@
             inp.addEventListener('input', function(e) { this.value = formatRupiahText(this.value); });
         });
 
-        // FUNGSI TANGGAL FORMAT: Tanggal Bulan Tahun WIB
         function formatDateWIB() {
-            const d = new Date();
-            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const day = d.getDate().toString().padStart(2, '0');
-            const month = months[d.getMonth()];
-            const year = d.getFullYear();
-            return `${day} ${month} ${year} WIB`;
+            const d = new Date(); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()} WIB`;
         }
 
-        // ================= FUNGSI UTILITAS & UI =================
         function showToast(msg, isError=false) {
             const t = document.getElementById('toast');
             t.textContent = msg; t.style.backgroundColor = isError ? 'var(--danger-bg)' : 'var(--success-bg)';
@@ -902,10 +833,7 @@
             if(modalId === 'modalEditLaptop' || modalId === 'modalEditTerjual' || modalId === 'modalJualLaptop') currentEditLapId = null;
         }
 
-        function getTodayDate() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
+        function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
         function compressImage(file) {
             return new Promise((resolve) => {
@@ -923,198 +851,109 @@
             });
         }
 
-        // ================= LOGIN SUBMIT =================
         function showLoginForm() {
-            document.getElementById('appPage').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('appPage').style.display = 'none'; document.getElementById('loginPage').style.display = 'block';
         }
 
         function showPublicView() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appPage').style.display = 'block';
-            
-            document.getElementById('welcomeText').textContent = 'BanlieComputing';
-            document.getElementById('userRoleDisplay').style.display = 'none';
-            
-            let btnLogout = document.getElementById('btnLogout');
-            btnLogout.textContent = 'Login Staff';
-            btnLogout.onclick = showLoginForm;
-            btnLogout.style.borderColor = 'var(--info-bg)';
-            btnLogout.style.color = 'var(--info-bg)';
-            
+            document.getElementById('loginPage').style.display = 'none'; document.getElementById('appPage').style.display = 'block';
+            document.getElementById('welcomeText').textContent = 'BanlieComputing Layanan'; document.getElementById('userRoleDisplay').style.display = 'none';
+            let btnLogout = document.getElementById('btnLogout'); btnLogout.textContent = 'Login Staff'; btnLogout.onclick = showLoginForm;
+            btnLogout.style.borderColor = 'var(--info-bg)'; btnLogout.style.color = 'var(--info-bg)';
             document.querySelectorAll('.internal-only, .admin-only, .tech-only').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.public-only').forEach(el => el.style.display = 'block');
-            
-            openTab('katalog-publik', document.getElementById('tabKatalogPublik'));
-            renderKatalogPublik();
+            openTab('katalog-publik', document.getElementById('tabKatalogPublik')); renderKatalogPublik();
         }
 
-        document.getElementById('formLogin').addEventListener('submit', function(e) {
+        document.getElementById('formLogin')?.addEventListener('submit', function(e) {
             e.preventDefault();
-            const u = document.getElementById('loginUsername').value.trim();
-            const p = document.getElementById('loginPassword').value.trim();
-            
+            const u = document.getElementById('loginUsername').value.trim(); const p = document.getElementById('loginPassword').value.trim();
             const user = usersDB.find(x => String(x.username).trim() === u && String(x.password).trim() === p);
-
             if(user) {
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                localStorage.setItem('lastActivity', Date.now());
-                applyLoginUI(user);
-                showToast(`Login berhasil sebagai ${user.role}`);
-                this.reset();
-            } else {
-                showToast('Username atau password salah', true);
+                localStorage.setItem('currentUser', JSON.stringify(user)); localStorage.setItem('lastActivity', Date.now());
+                applyLoginUI(user); showToast(`Login berhasil sebagai ${user.role}`); this.reset();
+            } else { showToast('Username atau password salah', true); }
+        });
+
+        // ================= LOGIKA TAMBAH LAPTOP (INVENTORY) =================
+        document.getElementById('formPenjualan')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let btn = document.getElementById('btnSimpanLaptop');
+            let prevText = btn.textContent;
+            btn.textContent = 'Menyimpan...'; btn.disabled = true;
+
+            const newLap = {
+                id: generateID('LAP'),
+                merek: document.getElementById('lapMerek').value,
+                tipe: document.getElementById('lapTipe').value,
+                spek: document.getElementById('lapSpek').value,
+                harga: parseRupiah(document.getElementById('lapHarga').value),
+                stok: parseInt(document.getElementById('lapStok').value),
+                garansi: document.getElementById('lapGaransi').value,
+                tanggal: document.getElementById('lapTgl').value,
+                statusJual: 'Tersedia',
+                fotos: []
+            };
+
+            let fileInput = document.getElementById('lapFotos');
+            if (fileInput.files.length > 0) {
+                let limit = Math.min(fileInput.files.length, 4); 
+                for (let i = 0; i < limit; i++) {
+                    let base64Img = await compressImage(fileInput.files[i]);
+                    newLap.fotos.push(base64Img);
+                }
             }
+
+            laptopKatalogDB.push(newLap);
+            showToast('Laptop baru berhasil ditambahkan!');
+            populateDatalists();
+            this.reset();
+            closeModal('modalTambahLaptop');
+            renderAdminKatalog();
+            renderKatalogPublik();
+            sendToServer('saveKatalog', newLap);
+            
+            btn.textContent = prevText; btn.disabled = false;
         });
 
         // ================= DASHBOARD ADMIN =================
         let chartSrvIns = null; let chartIncIns = null;
         function renderDashboard() {
             if(!currentUser || currentUser.role !== 'admin') return;
-
-            let omsetJual = 0, omsetServis = 0, lapTerjual = 0;
-            let srvMasuk = 0, srvProses = 0, srvSelesai = 0, srvBatal = 0;
-
+            let omsetJual = 0, omsetServis = 0, lapTerjual = 0; let srvMasuk = 0, srvProses = 0, srvSelesai = 0, srvBatal = 0;
             laptopKatalogDB.forEach(l => { if(l.statusJual === 'Terjual') { lapTerjual += parseInt(l.stok); omsetJual += parseInt(l.harga) || 0; } });
             servicesDB.forEach(s => {
                 if(s.status === 'Masuk') srvMasuk++; else if(s.status === 'Proses') srvProses++;
                 else if(s.status === 'Selesai') { srvSelesai++; omsetServis += parseInt(s.biayaAkhir || s.biaya) || 0; } else if(s.status === 'Batal') srvBatal++;
             });
+            document.getElementById('dashOmsetJual').textContent = formatRupiahText(omsetJual.toString()); document.getElementById('dashOmsetServis').textContent = formatRupiahText(omsetServis.toString());
+            document.getElementById('dashLapTerjual').textContent = lapTerjual + " Unit"; document.getElementById('dashSrvSelesai').textContent = srvSelesai + " Tiket";
 
-            document.getElementById('dashOmsetJual').textContent = formatRupiahText(omsetJual.toString());
-            document.getElementById('dashOmsetServis').textContent = formatRupiahText(omsetServis.toString());
-            document.getElementById('dashLapTerjual').textContent = lapTerjual + " Unit";
-            document.getElementById('dashSrvSelesai').textContent = srvSelesai + " Tiket";
-
-            const ctxSrv = document.getElementById('chartServis').getContext('2d');
-            const ctxInc = document.getElementById('chartPendapatan').getContext('2d');
+            const ctxSrv = document.getElementById('chartServis').getContext('2d'); const ctxInc = document.getElementById('chartPendapatan').getContext('2d');
             Chart.defaults.color = '#94a3b8';
-
             if(chartSrvIns) chartSrvIns.destroy(); if(chartIncIns) chartIncIns.destroy();
 
             chartSrvIns = new Chart(ctxSrv, {
-                type: 'bar',
-                data: { labels: ['Antrean Masuk', 'Diproses', 'Selesai', 'Batal'], datasets: [{ label: 'Jumlah Servisan', data: [srvMasuk, srvProses, srvSelesai, srvBatal], backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'], borderRadius: 6 }] },
+                type: 'bar', data: { labels: ['Antrean Masuk', 'Diproses', 'Selesai', 'Batal'], datasets: [{ label: 'Jumlah Servisan', data: [srvMasuk, srvProses, srvSelesai, srvBatal], backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'], borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Status Servisan Saat Ini', color: '#f8fafc' } } }
             });
-
             chartIncIns = new Chart(ctxInc, {
-                type: 'doughnut',
-                data: { labels: ['Jual Beli Laptop', 'Jasa Servis'], datasets: [{ data: [omsetJual, omsetServis], backgroundColor: ['#8b5cf6', '#3b82f6'], borderWidth: 0 }] },
+                type: 'doughnut', data: { labels: ['Jual Beli Laptop', 'Jasa Servis'], datasets: [{ data: [omsetJual, omsetServis], backgroundColor: ['#8b5cf6', '#3b82f6'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Komposisi Pendapatan', color: '#f8fafc' } } }
             });
         }
 
-        // ================= PENCARIAN FLEKSIBEL (BISA MENAMPILKAN BANYAK BARANG) =================
-        function renderHasilPencarian(foundArray) {
-            const resDiv = document.getElementById('hasilPencarian');
-            resDiv.innerHTML = ''; // Bersihkan kontainer pencarian
-
-            // Jika ada lebih dari 1 barang dengan nomor WA yang sama
-            if (foundArray.length > 1) {
-                resDiv.innerHTML += `<div style="margin-bottom: 15px; color: var(--info-bg); font-weight: bold; text-align: center; font-size: 0.95rem;">Ditemukan ${foundArray.length} perangkat yang terhubung dengan pencarian ini:</div>`;
-            }
-
-            // Loop untuk merender setiap barang yang ditemukan
-            foundArray.forEach((found) => {
-                let s1 = '', s2 = '', s3 = '';
-                if(found.status === 'Masuk') { s1 = 'step-active'; }
-                else if(found.status === 'Proses') { s1 = 'step-done'; s2 = 'step-active'; }
-                else if(found.status === 'Selesai') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-done'; }
-                else if(found.status === 'Batal') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-cancel'; }
-
-                let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
-                let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
-
-                let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
-                let costValue = found.status === 'Selesai' ? formatRupiahText(String(found.biayaAkhir || found.biaya || 0)) : (found.biayaEstimasi || found.biaya || '-');
-
-                // --- BAGIAN CHAT / RUANG DISKUSI ---
-                let chatHTML = '';
-                if (found.pesanChat && found.pesanChat.length > 0) {
-                    found.pesanChat.forEach(p => {
-                        let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
-                        let senderName = p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Anda';
-                        chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
-                    });
-                } else {
-                    chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada pesan/catatan khusus.</div>`;
-                }
-
-                let confirmHTML = '';
-                if (found.butuhKonfirmasi) {
-                    confirmHTML = `
-                        <div class="konfirmasi-box">
-                            <strong style="color:var(--warning-bg); display:block; margin-bottom:12px;">⚠️ Teknisi Menunggu Keputusan Anda</strong>
-                            <div style="display:flex; gap:10px; justify-content:center;">
-                                <button type="button" class="btn-sm btn-success" style="padding: 10px 15px; font-size:0.85rem;" onclick="kirimPesanKonsumen('${found.id}', 'Ya, Lanjutkan Servis')">✅ Ya, Lanjutkan</button>
-                                <button type="button" class="btn-sm btn-danger" style="padding: 10px 15px; font-size:0.85rem;" onclick="kirimPesanKonsumen('${found.id}', 'Tidak, Batalkan Servis')">❌ Tidak, Batalkan</button>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                resDiv.innerHTML += `
-                    <div class="tracking-card">
-                        <div class="tracking-header">
-                            <div>
-                                <h3 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">${found.merek} ${found.tipe}</h3>
-                                <span style="font-size: 0.8rem; color: var(--text-muted);">${found.jenis} | A/n: ${found.nama}</span>
-                            </div>
-                            <span class="tracking-id">${found.id}</span>
-                        </div>
-                        <div style="font-size: 0.9rem; margin-bottom: 20px;">
-                            <strong>Tgl Masuk:</strong> ${found.tanggalMasuk} <br>
-                            <strong>Kelengkapan:</strong> ${found.kelengkapan} <br>
-                            <strong>SNID:</strong> ${found.snid || '-'} <br><br>
-                            <strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>
-                            ${garansiHTML}
-                            <strong>${costLabel}:</strong> ${costValue}
-                        </div>
-                        <div class="timeline">
-                            <div class="timeline-step ${s1}"><div class="step-circle"></div><div class="step-label">Masuk</div></div>
-                            <div class="timeline-step ${s2}"><div class="step-circle"></div><div class="step-label">Proses</div></div>
-                            <div class="timeline-step ${s3}"><div class="step-circle"></div><div class="step-label">${step3Label}</div></div>
-                        </div>
-                        
-                        <div style="margin-top: 30px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
-                            <h4 style="margin-bottom: 10px; font-size:0.95rem; color:var(--text-main);">Ruang Pesan & Konfirmasi</h4>
-                            <div class="chat-area" id="publicChatArea_${found.id}">
-                                ${chatHTML}
-                            </div>
-                            ${confirmHTML}
-                            <div style="display:flex; gap:8px; margin-top:10px;">
-                                <input type="text" id="inputPesanKonsumen_${found.id}" class="input-catatan" placeholder="Ketik pesan untuk perangkat ini..." style="padding:10px;">
-                                <button type="button" class="btn-sm btn-jual" style="padding: 0 15px;" onclick="kirimPesanKonsumen('${found.id}')">Kirim</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            resDiv.style.display = 'block';
-
-            // Auto-scroll ke bawah untuk setiap area chat
-            foundArray.forEach(found => {
-                const chatArea = document.getElementById(`publicChatArea_${found.id}`);
-                if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-            });
-        }
-
-        document.getElementById('formCekStatus').addEventListener('submit', function(e) {
+        // ================= PENCARIAN FLEKSIBEL & ALUR TAMPILAN =================
+        document.getElementById('formCekStatus')?.addEventListener('submit', function(e) {
             e.preventDefault();
             const rawQ = document.getElementById('cek_no_wa').value.toLowerCase().trim();
-            const resDiv = document.getElementById('hasilPencarian');
             const qNumOnly = rawQ.replace(/[^0-9]/g, '');
 
-            // SEKARANG MENGGUNAKAN FILTER() UNTUK MENDAPATKAN SEMUA DATA YANG COCOK, BUKAN HANYA 1
-            const foundItems = servicesDB.filter(s => {
+            lastFoundArray = servicesDB.filter(s => {
                 if (String(s.id).toLowerCase() === rawQ) return true;
                 let sWa = String(s.wa).replace(/[^0-9]/g, ''); 
                 if (qNumOnly.length >= 4 && sWa.length >= 4) {
-                    let v1 = qNumOnly; 
-                    let v2 = qNumOnly.startsWith('0') ? '62' + qNumOnly.substring(1) : qNumOnly; 
+                    let v1 = qNumOnly; let v2 = qNumOnly.startsWith('0') ? '62' + qNumOnly.substring(1) : qNumOnly; 
                     let v3 = qNumOnly.startsWith('62') ? '0' + qNumOnly.substring(2) : qNumOnly; 
                     let v4 = qNumOnly.startsWith('0') ? qNumOnly.substring(1) : (qNumOnly.startsWith('62') ? qNumOnly.substring(2) : qNumOnly); 
                     return sWa.includes(v1) || sWa.includes(v2) || sWa.includes(v3) || sWa.includes(v4);
@@ -1122,13 +961,140 @@
                 return false;
             });
 
-            if(foundItems.length > 0) {
-                renderHasilPencarian(foundItems);
+            const resDiv = document.getElementById('hasilPencarian');
+            resDiv.style.display = 'block';
+
+            if(lastFoundArray.length === 0) {
+                resDiv.innerHTML = `<div style="color:var(--danger-bg); padding: 10px; text-align: center; font-weight: 500;">Data tidak ditemukan. Silakan periksa kembali No WA / ID.</div>`;
+            } else if (lastFoundArray.length === 1) {
+                // Jika hanya 1 barang, langsung tampilkan detail
+                renderDetailPencarian(lastFoundArray[0], false);
             } else {
-                resDiv.innerHTML = `<div style="color:var(--danger-bg); padding: 10px; text-align: center; font-weight: 500;">Data tidak ditemukan.</div>`;
-                resDiv.style.display = 'block';
+                // Jika > 1 barang, tampilkan kotak list thumbnail
+                renderDaftarPencarian(lastFoundArray);
             }
         });
+
+        // Merender tampilan grid/thumbnail list
+        function renderDaftarPencarian(foundArray) {
+            const resDiv = document.getElementById('hasilPencarian');
+            let html = `<div style="margin-bottom: 15px; color: var(--info-bg); font-weight: bold; text-align: center; font-size: 0.95rem;">Ditemukan ${foundArray.length} perangkat yang terhubung. Pilih salah satu:</div>`;
+            html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px;">`;
+            
+            foundArray.forEach(found => {
+                let badgeStatus = `<span class="badge ${found.status === 'Selesai' ? 'bg-selesai' : found.status === 'Proses' ? 'bg-proses' : found.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${found.status}</span>`;
+                if (found.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px; margin-top:5px; display:inline-block;">⚠️ Konfirmasi Tertunda</span>`;
+
+                html += `
+                    <div class="tracking-card" style="margin-top:0; cursor:pointer; transition:0.2s;" onclick="renderDetailPencarianById('${found.id}')" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateY(0)';">
+                        <div style="font-size:0.75rem; color:var(--accent-color); font-family:monospace; margin-bottom:5px;">${found.id}</div>
+                        <h4 style="color:var(--text-main); margin-bottom:5px; font-size:1.1rem;">${found.merek} ${found.tipe}</h4>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">📅 Masuk: ${found.tanggalMasuk}</div>
+                        <div>${badgeStatus}</div>
+                        <button class="submit-btn" style="padding: 10px; margin-top: 15px; font-size: 0.85rem; background:transparent; border:1px solid var(--accent-color); color:var(--accent-color);">🔍 Lihat Detail</button>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            resDiv.innerHTML = html;
+        }
+
+        function renderDetailPencarianById(id) {
+            const found = lastFoundArray.find(s => s.id === id);
+            if(found) {
+                // Tampilkan detail, dan setel showBackButton=true jika hasil lebih dari 1
+                renderDetailPencarian(found, lastFoundArray.length > 1);
+            }
+        }
+
+        // Merender tampilan full detail pelacakan untuk 1 barang
+        function renderDetailPencarian(found, showBackButton) {
+            const resDiv = document.getElementById('hasilPencarian');
+            let html = '';
+
+            if (showBackButton) {
+                html += `<button type="button" class="btn-sm" style="background:transparent; border:1px solid var(--text-muted); color:var(--text-main); margin-bottom:15px; padding:8px 15px;" onclick="renderDaftarPencarian(lastFoundArray)">🔙 Kembali ke Daftar Perangkat</button>`;
+            }
+
+            let s1 = '', s2 = '', s3 = '';
+            if(found.status === 'Masuk') { s1 = 'step-active'; }
+            else if(found.status === 'Proses') { s1 = 'step-done'; s2 = 'step-active'; }
+            else if(found.status === 'Selesai') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-done'; }
+            else if(found.status === 'Batal') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-cancel'; }
+
+            let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
+            let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
+            let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
+            let costValue = found.status === 'Selesai' ? formatRupiahText(String(found.biayaAkhir || found.biaya || 0)) : (found.biayaEstimasi || found.biaya || '-');
+
+            // --- BAGIAN CHAT / RUANG DISKUSI ---
+            let chatHTML = '';
+            if (found.pesanChat && found.pesanChat.length > 0) {
+                found.pesanChat.forEach(p => {
+                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
+                    let senderName = p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Anda';
+                    chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
+                });
+            } else {
+                chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada pesan/catatan khusus.</div>`;
+            }
+
+            // PERBAIKAN TOMBOL KONFIRMASI (Responsif untuk Android)
+            let confirmHTML = '';
+            if (found.butuhKonfirmasi) {
+                confirmHTML = `
+                    <div class="konfirmasi-box">
+                        <strong style="color:var(--warning-bg); display:block; margin-bottom:12px;">⚠️ Teknisi Menunggu Keputusan Anda</strong>
+                        <div class="konfirmasi-btn-group">
+                            <button type="button" class="btn-sm btn-success" onclick="kirimPesanKonsumen('${found.id}', 'Ya, Lanjutkan Servis')">✅ Ya, Lanjutkan</button>
+                            <button type="button" class="btn-sm btn-danger" onclick="kirimPesanKonsumen('${found.id}', 'Tidak, Batalkan Servis')">❌ Tidak, Batalkan</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="tracking-card" style="margin-top:0;">
+                    <div class="tracking-header">
+                        <div>
+                            <h3 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">${found.merek} ${found.tipe}</h3>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">${found.jenis} | A/n: ${found.nama}</span>
+                        </div>
+                        <span class="tracking-id">${found.id}</span>
+                    </div>
+                    <div style="font-size: 0.9rem; margin-bottom: 20px;">
+                        <strong>Tgl Masuk:</strong> ${found.tanggalMasuk} <br>
+                        <strong>Kelengkapan:</strong> ${found.kelengkapan} <br>
+                        <strong>SNID:</strong> ${found.snid || '-'} <br><br>
+                        <strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>
+                        ${garansiHTML}
+                        <strong>${costLabel}:</strong> ${costValue}
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-step ${s1}"><div class="step-circle"></div><div class="step-label">Masuk</div></div>
+                        <div class="timeline-step ${s2}"><div class="step-circle"></div><div class="step-label">Proses</div></div>
+                        <div class="timeline-step ${s3}"><div class="step-circle"></div><div class="step-label">${step3Label}</div></div>
+                    </div>
+                    
+                    <div style="margin-top: 30px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
+                        <h4 style="margin-bottom: 10px; font-size:0.95rem; color:var(--text-main);">Ruang Pesan & Konfirmasi</h4>
+                        <div class="chat-area" id="publicChatArea_${found.id}">
+                            ${chatHTML}
+                        </div>
+                        ${confirmHTML}
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+                            <input type="text" id="inputPesanKonsumen_${found.id}" class="input-catatan" placeholder="Ketik pesan untuk teknisi..." style="flex: 1 1 200px; padding:10px;">
+                            <button type="button" class="btn-sm btn-jual" style="padding: 10px 20px; flex: 0 1 auto;" onclick="kirimPesanKonsumen('${found.id}')">Kirim</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resDiv.innerHTML = html;
+
+            const chatArea = document.getElementById(`publicChatArea_${found.id}`);
+            if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+        }
 
         // ================= FUNGSI KIRIM PESAN KONSUMEN & TEKNISI =================
         function kirimPesanKonsumen(id, textOverride) {
@@ -1150,21 +1116,8 @@
             sendToServer('saveService', srv);
             showToast('Pesan berhasil dikirim ke teknisi!');
             
-            // Render ulang layar pencarian dengan query yang sama agar chat muncul
-            const rawQ = document.getElementById('cek_no_wa').value.toLowerCase().trim();
-            const qNumOnly = rawQ.replace(/[^0-9]/g, '');
-            const foundItems = servicesDB.filter(s => {
-                if (String(s.id).toLowerCase() === rawQ) return true;
-                let sWa = String(s.wa).replace(/[^0-9]/g, ''); 
-                if (qNumOnly.length >= 4 && sWa.length >= 4) {
-                    let v1 = qNumOnly; let v2 = qNumOnly.startsWith('0') ? '62' + qNumOnly.substring(1) : qNumOnly; 
-                    let v3 = qNumOnly.startsWith('62') ? '0' + qNumOnly.substring(2) : qNumOnly; 
-                    let v4 = qNumOnly.startsWith('0') ? qNumOnly.substring(1) : (qNumOnly.startsWith('62') ? qNumOnly.substring(2) : qNumOnly); 
-                    return sWa.includes(v1) || sWa.includes(v2) || sWa.includes(v3) || sWa.includes(v4);
-                }
-                return false;
-            });
-            renderHasilPencarian(foundItems);
+            // Render ulang tampilan detail saja tanpa kembali ke daftar
+            renderDetailPencarianById(id);
         }
 
         function kirimPesanTeknisi() {
@@ -1176,16 +1129,12 @@
             if(!text.trim() && !butuhKonfirm) return showToast('Pesan kosong. Ketik sesuatu atau centang konfirmasi.', true);
 
             if(!srv.pesanChat) srv.pesanChat = [];
-            if(text.trim()) {
-                srv.pesanChat.push({ sender: 'teknisi', text: text, time: formatDateWIB() });
-            }
-            
+            if(text.trim()) { srv.pesanChat.push({ sender: 'teknisi', text: text, time: formatDateWIB() }); }
             srv.butuhKonfirmasi = butuhKonfirm;
-            
             sendToServer('saveService', srv);
             showToast('Pesan terkirim ke pelanggan!');
-            
             document.getElementById('uSrvKirimPesan').value = '';
+            
             openModalUpdateServis(id); 
             if(currentUser.role === 'admin') renderAdminServices(); else renderTechServices();
         }
@@ -1194,12 +1143,10 @@
         function renderKatalogPublik() {
             const grid = document.getElementById('katalogGrid');
             grid.innerHTML = '';
-            
             const tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
 
             if(tersediaDB.length === 0) {
-                grid.innerHTML = `<div style="text-align:center; width: 100%; padding: 40px; color: var(--text-muted);">Belum ada produk di etalase toko.</div>`;
-                return;
+                grid.innerHTML = `<div style="text-align:center; width: 100%; padding: 40px; color: var(--text-muted);">Belum ada produk di etalase toko.</div>`; return;
             }
 
             tersediaDB.forEach(lap => {
@@ -1211,10 +1158,7 @@
                 if (lap.fotos && lap.fotos.length > 0) {
                     let mainImg = lap.fotos[0];
                     let thumbs = lap.fotos.map((f, i) => `<img src="${f}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
-                    imagesHTML = `
-                        <img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama">
-                        <div class="katalog-thumb-container">${thumbs}</div>
-                    `;
+                    imagesHTML = `<img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama"><div class="katalog-thumb-container">${thumbs}</div>`;
                 }
 
                 grid.innerHTML += `
@@ -1235,17 +1179,13 @@
 
         function changeMainImg(lapId, index) {
             const lap = laptopKatalogDB.find(l => l.id === lapId);
-            if(lap && lap.fotos[index]) {
-                document.getElementById(`mainImg-${lapId}`).src = lap.fotos[index];
-            }
+            if(lap && lap.fotos[index]) document.getElementById(`mainImg-${lapId}`).src = lap.fotos[index];
         }
 
         // ================= LOGIKA MANAJEMEN LAPTOP ADMIN =================
         function renderAdminKatalog() {
-            const tbTersedia = document.getElementById('tbodyKatalogTersedia');
-            const tbTerjual = document.getElementById('tbodyKatalogTerjual');
+            const tbTersedia = document.getElementById('tbodyKatalogTersedia'); const tbTerjual = document.getElementById('tbodyKatalogTerjual');
             if(!tbTersedia || !tbTerjual) return;
-            
             tbTersedia.innerHTML = ''; tbTerjual.innerHTML = '';
             let countTersedia = 0, countTerjual = 0;
 
@@ -1309,218 +1249,140 @@
             const lap = laptopKatalogDB.find(l => l.id === lapId);
             if(lap.stok <= 0) { showToast('Stok habis!', true); return; }
 
-            document.getElementById('jLapId').value = lapId;
-            document.getElementById('jTanggalJual').value = getTodayDate();
+            document.getElementById('jLapId').value = lapId; document.getElementById('jTanggalJual').value = getTodayDate();
             document.getElementById('jHargaJual').value = formatRupiahText(String(lap.harga)); 
-            
-            document.getElementById('jPenjual').innerHTML = getPenjualOptions();
-            document.getElementById('jPenjual').value = currentUser.nama;
-
-            document.getElementById('jEmail').value = '';
-            document.getElementById('jPass').value = '';
-            document.getElementById('jCatatan').value = '';
-
+            document.getElementById('jPenjual').innerHTML = getPenjualOptions(); document.getElementById('jPenjual').value = currentUser.nama;
+            document.getElementById('jEmail').value = ''; document.getElementById('jPass').value = ''; document.getElementById('jCatatan').value = '';
             openModal('modalJualLaptop');
         }
 
-        document.getElementById('formJualLaptop').addEventListener('submit', function(e) {
+        document.getElementById('formJualLaptop')?.addEventListener('submit', function(e) {
             e.preventDefault();
             const lapId = document.getElementById('jLapId').value;
             const originalIdx = laptopKatalogDB.findIndex(l => l.id === lapId);
             if(originalIdx === -1) return;
 
             let originalLap = laptopKatalogDB[originalIdx];
-
             let dataTerjual = {
-                id: generateID('LAP-SOLD'), 
-                merek: originalLap.merek, tipe: originalLap.tipe, spek: originalLap.spek, 
-                garansi: originalLap.garansi, tanggal: originalLap.tanggal, fotos: originalLap.fotos,
-                stok: 1, statusJual: 'Terjual',
-                harga: parseRupiah(document.getElementById('jHargaJual').value),
-                tanggalTerjual: document.getElementById('jTanggalJual').value,
-                penjual: document.getElementById('jPenjual').value,
-                email: document.getElementById('jEmail').value,
-                pass: document.getElementById('jPass').value,
-                catatanInternal: document.getElementById('jCatatan').value
+                id: generateID('LAP-SOLD'), merek: originalLap.merek, tipe: originalLap.tipe, spek: originalLap.spek, 
+                garansi: originalLap.garansi, tanggal: originalLap.tanggal, fotos: originalLap.fotos, stok: 1, statusJual: 'Terjual',
+                harga: parseRupiah(document.getElementById('jHargaJual').value), tanggalTerjual: document.getElementById('jTanggalJual').value,
+                penjual: document.getElementById('jPenjual').value, email: document.getElementById('jEmail').value,
+                pass: document.getElementById('jPass').value, catatanInternal: document.getElementById('jCatatan').value
             };
 
             if (originalLap.stok > 1) {
-                laptopKatalogDB[originalIdx].stok -= 1;
-                laptopKatalogDB.push(dataTerjual);
-                sendToServer('saveKatalog', laptopKatalogDB[originalIdx]);
-                sendToServer('saveKatalog', dataTerjual); 
+                laptopKatalogDB[originalIdx].stok -= 1; laptopKatalogDB.push(dataTerjual);
+                sendToServer('saveKatalog', laptopKatalogDB[originalIdx]); sendToServer('saveKatalog', dataTerjual); 
             } else {
-                laptopKatalogDB[originalIdx] = dataTerjual;
-                sendToServer('saveKatalog', dataTerjual); 
-                sendToServer('deleteKatalog', { id: originalLap.id }); 
+                laptopKatalogDB[originalIdx] = dataTerjual; sendToServer('saveKatalog', dataTerjual); sendToServer('deleteKatalog', { id: originalLap.id }); 
             }
 
-            showToast('Sip! Transaksi penjualan berhasil dicatat.');
-            closeModal('modalJualLaptop');
-            renderAdminKatalog();
-            renderKatalogPublik();
-            renderDashboard();
+            showToast('Sip! Transaksi penjualan berhasil dicatat.'); closeModal('modalJualLaptop');
+            renderAdminKatalog(); renderKatalogPublik(); renderDashboard();
         });
 
         // ================= FUNGSI EDIT INVENTORY =================
         function openModalEditInventory(lapId) {
-            currentEditLapId = lapId;
-            const lap = laptopKatalogDB.find(l => l.id === lapId);
-            
-            document.getElementById('mEditMerek').value = lap.merek;
-            document.getElementById('mEditTipe').value = lap.tipe;
-            document.getElementById('mEditHarga').value = formatRupiahText(String(lap.harga));
-            document.getElementById('mEditStok').value = lap.stok;
-            document.getElementById('mEditSpek').value = lap.spek;
-            document.getElementById('mEditGaransi').value = lap.garansi;
-            document.getElementById('mEditTgl').value = lap.tanggal;
-            document.getElementById('mEditFotos').value = ""; 
-
+            currentEditLapId = lapId; const lap = laptopKatalogDB.find(l => l.id === lapId);
+            document.getElementById('mEditMerek').value = lap.merek; document.getElementById('mEditTipe').value = lap.tipe;
+            document.getElementById('mEditHarga').value = formatRupiahText(String(lap.harga)); document.getElementById('mEditStok').value = lap.stok;
+            document.getElementById('mEditSpek').value = lap.spek; document.getElementById('mEditGaransi').value = lap.garansi;
+            document.getElementById('mEditTgl').value = lap.tanggal; document.getElementById('mEditFotos').value = ""; 
             openModal('modalEditLaptop');
         }
 
-        document.getElementById('formEditLaptop').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            if(!currentEditLapId) return;
+        document.getElementById('formEditLaptop')?.addEventListener('submit', async function(e) {
+            e.preventDefault(); if(!currentEditLapId) return;
             const idx = laptopKatalogDB.findIndex(l => l.id === currentEditLapId);
             
             if(idx > -1) {
-                let btn = document.getElementById('btnSimpanEditLaptop');
-                let prevText = btn.textContent;
+                let btn = document.getElementById('btnSimpanEditLaptop'); let prevText = btn.textContent;
                 btn.textContent = 'Menyimpan...'; btn.disabled = true;
 
-                laptopKatalogDB[idx].merek = document.getElementById('mEditMerek').value;
-                laptopKatalogDB[idx].tipe = document.getElementById('mEditTipe').value;
-                laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('mEditHarga').value); 
-                laptopKatalogDB[idx].stok = document.getElementById('mEditStok').value;
-                laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value;
-                laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
+                laptopKatalogDB[idx].merek = document.getElementById('mEditMerek').value; laptopKatalogDB[idx].tipe = document.getElementById('mEditTipe').value;
+                laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('mEditHarga').value); laptopKatalogDB[idx].stok = document.getElementById('mEditStok').value;
+                laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value; laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
                 laptopKatalogDB[idx].tanggal = document.getElementById('mEditTgl').value;
                 
                 let fileInput = document.getElementById('mEditFotos');
                 if (fileInput.files.length > 0) {
                     let lapFotosArray = []; let limit = Math.min(fileInput.files.length, 4); 
-                    for (let i = 0; i < limit; i++) {
-                        let base64Img = await compressImage(fileInput.files[i]);
-                        lapFotosArray.push(base64Img);
-                    }
+                    for (let i = 0; i < limit; i++) { let base64Img = await compressImage(fileInput.files[i]); lapFotosArray.push(base64Img); }
                     laptopKatalogDB[idx].fotos = lapFotosArray;
                 }
 
-                showToast('Etalase & Detail berhasil diperbarui!');
-                populateDatalists(); // Perbarui saran setelah diedit
-                closeModal('modalEditLaptop');
-                renderAdminKatalog(); renderKatalogPublik();
-                sendToServer('saveKatalog', laptopKatalogDB[idx]);
-                
+                showToast('Etalase & Detail berhasil diperbarui!'); populateDatalists(); closeModal('modalEditLaptop');
+                renderAdminKatalog(); renderKatalogPublik(); sendToServer('saveKatalog', laptopKatalogDB[idx]);
                 btn.textContent = prevText; btn.disabled = false;
             }
         });
 
         // ================= FUNGSI EDIT DATA TERJUAL =================
         function openModalEditTerjual(lapId) {
-            currentEditLapId = lapId;
-            const lap = laptopKatalogDB.find(l => l.id === lapId);
-            
-            document.getElementById('etMerek').value = lap.merek;
-            document.getElementById('etTipe').value = lap.tipe;
+            currentEditLapId = lapId; const lap = laptopKatalogDB.find(l => l.id === lapId);
+            document.getElementById('etMerek').value = lap.merek; document.getElementById('etTipe').value = lap.tipe;
             document.getElementById('etTanggalJual').value = lap.tanggalTerjual || getTodayDate();
             document.getElementById('etHarga').value = formatRupiahText(String(lap.harga));
-            
             document.getElementById('etPenjual').innerHTML = getPenjualOptions();
-            if (lap.penjual) document.getElementById('etPenjual').value = lap.penjual;
-            else document.getElementById('etPenjual').value = currentUser.nama;
-
-            document.getElementById('etEmail').value = lap.email;
-            document.getElementById('etPass').value = lap.pass;
-            document.getElementById('etCatatan').value = lap.catatanInternal;
-
-            openModal('modalEditTerjual');
+            if (lap.penjual) document.getElementById('etPenjual').value = lap.penjual; else document.getElementById('etPenjual').value = currentUser.nama;
+            document.getElementById('etEmail').value = lap.email; document.getElementById('etPass').value = lap.pass;
+            document.getElementById('etCatatan').value = lap.catatanInternal; openModal('modalEditTerjual');
         }
 
-        document.getElementById('formEditTerjual').addEventListener('submit', function(e) {
-            e.preventDefault();
-            if(!currentEditLapId) return;
+        document.getElementById('formEditTerjual')?.addEventListener('submit', function(e) {
+            e.preventDefault(); if(!currentEditLapId) return;
             const idx = laptopKatalogDB.findIndex(l => l.id === currentEditLapId);
-            
             if(idx > -1) {
-                laptopKatalogDB[idx].merek = document.getElementById('etMerek').value;
-                laptopKatalogDB[idx].tipe = document.getElementById('etTipe').value;
-                laptopKatalogDB[idx].tanggalTerjual = document.getElementById('etTanggalJual').value;
-                laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('etHarga').value);
-                laptopKatalogDB[idx].penjual = document.getElementById('etPenjual').value;
-                laptopKatalogDB[idx].email = document.getElementById('etEmail').value;
-                laptopKatalogDB[idx].pass = document.getElementById('etPass').value;
-                laptopKatalogDB[idx].catatanInternal = document.getElementById('etCatatan').value;
-                
-                showToast('Revisi data penjualan berhasil!');
-                populateDatalists(); // Perbarui saran setelah diedit
-                closeModal('modalEditTerjual');
-                renderAdminKatalog(); renderDashboard();
-                sendToServer('saveKatalog', laptopKatalogDB[idx]); 
+                laptopKatalogDB[idx].merek = document.getElementById('etMerek').value; laptopKatalogDB[idx].tipe = document.getElementById('etTipe').value;
+                laptopKatalogDB[idx].tanggalTerjual = document.getElementById('etTanggalJual').value; laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('etHarga').value);
+                laptopKatalogDB[idx].penjual = document.getElementById('etPenjual').value; laptopKatalogDB[idx].email = document.getElementById('etEmail').value;
+                laptopKatalogDB[idx].pass = document.getElementById('etPass').value; laptopKatalogDB[idx].catatanInternal = document.getElementById('etCatatan').value;
+                showToast('Revisi data penjualan berhasil!'); populateDatalists(); closeModal('modalEditTerjual');
+                renderAdminKatalog(); renderDashboard(); sendToServer('saveKatalog', laptopKatalogDB[idx]); 
             }
         });
 
-        // ================= HAPUS LAPTOP =================
         function hapusLaptop(id) {
             if(confirm('Yakin ingin menghapus data laptop ini secara permanen?')) {
                 const idx = laptopKatalogDB.findIndex(l => l.id === id);
                 if(idx > -1) {
-                    laptopKatalogDB.splice(idx, 1);
-                    showToast('Data laptop dihapus!');
-                    populateDatalists(); // Update pilihan jika data berkurang
-                    renderAdminKatalog(); renderKatalogPublik(); renderDashboard();
-                    sendToServer('deleteKatalog', { id: id }); 
+                    laptopKatalogDB.splice(idx, 1); showToast('Data laptop dihapus!'); populateDatalists();
+                    renderAdminKatalog(); renderKatalogPublik(); renderDashboard(); sendToServer('deleteKatalog', { id: id }); 
                 }
             }
         }
 
         // ================= LOGIKA INPUT SERVISAN BARU =================
-        document.getElementById('formServisan').addEventListener('submit', function(e) {
+        document.getElementById('formServisan')?.addEventListener('submit', function(e) {
             e.preventDefault();
             const newSrv = {
-                id: generateID('SRV'), tanggalMasuk: formatDateWIB(),
-                nama: document.getElementById('srvNama').value, wa: document.getElementById('srvWA').value,
+                id: generateID('SRV'), tanggalMasuk: formatDateWIB(), nama: document.getElementById('srvNama').value, wa: document.getElementById('srvWA').value,
                 jenis: document.getElementById('srvJenis').value, merek: document.getElementById('srvMerek').value,
                 tipe: document.getElementById('srvTipe').value, snid: document.getElementById('srvSNID').value,
                 kelengkapan: document.getElementById('srvKelengkapan').value, masalah: document.getElementById('srvMasalah').value,
-                deskripsi: document.getElementById('srvDeskripsi').value, 
-                biayaEstimasi: document.getElementById('srvBiaya').value || '',
-                biayaAkhir: 0,
+                deskripsi: document.getElementById('srvDeskripsi').value, biayaEstimasi: document.getElementById('srvBiaya').value || '', biayaAkhir: 0,
                 garansi: '', status: 'Masuk', techId: currentUser.username, catatan: 'Barang diterima, menunggu antrean pengecekan.',
                 history: [ { time: formatDateWIB(), action: 'Tiket Servis Dibuat', note: 'Barang masuk dan antre pengecekan', by: currentUser.username } ],
-                pesanChat: [],
-                butuhKonfirmasi: false
+                pesanChat: [], butuhKonfirmasi: false
             };
-            servicesDB.push(newSrv);
-            showToast(`Tiket Servis Dibuat: ${newSrv.id}`);
-            populateDatalists(); // Perbarui saran otomatis
-            
-            this.reset();
-            closeModal('modalTambahServis');
-            
+            servicesDB.push(newSrv); showToast(`Tiket Servis Dibuat: ${newSrv.id}`); populateDatalists();
+            this.reset(); closeModal('modalTambahServis');
             if(currentUser.role === 'teknisi') renderTechServices();
             if(currentUser.role === 'admin') { renderAdminServices(); renderDashboard(); }
-            
             sendToServer('saveService', newSrv);
         });
 
-        // ================= LOGIKA TEKNISI =================
+        // ================= LOGIKA TEKNISI & ADMIN SERVISAN =================
         function renderTechServices() {
-            const tbody = document.getElementById('tbodyTechServices');
-            tbody.innerHTML = '';
-            
+            const tbody = document.getElementById('tbodyTechServices'); tbody.innerHTML = '';
             const q = document.getElementById('searchTech').value.toLowerCase();
-            const myData = servicesDB.filter(s => s.techId === currentUser.username && 
-                (s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || s.wa.includes(q) || s.merek.toLowerCase().includes(q))
-            );
+            const myData = servicesDB.filter(s => s.techId === currentUser.username && (s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || s.wa.includes(q) || s.merek.toLowerCase().includes(q)));
             
             if(myData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">Tidak ada data ditemukan</td></tr>`; return; }
 
             myData.forEach(s => {
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
-                
-                // Indikator kecil jika butuh konfirmasi
                 if (s.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px;">⏱️ Menunggu Konfirmasi</span>`;
 
                 let compactHistoryHTML = '';
@@ -1530,13 +1392,7 @@
                     if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
                     
                     displayHistory.forEach(h => {
-                        compactHistoryHTML += `
-                            <div class="history-item" style="margin-bottom: 8px;">
-                                <div class="history-time" style="font-size:0.7rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:1px 4px; border-radius:3px;">${h.by}</span></div>
-                                <div class="history-action" style="font-size:0.75rem; color:var(--accent-color);">${h.action}</div>
-                                ${h.note ? `<div class="history-note" style="font-size:0.75rem; color:var(--text-muted); margin-top:0;">"${h.note}"</div>` : ''}
-                            </div>
-                        `;
+                        compactHistoryHTML += `<div class="history-item" style="margin-bottom: 8px;"><div class="history-time" style="font-size:0.7rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:1px 4px; border-radius:3px;">${h.by}</span></div><div class="history-action" style="font-size:0.75rem; color:var(--accent-color);">${h.action}</div>${h.note ? `<div class="history-note" style="font-size:0.75rem; color:var(--text-muted); margin-top:0;">"${h.note}"</div>` : ''}</div>`;
                     });
                     compactHistoryHTML += '</div>';
                 }
@@ -1545,40 +1401,22 @@
                     <tr>
                         <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${s.tanggalMasuk}</span></td>
                         <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
-                        <td>
-                            <div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div>
-                            <div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div>
-                        </td>
-                        <td>
-                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
-                            ${compactHistoryHTML}
-                            <div style="display: flex; gap: 6px; margin-top: 10px;">
-                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button>
-                                <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
-                            </div>
-                        </td>
+                        <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
+                        <td><div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}<div style="display: flex; gap: 6px; margin-top: 10px;"><button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button><button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button></div></td>
                     </tr>
                 `;
             });
         }
 
-        // ================= LOGIKA ADMIN SERVISAN =================
         function renderAdminServices() {
-            const tbody = document.getElementById('tbodyAdminServices');
-            tbody.innerHTML = '';
-            
+            const tbody = document.getElementById('tbodyAdminServices'); tbody.innerHTML = '';
             const q = document.getElementById('searchAdmin').value.toLowerCase();
-            const myData = servicesDB.filter(s => 
-                s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || 
-                s.wa.includes(q) || s.merek.toLowerCase().includes(q) || s.techId.toLowerCase().includes(q)
-            );
+            const myData = servicesDB.filter(s => s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || s.wa.includes(q) || s.merek.toLowerCase().includes(q) || s.techId.toLowerCase().includes(q));
 
             if(myData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">Tidak ada data ditemukan</td></tr>`; return; }
 
             myData.forEach(s => {
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
-                
                 if (s.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px;">⏱️ Menunggu Konfirmasi</span>`;
 
                 let compactHistoryHTML = '';
@@ -1586,40 +1424,18 @@
                     compactHistoryHTML = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
                     let displayHistory = s.history.slice(-3); 
                     if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
-                    
                     displayHistory.forEach(h => {
-                        compactHistoryHTML += `
-                            <div class="history-item" style="margin-bottom: 8px;">
-                                <div class="history-time" style="font-size:0.7rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:1px 4px; border-radius:3px;">${h.by}</span></div>
-                                <div class="history-action" style="font-size:0.75rem; color:var(--accent-color);">${h.action}</div>
-                                ${h.note ? `<div class="history-note" style="font-size:0.75rem; color:var(--text-muted); margin-top:0;">"${h.note}"</div>` : ''}
-                            </div>
-                        `;
+                        compactHistoryHTML += `<div class="history-item" style="margin-bottom: 8px;"><div class="history-time" style="font-size:0.7rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:1px 4px; border-radius:3px;">${h.by}</span></div><div class="history-action" style="font-size:0.75rem; color:var(--accent-color);">${h.action}</div>${h.note ? `<div class="history-note" style="font-size:0.75rem; color:var(--text-muted); margin-top:0;">"${h.note}"</div>` : ''}</div>`;
                     });
                     compactHistoryHTML += '</div>';
                 }
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>
-                            <strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br>
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">${s.tanggalMasuk}</span><br>
-                            <span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: var(--info-bg); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Teknisi: ${s.techId}</span>
-                        </td>
+                        <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${s.tanggalMasuk}</span><br><span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: var(--info-bg); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Teknisi: ${s.techId}</span></td>
                         <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
-                        <td>
-                            <div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div>
-                            <div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div>
-                        </td>
-                        <td>
-                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
-                            ${compactHistoryHTML}
-                            <div style="display: flex; gap: 6px; margin-top: 10px;">
-                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button>
-                                <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
-                            </div>
-                        </td>
+                        <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
+                        <td><div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}<div style="display: flex; gap: 6px; margin-top: 10px;"><button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button><button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button></div></td>
                     </tr>
                 `;
             });
@@ -1629,205 +1445,115 @@
         function toggleBiayaAkhir() {
             const status = document.getElementById('uSrvStatus').value;
             if (status === 'Selesai') {
-                document.getElementById('containerBiayaEstimasi').style.display = 'none';
-                document.getElementById('containerBiayaAkhir').style.display = 'block';
+                document.getElementById('containerBiayaEstimasi').style.display = 'none'; document.getElementById('containerBiayaAkhir').style.display = 'block';
             } else {
-                document.getElementById('containerBiayaEstimasi').style.display = 'block';
-                document.getElementById('containerBiayaAkhir').style.display = 'none';
+                document.getElementById('containerBiayaEstimasi').style.display = 'block'; document.getElementById('containerBiayaAkhir').style.display = 'none';
             }
         }
 
         function openModalUpdateServis(id) {
-            const s = servicesDB.find(x => x.id === id);
-            if(!s) return;
-
-            document.getElementById('uSrvId').value = id;
-            document.getElementById('uSrvStatus').value = s.status;
-            
-            // Mengatur nilai Biaya & toggle visibilitas
+            const s = servicesDB.find(x => x.id === id); if(!s) return;
+            document.getElementById('uSrvId').value = id; document.getElementById('uSrvStatus').value = s.status;
             document.getElementById('uSrvBiayaEstimasi').value = s.biayaEstimasi || s.biaya || '';
             document.getElementById('uSrvBiayaAkhir').value = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biaya ? formatRupiahText(String(s.biaya)) : '');
             toggleBiayaAkhir();
-
-            document.getElementById('uSrvGaransi').value = s.garansi;
-            document.getElementById('uSrvCatatan').value = ''; 
+            document.getElementById('uSrvGaransi').value = s.garansi; document.getElementById('uSrvCatatan').value = ''; 
             
-            // Render Chat Area in Modal
-            const chatArea = document.getElementById('techChatArea');
-            let chatHTML = '';
+            const chatArea = document.getElementById('techChatArea'); let chatHTML = '';
             if (s.pesanChat && s.pesanChat.length > 0) {
                 s.pesanChat.forEach(p => {
-                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
-                    let senderName = p.sender === 'teknisi' ? '👨‍🔧 Anda' : '👤 Konsumen';
+                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; let senderName = p.sender === 'teknisi' ? '👨‍🔧 Anda' : '👤 Konsumen';
                     chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
                 });
-            } else {
-                chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada riwayat percakapan.</div>`;
-            }
-            chatArea.innerHTML = chatHTML;
-            chatArea.scrollTop = chatArea.scrollHeight; // Auto scroll to bottom
+            } else { chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada riwayat percakapan.</div>`; }
+            chatArea.innerHTML = chatHTML; chatArea.scrollTop = chatArea.scrollHeight;
 
-            // Set checkbox konfirmasi
             document.getElementById('uSrvButuhKonfirmasi').checked = !!s.butuhKonfirmasi;
 
             const techGroup = document.getElementById('uSrvTechGroup');
             if(currentUser.role === 'admin') {
                 techGroup.style.display = 'block';
-                let techOptions = usersDB.map(u => `<option value="${u.username}">${u.nama} (${u.role})</option>`).join('');
-                document.getElementById('uSrvTech').innerHTML = techOptions;
+                document.getElementById('uSrvTech').innerHTML = usersDB.map(u => `<option value="${u.username}">${u.nama} (${u.role})</option>`).join('');
                 document.getElementById('uSrvTech').value = s.techId;
             } else { techGroup.style.display = 'none'; }
 
             openModal('modalUpdateServis');
         }
 
-        document.getElementById('formUpdateServis').addEventListener('submit', function(e) {
+        document.getElementById('formUpdateServis')?.addEventListener('submit', function(e) {
             e.preventDefault();
-            const id = document.getElementById('uSrvId').value;
-            const idx = servicesDB.findIndex(s => s.id === id);
-            if(idx === -1) return;
+            const id = document.getElementById('uSrvId').value; const idx = servicesDB.findIndex(s => s.id === id); if(idx === -1) return;
 
-            let oldStatus = servicesDB[idx].status;
-            let newStatus = document.getElementById('uSrvStatus').value;
-            let newCatatan = document.getElementById('uSrvCatatan').value;
-            let logMessages = [];
+            let oldStatus = servicesDB[idx].status; let newStatus = document.getElementById('uSrvStatus').value;
+            let newCatatan = document.getElementById('uSrvCatatan').value; let logMessages = [];
 
             if(oldStatus !== newStatus) { logMessages.push(`Status berubah: ${oldStatus} ➔ ${newStatus}`); }
-
             if(currentUser.role === 'admin') {
                 let oldTech = servicesDB[idx].techId; let newTech = document.getElementById('uSrvTech').value;
                 if(oldTech !== newTech) { logMessages.push(`Ditugaskan ulang dari [${oldTech}] ke [${newTech}]`); servicesDB[idx].techId = newTech; }
             }
 
-            // Merekam status checkbox terakhir
             servicesDB[idx].butuhKonfirmasi = document.getElementById('uSrvButuhKonfirmasi').checked;
-
-            servicesDB[idx].status = newStatus;
-            servicesDB[idx].biayaEstimasi = document.getElementById('uSrvBiayaEstimasi').value; 
-            if (newStatus === 'Selesai') {
-                servicesDB[idx].biayaAkhir = parseRupiah(document.getElementById('uSrvBiayaAkhir').value) || 0;
-            }
+            servicesDB[idx].status = newStatus; servicesDB[idx].biayaEstimasi = document.getElementById('uSrvBiayaEstimasi').value; 
+            if (newStatus === 'Selesai') servicesDB[idx].biayaAkhir = parseRupiah(document.getElementById('uSrvBiayaAkhir').value) || 0;
             servicesDB[idx].garansi = document.getElementById('uSrvGaransi').value;
             
-            // Catat log jika ada status berubah atau catatan diketik
             let finalActionLog = logMessages.length > 0 ? logMessages.join(' | ') : 'Pembaruan Progres';
             if (newCatatan.trim() || logMessages.length > 0) {
                 if(!servicesDB[idx].history) servicesDB[idx].history = [];
                 servicesDB[idx].history.push({ time: formatDateWIB(), action: finalActionLog, note: newCatatan, by: currentUser.username });
             }
             
-            showToast(`Update & Log Timeline berhasil disimpan!`);
-            this.reset();
-            closeModal('modalUpdateServis');
-            
+            showToast(`Update & Log Timeline berhasil disimpan!`); this.reset(); closeModal('modalUpdateServis');
             if (currentUser.role === 'admin') { renderAdminServices(); renderDashboard(); } else renderTechServices();
             sendToServer('saveService', servicesDB[idx]); 
         });
 
-        // Modifikasi Full History Untuk Tampilkan History System & Chat Terpisah
         function openModalHistory(id) {
-            const s = servicesDB.find(x => x.id === id);
-            if(!s) return;
+            const s = servicesDB.find(x => x.id === id); if(!s) return;
             document.getElementById('hSrvTitle').textContent = `Servis ID: ${s.id} - ${s.merek} ${s.tipe}`;
             
-            let html = '<div style="margin-bottom: 20px;">';
-            
-            // Bagian Riwayat Chat
-            html += '<h4 style="color:var(--info-bg); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">💬 Riwayat Chat & Konfirmasi</h4>';
+            let html = '<div style="margin-bottom: 20px;"><h4 style="color:var(--info-bg); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">💬 Riwayat Chat & Konfirmasi</h4>';
             if(s.pesanChat && s.pesanChat.length > 0) {
                 html += '<div class="chat-area" style="max-height:200px; margin-bottom: 20px;">';
-                s.pesanChat.forEach(p => {
-                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
-                    let senderName = p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Konsumen';
-                    html += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
-                });
+                s.pesanChat.forEach(p => { html += `<div class="chat-bubble ${p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'}"><strong>${p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Konsumen'}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`; });
                 html += '</div>';
-            } else {
-                html += '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Belum ada riwayat percakapan.</div>';
-            }
+            } else { html += '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Belum ada riwayat percakapan.</div>'; }
 
-            // Bagian Log System
-            html += '<h4 style="color:var(--accent-color); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">📜 Timeline Aktivitas Sistem</h4>';
-            html += '<div class="history-list" style="border-left: 2px solid var(--accent-color); padding-left: 10px;">';
-            
+            html += '<h4 style="color:var(--accent-color); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">📜 Timeline Aktivitas Sistem</h4><div class="history-list" style="border-left: 2px solid var(--accent-color); padding-left: 10px;">';
             if(s.history && s.history.length > 0) {
-                s.history.forEach(h => {
-                    html += `
-                        <div class="history-item" style="margin-bottom: 15px;">
-                            <div class="history-time" style="font-size:0.75rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">Operator: ${h.by}</span></div>
-                            <div class="history-action" style="font-size:0.9rem; color:var(--accent-color); font-weight:bold;">${h.action}</div>
-                            ${h.note ? `<div class="history-note" style="font-size:0.85rem; color:var(--text-main); margin-top:4px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">"${h.note}"</div>` : ''}
-                        </div>
-                    `;
-                });
+                s.history.forEach(h => { html += `<div class="history-item" style="margin-bottom: 15px;"><div class="history-time" style="font-size:0.75rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">Operator: ${h.by}</span></div><div class="history-action" style="font-size:0.9rem; color:var(--accent-color); font-weight:bold;">${h.action}</div>${h.note ? `<div class="history-note" style="font-size:0.85rem; color:var(--text-main); margin-top:4px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">"${h.note}"</div>` : ''}</div>`; });
             } else { html += '<div style="color: var(--text-muted); font-size: 0.85rem;">Belum ada riwayat log.</div>'; }
-            html += '</div></div>';
             
-            document.getElementById('hSrvContainer').innerHTML = html;
-            openModal('modalHistoryServis');
+            document.getElementById('hSrvContainer').innerHTML = html + '</div></div>'; openModal('modalHistoryServis');
         }
 
         // ================= LOGIKA KELOLA USER =================
         function renderUsers() {
-            const tbody = document.getElementById('tbodyUsers');
-            tbody.innerHTML = '';
-            
+            const tbody = document.getElementById('tbodyUsers'); tbody.innerHTML = '';
             usersDB.forEach((u, index) => {
-                const isMe = u.username === currentUser.username;
-                const disableRole = u.username === 'admin' && u.role === 'admin' ? 'disabled' : ''; 
-                const btnDelete = (isMe || (u.username === 'admin' && u.role === 'admin')) 
-                    ? `<span style="color:var(--text-muted); font-size:10px;">Akses Penuh</span>` 
-                    : `<button class="btn-sm btn-danger" onclick="deleteUser(${index})">Hapus</button>`;
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="vertical-align: middle;"><code>${u.username}</code> ${isMe ? '<br><span style="font-size:0.7rem; color:var(--success-bg);">(Anda)</span>' : ''}</td>
-                        <td><input type="text" id="editNama-${index}" class="input-catatan" value="${u.nama}" style="min-width:120px;"></td>
-                        <td>
-                            <select id="editRole-${index}" class="select-status" style="min-width:100px;" ${disableRole}>
-                                <option value="teknisi" ${u.role === 'teknisi' ? 'selected' : ''}>Teknisi</option>
-                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-                            </select>
-                        </td>
-                        <td><input type="text" id="editPass-${index}" class="input-catatan" value="${u.password}" style="min-width:80px;" placeholder="Password"></td>
-                        <td style="display:flex; gap:5px; flex-direction:column;">
-                            <button class="btn-sm btn-success" onclick="updateUser(${index})">Simpan</button>
-                            ${btnDelete}
-                        </td>
-                    </tr>
-                `;
+                const isMe = u.username === currentUser.username; const disableRole = u.username === 'admin' && u.role === 'admin' ? 'disabled' : ''; 
+                const btnDelete = (isMe || (u.username === 'admin' && u.role === 'admin')) ? `<span style="color:var(--text-muted); font-size:10px;">Akses Penuh</span>` : `<button class="btn-sm btn-danger" onclick="deleteUser(${index})">Hapus</button>`;
+                tbody.innerHTML += `<tr><td style="vertical-align: middle;"><code>${u.username}</code> ${isMe ? '<br><span style="font-size:0.7rem; color:var(--success-bg);">(Anda)</span>' : ''}</td><td><input type="text" id="editNama-${index}" class="input-catatan" value="${u.nama}" style="min-width:120px;"></td><td><select id="editRole-${index}" class="select-status" style="min-width:100px;" ${disableRole}><option value="teknisi" ${u.role === 'teknisi' ? 'selected' : ''}>Teknisi</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option></select></td><td><input type="text" id="editPass-${index}" class="input-catatan" value="${u.password}" style="min-width:80px;" placeholder="Password"></td><td style="display:flex; gap:5px; flex-direction:column;"><button class="btn-sm btn-success" onclick="updateUser(${index})">Simpan</button>${btnDelete}</td></tr>`;
             });
         }
 
-        document.getElementById('formAddUser').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const u = document.getElementById('newUsername').value;
-            const n = document.getElementById('newNama').value;
-            const p = document.getElementById('newPass').value;
-            
+        document.getElementById('formAddUser')?.addEventListener('submit', function(e) {
+            e.preventDefault(); const u = document.getElementById('newUsername').value; const n = document.getElementById('newNama').value; const p = document.getElementById('newPass').value;
             if(usersDB.find(x => x.username === u)) { showToast('Username sudah dipakai!', true); return; }
-            
             const newUser = { username: u, password: p, role: 'teknisi', nama: n };
-            usersDB.push(newUser);
-            showToast('Karyawan berhasil ditambahkan!');
-            this.reset(); closeModal('modalTambahUser'); renderUsers(); sendToServer('saveUser', newUser); 
+            usersDB.push(newUser); showToast('Karyawan ditambahkan!'); this.reset(); closeModal('modalTambahUser'); renderUsers(); sendToServer('saveUser', newUser); 
         });
 
         function updateUser(index) {
             usersDB[index].nama = document.getElementById(`editNama-${index}`).value;
             if(usersDB[index].username !== 'admin') { usersDB[index].role = document.getElementById(`editRole-${index}`).value; }
             usersDB[index].password = document.getElementById(`editPass-${index}`).value;
-            
-            showToast('Perubahan data Karyawan berhasil disimpan!');
-            renderUsers(); sendToServer('saveUser', usersDB[index]); 
+            showToast('Perubahan disimpan!'); renderUsers(); sendToServer('saveUser', usersDB[index]); 
         }
 
         function deleteUser(index) {
-            if(confirm('Yakin ingin menghapus karyawan ini?')) {
-                const uname = usersDB[index].username;
-                usersDB.splice(index, 1);
-                showToast('Karyawan dihapus!'); renderUsers(); sendToServer('deleteUser', { username: uname }); 
-            }
+            if(confirm('Yakin ingin menghapus karyawan ini?')) { const uname = usersDB[index].username; usersDB.splice(index, 1); showToast('Karyawan dihapus!'); renderUsers(); sendToServer('deleteUser', { username: uname }); }
         }
         
         window.onload = function() { fetchInitialData(); };
