@@ -158,10 +158,21 @@
         .katalog-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
         .katalog-thumb:hover { border-color: var(--accent-color); transform: scale(1.05); }
 
+        /* Loader Animation */
+        .spinner { border: 4px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-color); animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media (max-width: 600px) { .form-row { flex-direction: column; gap: 1.1rem; } }
     </style>
 </head>
 <body>
+
+    <!-- LAYAR LOADING GOOGLE SHEETS -->
+    <div id="globalLoader" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <div class="spinner"></div>
+        <h2 style="color:var(--text-main); font-size: 1.2rem;">Menyinkronkan Database...</h2>
+        <p style="color:var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Terhubung dengan Google Sheets Server</p>
+    </div>
 
     <!-- HALAMAN LOGIN -->
     <div id="loginPage" class="main-container" style="display: none;">
@@ -173,7 +184,7 @@
         <form id="formLogin">
             <div class="input-group">
                 <label>Username / ID Karyawan</label>
-                <input type="text" id="loginUsername" placeholder="Cth: linda / ardy" required>
+                <input type="text" id="loginUsername" placeholder="Cth: admin" required>
             </div>
             <div class="input-group">
                 <label>Password</label>
@@ -181,17 +192,11 @@
             </div>
             <button type="submit" class="submit-btn">Login Internal</button>
             <button type="button" onclick="showPublicView()" class="submit-btn" style="background: transparent; border: 1px solid var(--border-color); margin-top: 10px;">Kembali ke Publik (Cek Status & Store)</button>
-            
-            <div style="margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
-                <strong>Akun Demo (Password semua: <code>123</code>):</strong><br>
-                Admin: <code>linda</code><br>
-                Teknisi: <code>ardy</code>, <code>aiman</code>, <code>devid</code>, <code>andri</code>
-            </div>
         </form>
     </div>
 
     <!-- HALAMAN APLIKASI UTAMA -->
-    <div id="appPage" class="main-container">
+    <div id="appPage" class="main-container" style="display: none;">
         
         <!-- Top Bar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
@@ -375,7 +380,7 @@
                     <input type="file" id="lapFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">*Tahan tombol Ctrl/Shift untuk pilih s/d 4 foto sekaligus.</div>
                 </div>
-                <button type="submit" class="submit-btn" style="margin-top: 10px;">+ Simpan ke Etalase</button>
+                <button type="submit" id="btnSimpanLaptop" class="submit-btn" style="margin-top: 10px;">+ Simpan ke Etalase</button>
             </form>
         </div>
     </div>
@@ -585,41 +590,59 @@
     <div id="toast" class="toast">Notifikasi!</div>
 
     <script>
-        // ================= DATABASE LOKAL (SIMULASI) =================
-        let usersDB = [
-            { username: 'linda', password: '123', role: 'admin', nama: 'Linda (Admin)' },
-            { username: 'ardy', password: '123', role: 'teknisi', nama: 'Ardy' }
-        ];
+        // ================= KONEKSI DATABASE SERVER (GOOGLE APPS SCRIPT) =================
+        // PASTE URL ANDA DI SINI
+        const API_URL = "https://script.google.com/macros/s/AKfycbwa8s0Xv7x_eNuHVdZgvblB1uf4Zpvuj4EfkAH-up_D_cI9nf6N3kSm2Gi7di0o8P54Lw/exec";
 
-        let servicesDB = [
-            { 
-                id: 'SRV-001', tanggalMasuk: new Date().toLocaleDateString('id-ID'), wa: '0812', nama: 'Bapak Budi', 
-                jenis: 'Laptop', merek: 'Lenovo', tipe: 'Ideapad 3', snid: 'LN12345', kelengkapan: 'Unit, Charger',
-                masalah: 'Keyboard sebagian tidak bisa', deskripsi: 'Tombol A,S,D mati. Fisik mulus.', biaya: '350000', garansi: 'Garansi 1 Minggu',
-                status: 'Proses', techId: 'ardy', catatan: 'Sedang memesan part keyboard, besok tiba.',
-                history: [
-                    { time: new Date().toLocaleString('id-ID'), action: 'Tiket Servis Dibuat', note: 'Barang diterima dan antre.', by: 'linda' }
-                ]
-            }
-        ];
-
-        let laptopKatalogDB = [
-            {
-                id: 'LAP-001', merek: 'Asus', tipe: 'ROG Strix G15', spek: 'Ryzen 7 6800H\nRAM 16GB DDR5\nSSD 512GB NVMe\nRTX 3050 4GB',
-                harga: 12500000, stok: 2, garansi: 'Garansi Resmi Asus', tanggal: '2025-05-10', 
-                email: '', pass: '', catatanInternal: '', penjual: '', tanggalTerjual: '', statusJual: 'Tersedia',
-                fotos: ['https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=400&q=80']
-            },
-            {
-                id: 'LAP-SOLD-002', merek: 'Lenovo', tipe: 'Thinkpad T480', spek: 'Intel Core i5 Gen 8\nRAM 8GB\nSSD 256GB',
-                harga: 4200000, stok: 1, garansi: 'Garansi Toko 1 Bulan', tanggal: '2025-06-01', 
-                email: 'user_t480@outlook.com', pass: 'Leno123!', catatanInternal: 'Bapak Andi WA 08123', penjual: 'Admin', tanggalTerjual: '2025-06-15', statusJual: 'Terjual',
-                fotos: []
-            }
-        ];
+        // Array Kosong (Akan diisi dari server)
+        let usersDB = [];
+        let servicesDB = [];
+        let laptopKatalogDB = [];
 
         let currentUser = null; 
         let currentEditLapId = null;
+
+        // FUNGSI LOAD DATA PERTAMA KALI
+        async function fetchInitialData() {
+            try {
+                const [resUsers, resServices, resKatalog] = await Promise.all([
+                    fetch(API_URL + "?action=getUsers").then(r => r.json()),
+                    fetch(API_URL + "?action=getServices").then(r => r.json()),
+                    fetch(API_URL + "?action=getKatalog").then(r => r.json())
+                ]);
+                
+                usersDB = resUsers;
+                servicesDB = resServices;
+                laptopKatalogDB = resKatalog;
+
+                // Buat Admin Default jika Database Kosong (First Run)
+                if(usersDB.length === 0) {
+                    let defaultAdmin = { username: 'admin', password: '123', role: 'admin', nama: 'Admin Toko' };
+                    usersDB.push(defaultAdmin);
+                    sendToServer('saveUser', defaultAdmin); // Auto Save ke Sheet
+                }
+
+                document.getElementById('globalLoader').style.display = 'none'; // Sembunyikan Layar Loading
+                showPublicView(); // Langsung render Katalog Publik
+
+            } catch (err) {
+                console.error("Gagal koneksi ke Google Sheets:", err);
+                document.getElementById('globalLoader').innerHTML = `<h2 style="color:var(--danger-bg);">Gagal Terhubung ke Database Server</h2><p>Pastikan URL API benar dan internet Anda stabil.</p><button onclick="location.reload()" class="submit-btn" style="width:200px; margin-top:20px;">Coba Lagi</button>`;
+            }
+        }
+
+        // FUNGSI API POST (Sinkronisasi Background)
+        async function sendToServer(action, dataObj) {
+            try {
+                fetch(API_URL + "?action=" + action, {
+                    method: 'POST',
+                    body: JSON.stringify(dataObj)
+                });
+                // Kita tidak await fetch agar tidak mem-blokir UI (Optimistic Update)
+            } catch (error) {
+                console.error("Error saving data:", error);
+            }
+        }
 
         // ================= FUNGSI UTILITAS & UI =================
         function showToast(msg, isError=false) {
@@ -647,10 +670,37 @@
             }
         }
 
-        // Default Hari Ini untuk input tanggal
         function getTodayDate() {
             const d = new Date();
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        // --- FUNGSI KOMPRESI GAMBAR (Penting agar muat di Google Sheets) ---
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        // Kecilkan ukuran ke max lebar 600px agar base64 ringan
+                        const maxWidth = 600;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6)); // Kualitas 60% JPEG
+                    }
+                }
+            });
         }
 
         // ================= LOGIKA LOGIN & AKSES =================
@@ -792,7 +842,7 @@
                 let imagesHTML = `<div class="katalog-img">💻</div>`; 
                 if (lap.fotos && lap.fotos.length > 0) {
                     let mainImg = lap.fotos[0];
-                    let thumbs = lap.fotos.map(f => `<img src="${f}" class="katalog-thumb" onclick="changeMainImg('${f}', '${lap.id}')">`).join('');
+                    let thumbs = lap.fotos.map((f, i) => `<img src="${f}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
                     imagesHTML = `
                         <img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama">
                         <div class="katalog-thumb-container">${thumbs}</div>
@@ -815,8 +865,11 @@
             });
         }
 
-        function changeMainImg(src, lapId) {
-            document.getElementById(`mainImg-${lapId}`).src = src;
+        function changeMainImg(lapId, index) {
+            const lap = laptopKatalogDB.find(l => l.id === lapId);
+            if(lap && lap.fotos[index]) {
+                document.getElementById(`mainImg-${lapId}`).src = lap.fotos[index];
+            }
         }
 
         // ================= LOGIKA MANAJEMEN LAPTOP ADMIN =================
@@ -890,9 +943,8 @@
 
             document.getElementById('jLapId').value = lapId;
             document.getElementById('jTanggalJual').value = getTodayDate();
-            document.getElementById('jHargaJual').value = lap.harga; // Default harga dasar
+            document.getElementById('jHargaJual').value = lap.harga; 
             
-            // Generate list karyawan dan otomatis pilih akun yang sedang login
             document.getElementById('jPenjual').innerHTML = getPenjualOptions();
             document.getElementById('jPenjual').value = currentUser.nama;
 
@@ -911,12 +963,11 @@
 
             let originalLap = laptopKatalogDB[originalIdx];
 
-            // Detail Penjualan Baru
             let dataTerjual = {
                 id: generateID('LAP-SOLD'), 
                 merek: originalLap.merek, tipe: originalLap.tipe, spek: originalLap.spek, 
                 garansi: originalLap.garansi, tanggal: originalLap.tanggal, fotos: originalLap.fotos,
-                stok: 1, // unit yang dijual adalah 1
+                stok: 1, 
                 statusJual: 'Terjual',
                 harga: document.getElementById('jHargaJual').value,
                 tanggalTerjual: document.getElementById('jTanggalJual').value,
@@ -927,14 +978,14 @@
             };
 
             if (originalLap.stok > 1) {
-                // Kurangi stok asli
                 laptopKatalogDB[originalIdx].stok -= 1;
-                // Masukkan entri baru untuk 1 unit yang laku ini
                 laptopKatalogDB.push(dataTerjual);
+                sendToServer('saveKatalog', laptopKatalogDB[originalIdx]); // Update original
+                sendToServer('saveKatalog', dataTerjual); // Simpan yang baru
             } else {
-                // Jika stok tinggal 1, timpa data aslinya dan pindahkan statusnya
                 laptopKatalogDB[originalIdx] = dataTerjual;
-                // Tetap simpan ID original jika dibutuhkan, atau pakai yang baru. Kita pakai dataTerjual saja
+                sendToServer('saveKatalog', dataTerjual); // Timpa data lama dengan data terjual
+                sendToServer('deleteKatalog', { id: originalLap.id }); // Hapus ID lama
             }
 
             showToast('Sip! Transaksi penjualan berhasil dicatat.');
@@ -975,6 +1026,7 @@
                 closeModal('modalEditLaptop');
                 renderAdminKatalog();
                 renderKatalogPublik();
+                sendToServer('saveKatalog', laptopKatalogDB[idx]); // Sync API
             }
         });
 
@@ -988,10 +1040,7 @@
             document.getElementById('etTanggalJual').value = lap.tanggalTerjual || getTodayDate();
             document.getElementById('etHarga').value = lap.harga;
             
-            // Generate list karyawan dan set ke data yang sudah tersimpan
             document.getElementById('etPenjual').innerHTML = getPenjualOptions();
-            
-            // Jika penjual lama tidak ada di daftar (misal dihapus), fallback ke nama akun saat ini
             if (lap.penjual) document.getElementById('etPenjual').value = lap.penjual;
             else document.getElementById('etPenjual').value = currentUser.nama;
 
@@ -1020,6 +1069,7 @@
                 showToast('Revisi data penjualan berhasil!');
                 closeModal('modalEditTerjual');
                 renderAdminKatalog();
+                sendToServer('saveKatalog', laptopKatalogDB[idx]); // Sync API
             }
         });
 
@@ -1032,21 +1082,29 @@
                     showToast('Data laptop dihapus!');
                     renderAdminKatalog();
                     renderKatalogPublik();
+                    sendToServer('deleteKatalog', { id: id }); // Sync API
                 }
             }
         }
 
         // ================= LOGIKA INPUT LAPTOP (TAMBAH DATA BARU) =================
-        document.getElementById('formPenjualan').addEventListener('submit', function(e) {
+        document.getElementById('formPenjualan').addEventListener('submit', async function(e) {
             e.preventDefault();
+            let btn = document.getElementById('btnSimpanLaptop');
+            btn.textContent = 'Memproses Gambar...';
+            btn.disabled = true;
+
             let tgl = document.getElementById('lapTgl').value;
             
             let fileInput = document.getElementById('lapFotos');
             let lapFotosArray = [];
+            
+            // Kompres dan ubah ke Base64 (Syarat wajib untuk Spreadsheet)
             if (fileInput.files.length > 0) {
                 let limit = Math.min(fileInput.files.length, 4); 
                 for (let i = 0; i < limit; i++) {
-                    lapFotosArray.push(URL.createObjectURL(fileInput.files[i]));
+                    let base64Img = await compressImage(fileInput.files[i]);
+                    lapFotosArray.push(base64Img);
                 }
             }
 
@@ -1056,12 +1114,18 @@
                 garansi: document.getElementById('lapGaransi').value, tanggal: tgl, email: '', pass: '', catatanInternal: '', penjual: '', tanggalTerjual: '', techId: currentUser.username,
                 statusJual: 'Tersedia', fotos: lapFotosArray
             };
+            
             laptopKatalogDB.push(newLap);
             showToast('Laptop berhasil ditambahkan ke Etalase Store!');
+            
             this.reset();
+            btn.textContent = '+ Simpan ke Etalase';
+            btn.disabled = false;
+            
             closeModal('modalTambahLaptop');
             renderAdminKatalog();
             renderKatalogPublik();
+            sendToServer('saveKatalog', newLap); // Sync API
         });
 
         // ================= LOGIKA INPUT SERVISAN BARU =================
@@ -1086,6 +1150,8 @@
             
             if(currentUser.role === 'teknisi') renderTechServices();
             if(currentUser.role === 'admin') renderAdminServices();
+            
+            sendToServer('saveService', newSrv); // Sync API
         });
 
         // ================= LOGIKA TEKNISI =================
@@ -1093,7 +1159,6 @@
             const tbody = document.getElementById('tbodyTechServices');
             tbody.innerHTML = '';
             
-            // Logika Pencarian
             const q = document.getElementById('searchTech').value.toLowerCase();
             const myData = servicesDB.filter(s => s.techId === currentUser.username && 
                 (s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || s.wa.includes(q) || s.merek.toLowerCase().includes(q))
@@ -1106,11 +1171,10 @@
             myData.forEach(s => {
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
                 
-                // History Ringkas (Max 3)
                 let compactHistoryHTML = '';
                 if(s.history && s.history.length > 0) {
                     compactHistoryHTML = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
-                    let displayHistory = s.history.slice(-3); // Ambil 3 terakhir
+                    let displayHistory = s.history.slice(-3); 
                     if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
                     
                     displayHistory.forEach(h => {
@@ -1154,7 +1218,6 @@
             const tbody = document.getElementById('tbodyAdminServices');
             tbody.innerHTML = '';
             
-            // Logika Pencarian
             const q = document.getElementById('searchAdmin').value.toLowerCase();
             const myData = servicesDB.filter(s => 
                 s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || 
@@ -1168,11 +1231,10 @@
             myData.forEach(s => {
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
                 
-                // History Ringkas (Max 3)
                 let compactHistoryHTML = '';
                 if(s.history && s.history.length > 0) {
                     compactHistoryHTML = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
-                    let displayHistory = s.history.slice(-3); // Ambil 3 terakhir
+                    let displayHistory = s.history.slice(-3); 
                     if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
                     
                     displayHistory.forEach(h => {
@@ -1224,9 +1286,8 @@
             document.getElementById('uSrvStatus').value = s.status;
             document.getElementById('uSrvBiaya').value = s.biaya;
             document.getElementById('uSrvGaransi').value = s.garansi;
-            document.getElementById('uSrvCatatan').value = ''; // Kosongkan agar bisa isi log baru
+            document.getElementById('uSrvCatatan').value = ''; 
             
-            // Jika Admin, tampilkan menu ganti teknisi
             const techGroup = document.getElementById('uSrvTechGroup');
             if(currentUser.role === 'admin') {
                 techGroup.style.display = 'block';
@@ -1253,7 +1314,6 @@
 
             if(oldStatus !== newStatus) { logMessages.push(`Status berubah: ${oldStatus} ➔ ${newStatus}`); }
 
-            // Cek jika pindah teknisi (hanya admin)
             if(currentUser.role === 'admin') {
                 let oldTech = servicesDB[idx].techId;
                 let newTech = document.getElementById('uSrvTech').value;
@@ -1278,6 +1338,7 @@
             closeModal('modalUpdateServis');
             
             if (currentUser.role === 'admin') renderAdminServices(); else renderTechServices();
+            sendToServer('saveService', servicesDB[idx]); // Sync API
         });
 
         // Tampilkan modal full history
@@ -1314,8 +1375,8 @@
             
             usersDB.forEach((u, index) => {
                 const isMe = u.username === currentUser.username;
-                const disableRole = u.username === 'linda' ? 'disabled' : ''; 
-                const btnDelete = (isMe || u.username === 'linda') 
+                const disableRole = u.username === 'admin' && u.role === 'admin' ? 'disabled' : ''; // Admin utama tidak bisa diubah role
+                const btnDelete = (isMe || (u.username === 'admin' && u.role === 'admin')) 
                     ? `<span style="color:var(--text-muted); font-size:10px;">Akses Penuh</span>` 
                     : `<button class="btn-sm btn-danger" onclick="deleteUser(${index})">Hapus</button>`;
                 
@@ -1347,34 +1408,41 @@
             
             if(usersDB.find(x => x.username === u)) { showToast('Username sudah dipakai!', true); return; }
             
-            usersDB.push({ username: u, password: p, role: 'teknisi', nama: n });
+            const newUser = { username: u, password: p, role: 'teknisi', nama: n };
+            usersDB.push(newUser);
             showToast('Karyawan berhasil ditambahkan!');
             this.reset();
             closeModal('modalTambahUser');
             renderUsers();
+            sendToServer('saveUser', newUser); // Sync API
         });
 
         function updateUser(index) {
             usersDB[index].nama = document.getElementById(`editNama-${index}`).value;
-            if(usersDB[index].username !== 'linda') {
+            if(usersDB[index].username !== 'admin') {
                 usersDB[index].role = document.getElementById(`editRole-${index}`).value;
             }
             usersDB[index].password = document.getElementById(`editPass-${index}`).value;
             
             showToast('Perubahan data Karyawan berhasil disimpan!');
             renderUsers();
+            sendToServer('saveUser', usersDB[index]); // Sync API
         }
 
         function deleteUser(index) {
             if(confirm('Yakin ingin menghapus karyawan ini?')) {
+                const uname = usersDB[index].username;
                 usersDB.splice(index, 1);
                 showToast('Karyawan dihapus!');
                 renderUsers();
+                sendToServer('deleteUser', { username: uname }); // Sync API
             }
         }
         
+        // JALANKAN SAAT WEB DIBUKA
         window.onload = function() {
-            renderKatalogPublik();
+            // Ambil data dari server sebelum menampilkan web
+            fetchInitialData();
         };
     </script>
 </body>
