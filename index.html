@@ -568,7 +568,7 @@
                 </div>
                 <div class="form-row">
                     <div class="input-group"><label>Kelengkapan</label><input type="text" id="srvKelengkapan" list="dlKelengkapan" placeholder="Cth: Unit, Dus, Charger" required></div>
-                    <div class="input-group"><label>Estimasi Biaya Awal</label><input type="text" id="srvBiaya" class="input-rupiah" inputmode="numeric" placeholder="Opsional"></div>
+                    <div class="input-group"><label>Estimasi Biaya</label><input type="text" id="srvBiaya" placeholder="Cth: 200.000 s/d 500.000"></div>
                 </div>
                 <div class="input-group"><label>Masalah Utama</label><input type="text" id="srvMasalah" list="dlMasalah" placeholder="Cth: Mati Total, Ganti LCD" required></div>
                 <div class="input-group">
@@ -624,16 +624,20 @@
                 <div class="form-row">
                     <div class="input-group">
                         <label>Status Saat Ini</label>
-                        <select id="uSrvStatus">
+                        <select id="uSrvStatus" onchange="toggleBiayaAkhir()">
                             <option value="Masuk">Masuk (Antrean)</option>
                             <option value="Proses">Proses Dikerjakan</option>
                             <option value="Selesai">Selesai / Diambil</option>
                             <option value="Batal">Batal / Tidak Bisa</option>
                         </select>
                     </div>
-                    <div class="input-group">
-                        <label>Biaya Akhir / Estimasi</label>
-                        <input type="text" id="uSrvBiaya" class="input-rupiah" inputmode="numeric">
+                    <div class="input-group" id="containerBiayaEstimasi">
+                        <label>Estimasi Biaya</label>
+                        <input type="text" id="uSrvBiayaEstimasi" placeholder="Cth: 200.000 s/d 500.000">
+                    </div>
+                    <div class="input-group" id="containerBiayaAkhir" style="display:none;">
+                        <label>Biaya Akhir (Fixed)</label>
+                        <input type="text" id="uSrvBiayaAkhir" class="input-rupiah" inputmode="numeric" placeholder="Cth: 450000">
                     </div>
                 </div>
                 
@@ -680,7 +684,6 @@
         let currentEditLapId = null;
 
         // ================= SISTEM AKTIVITAS & AUTO LOGOUT =================
-        // Memperbarui waktu aktivitas (di-_throttle_ tiap 5 detik agar tidak membebani browser)
         function updateActivity() {
             if(currentUser) {
                 let last = parseInt(localStorage.getItem('lastActivity') || 0);
@@ -690,12 +693,10 @@
             }
         }
 
-        // Event listener aktivitas pengguna
         ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
             document.addEventListener(evt, updateActivity, {passive: true});
         });
 
-        // Pengecekan sesi rutin setiap 1 Menit
         setInterval(() => {
             if(currentUser) {
                 let last = parseInt(localStorage.getItem('lastActivity') || 0);
@@ -819,7 +820,7 @@
             catch (error) { console.error("Error saving data:", error); }
         }
 
-        // ================= FUNGSI FORMAT RUPIAH =================
+        // ================= FUNGSI FORMAT RUPIAH & TANGGAL =================
         function formatRupiahText(value) {
             if(!value) return "";
             let number_string = value.replace(/[^,\d]/g, '').toString(),
@@ -838,6 +839,16 @@
         document.querySelectorAll('.input-rupiah').forEach(inp => {
             inp.addEventListener('input', function(e) { this.value = formatRupiahText(this.value); });
         });
+
+        // FUNGSI TANGGAL FORMAT: Tanggal Bulan Tahun WIB
+        function formatDateWIB() {
+            const d = new Date();
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+            return `${day} ${month} ${year} WIB`;
+        }
 
         // ================= FUNGSI UTILITAS & UI =================
         function showToast(msg, isError=false) {
@@ -938,7 +949,7 @@
             laptopKatalogDB.forEach(l => { if(l.statusJual === 'Terjual') { lapTerjual += parseInt(l.stok); omsetJual += parseInt(l.harga) || 0; } });
             servicesDB.forEach(s => {
                 if(s.status === 'Masuk') srvMasuk++; else if(s.status === 'Proses') srvProses++;
-                else if(s.status === 'Selesai') { srvSelesai++; omsetServis += parseInt(s.biaya) || 0; } else if(s.status === 'Batal') srvBatal++;
+                else if(s.status === 'Selesai') { srvSelesai++; omsetServis += parseInt(s.biayaAkhir || s.biaya) || 0; } else if(s.status === 'Batal') srvBatal++;
             });
 
             document.getElementById('dashOmsetJual').textContent = formatRupiahText(omsetJual.toString());
@@ -977,6 +988,9 @@
 
             let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
             let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
+
+            let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
+            let costValue = found.status === 'Selesai' ? formatRupiahText(String(found.biayaAkhir || found.biaya || 0)) : (found.biayaEstimasi || found.biaya || '-');
 
             // --- BAGIAN CHAT / RUANG DISKUSI ---
             let chatHTML = '';
@@ -1019,7 +1033,7 @@
                         <strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br>
                         <span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>
                         ${garansiHTML}
-                        <strong>${found.status === 'Selesai' ? 'Biaya Akhir' : 'Estimasi Biaya'}:</strong> ${formatRupiahText(String(found.biaya))}
+                        <strong>${costLabel}:</strong> ${costValue}
                     </div>
                     <div class="timeline">
                         <div class="timeline-step ${s1}"><div class="step-circle"></div><div class="step-label">Masuk</div></div>
@@ -1042,7 +1056,6 @@
             `;
             resDiv.style.display = 'block';
 
-            // Auto scroll chat to bottom
             const chatArea = document.getElementById(`publicChatArea_${found.id}`);
             if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
         }
@@ -1083,19 +1096,17 @@
             if(!text.trim()) return;
 
             if(!srv.pesanChat) srv.pesanChat = [];
-            srv.pesanChat.push({ sender: 'konsumen', text: text, time: new Date().toLocaleString('id-ID') });
+            srv.pesanChat.push({ sender: 'konsumen', text: text, time: formatDateWIB() });
             
-            // Jika membalas konfirmasi/tombol, catat ke History Timeline & matikan flag butuh konfirmasi
             if (textOverride && srv.butuhKonfirmasi) {
                 srv.butuhKonfirmasi = false;
                 if(!srv.history) srv.history = [];
-                srv.history.push({ time: new Date().toLocaleString('id-ID'), action: 'Konfirmasi Konsumen', note: text, by: 'Konsumen' });
+                srv.history.push({ time: formatDateWIB(), action: 'Konfirmasi Konsumen', note: text, by: 'Konsumen' });
             }
 
             sendToServer('saveService', srv);
             showToast('Pesan berhasil dikirim ke teknisi!');
             
-            // Re-render UI
             renderHasilPencarian(srv);
         }
 
@@ -1109,17 +1120,16 @@
 
             if(!srv.pesanChat) srv.pesanChat = [];
             if(text.trim()) {
-                srv.pesanChat.push({ sender: 'teknisi', text: text, time: new Date().toLocaleString('id-ID') });
+                srv.pesanChat.push({ sender: 'teknisi', text: text, time: formatDateWIB() });
             }
             
-            // Toggle flag butuh konfirmasi untuk HP pelanggan
             srv.butuhKonfirmasi = butuhKonfirm;
             
             sendToServer('saveService', srv);
             showToast('Pesan terkirim ke pelanggan!');
             
             document.getElementById('uSrvKirimPesan').value = '';
-            openModalUpdateServis(id); // refresh modal chat
+            openModalUpdateServis(id); 
             if(currentUser.role === 'admin') renderAdminServices(); else renderTechServices();
         }
 
@@ -1408,57 +1418,20 @@
             }
         }
 
-        // ================= LOGIKA INPUT LAPTOP =================
-        document.getElementById('formPenjualan').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            let btn = document.getElementById('btnSimpanLaptop');
-            btn.textContent = 'Memproses Gambar...'; btn.disabled = true;
-
-            let tgl = document.getElementById('lapTgl').value;
-            let fileInput = document.getElementById('lapFotos');
-            let lapFotosArray = [];
-            
-            if (fileInput.files.length > 0) {
-                let limit = Math.min(fileInput.files.length, 4); 
-                for (let i = 0; i < limit; i++) {
-                    let base64Img = await compressImage(fileInput.files[i]);
-                    lapFotosArray.push(base64Img);
-                }
-            }
-
-            const newLap = {
-                id: generateID('LAP'), merek: document.getElementById('lapMerek').value, tipe: document.getElementById('lapTipe').value,
-                spek: document.getElementById('lapSpek').value, 
-                harga: parseRupiah(document.getElementById('lapHarga').value), 
-                stok: document.getElementById('lapStok').value,
-                garansi: document.getElementById('lapGaransi').value, tanggal: tgl, email: '', pass: '', catatanInternal: '', penjual: '', tanggalTerjual: '', techId: currentUser.username,
-                statusJual: 'Tersedia', fotos: lapFotosArray
-            };
-            
-            laptopKatalogDB.push(newLap);
-            showToast('Laptop berhasil ditambahkan ke Etalase Store!');
-            populateDatalists(); // Perbarui dropdown saran
-            
-            this.reset();
-            btn.textContent = '+ Simpan ke Etalase'; btn.disabled = false;
-            closeModal('modalTambahLaptop');
-            renderAdminKatalog(); renderKatalogPublik();
-            sendToServer('saveKatalog', newLap);
-        });
-
         // ================= LOGIKA INPUT SERVISAN BARU =================
         document.getElementById('formServisan').addEventListener('submit', function(e) {
             e.preventDefault();
             const newSrv = {
-                id: generateID('SRV'), tanggalMasuk: new Date().toLocaleDateString('id-ID'),
+                id: generateID('SRV'), tanggalMasuk: formatDateWIB(),
                 nama: document.getElementById('srvNama').value, wa: document.getElementById('srvWA').value,
                 jenis: document.getElementById('srvJenis').value, merek: document.getElementById('srvMerek').value,
                 tipe: document.getElementById('srvTipe').value, snid: document.getElementById('srvSNID').value,
                 kelengkapan: document.getElementById('srvKelengkapan').value, masalah: document.getElementById('srvMasalah').value,
                 deskripsi: document.getElementById('srvDeskripsi').value, 
-                biaya: parseRupiah(document.getElementById('srvBiaya').value) || 0,
+                biayaEstimasi: document.getElementById('srvBiaya').value || '',
+                biayaAkhir: 0,
                 garansi: '', status: 'Masuk', techId: currentUser.username, catatan: 'Barang diterima, menunggu antrean pengecekan.',
-                history: [ { time: new Date().toLocaleString('id-ID'), action: 'Tiket Servis Dibuat', note: 'Barang masuk dan antre pengecekan', by: currentUser.username } ],
+                history: [ { time: formatDateWIB(), action: 'Tiket Servis Dibuat', note: 'Barang masuk dan antre pengecekan', by: currentUser.username } ],
                 pesanChat: [],
                 butuhKonfirmasi: false
             };
@@ -1596,13 +1569,29 @@
         }
 
         // ================= LOGIKA MODAL UPDATE SERVISAN & HISTORY =================
+        function toggleBiayaAkhir() {
+            const status = document.getElementById('uSrvStatus').value;
+            if (status === 'Selesai') {
+                document.getElementById('containerBiayaEstimasi').style.display = 'none';
+                document.getElementById('containerBiayaAkhir').style.display = 'block';
+            } else {
+                document.getElementById('containerBiayaEstimasi').style.display = 'block';
+                document.getElementById('containerBiayaAkhir').style.display = 'none';
+            }
+        }
+
         function openModalUpdateServis(id) {
             const s = servicesDB.find(x => x.id === id);
             if(!s) return;
 
             document.getElementById('uSrvId').value = id;
             document.getElementById('uSrvStatus').value = s.status;
-            document.getElementById('uSrvBiaya').value = formatRupiahText(String(s.biaya));
+            
+            // Mengatur nilai Biaya & toggle visibilitas
+            document.getElementById('uSrvBiayaEstimasi').value = s.biayaEstimasi || s.biaya || '';
+            document.getElementById('uSrvBiayaAkhir').value = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biaya ? formatRupiahText(String(s.biaya)) : '');
+            toggleBiayaAkhir();
+
             document.getElementById('uSrvGaransi').value = s.garansi;
             document.getElementById('uSrvCatatan').value = ''; 
             
@@ -1657,14 +1646,17 @@
             servicesDB[idx].butuhKonfirmasi = document.getElementById('uSrvButuhKonfirmasi').checked;
 
             servicesDB[idx].status = newStatus;
-            servicesDB[idx].biaya = parseRupiah(document.getElementById('uSrvBiaya').value); 
+            servicesDB[idx].biayaEstimasi = document.getElementById('uSrvBiayaEstimasi').value; 
+            if (newStatus === 'Selesai') {
+                servicesDB[idx].biayaAkhir = parseRupiah(document.getElementById('uSrvBiayaAkhir').value) || 0;
+            }
             servicesDB[idx].garansi = document.getElementById('uSrvGaransi').value;
             
             // Catat log jika ada status berubah atau catatan diketik
             let finalActionLog = logMessages.length > 0 ? logMessages.join(' | ') : 'Pembaruan Progres';
             if (newCatatan.trim() || logMessages.length > 0) {
                 if(!servicesDB[idx].history) servicesDB[idx].history = [];
-                servicesDB[idx].history.push({ time: new Date().toLocaleString('id-ID'), action: finalActionLog, note: newCatatan, by: currentUser.username });
+                servicesDB[idx].history.push({ time: formatDateWIB(), action: finalActionLog, note: newCatatan, by: currentUser.username });
             }
             
             showToast(`Update & Log Timeline berhasil disimpan!`);
