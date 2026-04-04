@@ -933,7 +933,7 @@
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('appPage').style.display = 'block';
             
-            document.getElementById('welcomeText').textContent = 'BanlieComputing Layanan';
+            document.getElementById('welcomeText').textContent = 'BanlieComputing';
             document.getElementById('userRoleDisplay').style.display = 'none';
             
             let btnLogout = document.getElementById('btnLogout');
@@ -1005,88 +1005,101 @@
             });
         }
 
-        // ================= PENCARIAN FLEKSIBEL (CEK STATUS) =================
-        function renderHasilPencarian(found) {
+        // ================= PENCARIAN FLEKSIBEL (BISA MENAMPILKAN BANYAK BARANG) =================
+        function renderHasilPencarian(foundArray) {
             const resDiv = document.getElementById('hasilPencarian');
-            
-            let s1 = '', s2 = '', s3 = '';
-            if(found.status === 'Masuk') { s1 = 'step-active'; }
-            else if(found.status === 'Proses') { s1 = 'step-done'; s2 = 'step-active'; }
-            else if(found.status === 'Selesai') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-done'; }
-            else if(found.status === 'Batal') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-cancel'; }
+            resDiv.innerHTML = ''; // Bersihkan kontainer pencarian
 
-            let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
-            let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
-
-            let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
-            let costValue = found.status === 'Selesai' ? formatRupiahText(String(found.biayaAkhir || found.biaya || 0)) : (found.biayaEstimasi || found.biaya || '-');
-
-            // --- BAGIAN CHAT / RUANG DISKUSI ---
-            let chatHTML = '';
-            if (found.pesanChat && found.pesanChat.length > 0) {
-                found.pesanChat.forEach(p => {
-                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
-                    let senderName = p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Anda';
-                    chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
-                });
-            } else {
-                chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada pesan/catatan khusus.</div>`;
+            // Jika ada lebih dari 1 barang dengan nomor WA yang sama
+            if (foundArray.length > 1) {
+                resDiv.innerHTML += `<div style="margin-bottom: 15px; color: var(--info-bg); font-weight: bold; text-align: center; font-size: 0.95rem;">Ditemukan ${foundArray.length} perangkat yang terhubung dengan pencarian ini:</div>`;
             }
 
-            let confirmHTML = '';
-            if (found.butuhKonfirmasi) {
-                confirmHTML = `
-                    <div class="konfirmasi-box">
-                        <strong style="color:var(--warning-bg); display:block; margin-bottom:12px;">⚠️ Teknisi Menunggu Keputusan Anda</strong>
-                        <div style="display:flex; gap:10px; justify-content:center;">
-                            <button type="button" class="btn-sm btn-success" style="padding: 10px 15px; font-size:0.85rem;" onclick="kirimPesanKonsumen('${found.id}', 'Ya, Lanjutkan Servis')">✅ Ya, Lanjutkan</button>
-                            <button type="button" class="btn-sm btn-danger" style="padding: 10px 15px; font-size:0.85rem;" onclick="kirimPesanKonsumen('${found.id}', 'Tidak, Batalkan Servis')">❌ Tidak, Batalkan</button>
+            // Loop untuk merender setiap barang yang ditemukan
+            foundArray.forEach((found) => {
+                let s1 = '', s2 = '', s3 = '';
+                if(found.status === 'Masuk') { s1 = 'step-active'; }
+                else if(found.status === 'Proses') { s1 = 'step-done'; s2 = 'step-active'; }
+                else if(found.status === 'Selesai') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-done'; }
+                else if(found.status === 'Batal') { s1 = 'step-done'; s2 = 'step-done'; s3 = 'step-cancel'; }
+
+                let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
+                let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
+
+                let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
+                let costValue = found.status === 'Selesai' ? formatRupiahText(String(found.biayaAkhir || found.biaya || 0)) : (found.biayaEstimasi || found.biaya || '-');
+
+                // --- BAGIAN CHAT / RUANG DISKUSI ---
+                let chatHTML = '';
+                if (found.pesanChat && found.pesanChat.length > 0) {
+                    found.pesanChat.forEach(p => {
+                        let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
+                        let senderName = p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Anda';
+                        chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
+                    });
+                } else {
+                    chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada pesan/catatan khusus.</div>`;
+                }
+
+                let confirmHTML = '';
+                if (found.butuhKonfirmasi) {
+                    confirmHTML = `
+                        <div class="konfirmasi-box">
+                            <strong style="color:var(--warning-bg); display:block; margin-bottom:12px;">⚠️ Teknisi Menunggu Keputusan Anda</strong>
+                            <div style="display:flex; gap:10px; justify-content:center;">
+                                <button type="button" class="btn-sm btn-success" style="padding: 10px 15px; font-size:0.85rem;" onclick="kirimPesanKonsumen('${found.id}', 'Ya, Lanjutkan Servis')">✅ Ya, Lanjutkan</button>
+                                <button type="button" class="btn-sm btn-danger" style="padding: 10px 15px; font-size:0.85rem;" onclick="kirimPesanKonsumen('${found.id}', 'Tidak, Batalkan Servis')">❌ Tidak, Batalkan</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                resDiv.innerHTML += `
+                    <div class="tracking-card">
+                        <div class="tracking-header">
+                            <div>
+                                <h3 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">${found.merek} ${found.tipe}</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">${found.jenis} | A/n: ${found.nama}</span>
+                            </div>
+                            <span class="tracking-id">${found.id}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; margin-bottom: 20px;">
+                            <strong>Tgl Masuk:</strong> ${found.tanggalMasuk} <br>
+                            <strong>Kelengkapan:</strong> ${found.kelengkapan} <br>
+                            <strong>SNID:</strong> ${found.snid || '-'} <br><br>
+                            <strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>
+                            ${garansiHTML}
+                            <strong>${costLabel}:</strong> ${costValue}
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step ${s1}"><div class="step-circle"></div><div class="step-label">Masuk</div></div>
+                            <div class="timeline-step ${s2}"><div class="step-circle"></div><div class="step-label">Proses</div></div>
+                            <div class="timeline-step ${s3}"><div class="step-circle"></div><div class="step-label">${step3Label}</div></div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
+                            <h4 style="margin-bottom: 10px; font-size:0.95rem; color:var(--text-main);">Ruang Pesan & Konfirmasi</h4>
+                            <div class="chat-area" id="publicChatArea_${found.id}">
+                                ${chatHTML}
+                            </div>
+                            ${confirmHTML}
+                            <div style="display:flex; gap:8px; margin-top:10px;">
+                                <input type="text" id="inputPesanKonsumen_${found.id}" class="input-catatan" placeholder="Ketik pesan untuk perangkat ini..." style="padding:10px;">
+                                <button type="button" class="btn-sm btn-jual" style="padding: 0 15px;" onclick="kirimPesanKonsumen('${found.id}')">Kirim</button>
+                            </div>
                         </div>
                     </div>
                 `;
-            }
-
-            resDiv.innerHTML = `
-                <div class="tracking-card">
-                    <div class="tracking-header">
-                        <div>
-                            <h3 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">${found.merek} ${found.tipe}</h3>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">${found.jenis} | A/n: ${found.nama}</span>
-                        </div>
-                        <span class="tracking-id">${found.id}</span>
-                    </div>
-                    <div style="font-size: 0.9rem; margin-bottom: 20px;">
-                        <strong>Tgl Masuk:</strong> ${found.tanggalMasuk} <br>
-                        <strong>Kelengkapan:</strong> ${found.kelengkapan} <br>
-                        <strong>SNID:</strong> ${found.snid || '-'} <br><br>
-                        <strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br>
-                        <span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>
-                        ${garansiHTML}
-                        <strong>${costLabel}:</strong> ${costValue}
-                    </div>
-                    <div class="timeline">
-                        <div class="timeline-step ${s1}"><div class="step-circle"></div><div class="step-label">Masuk</div></div>
-                        <div class="timeline-step ${s2}"><div class="step-circle"></div><div class="step-label">Proses</div></div>
-                        <div class="timeline-step ${s3}"><div class="step-circle"></div><div class="step-label">${step3Label}</div></div>
-                    </div>
-                    
-                    <div style="margin-top: 30px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
-                        <h4 style="margin-bottom: 10px; font-size:0.95rem; color:var(--text-main);">Ruang Pesan & Konfirmasi</h4>
-                        <div class="chat-area" id="publicChatArea_${found.id}">
-                            ${chatHTML}
-                        </div>
-                        ${confirmHTML}
-                        <div style="display:flex; gap:8px; margin-top:10px;">
-                            <input type="text" id="inputPesanKonsumen_${found.id}" class="input-catatan" placeholder="Ketik pesan/pertanyaan ke teknisi..." style="padding:10px;">
-                            <button type="button" class="btn-sm btn-jual" style="padding: 0 15px;" onclick="kirimPesanKonsumen('${found.id}')">Kirim</button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            });
+            
             resDiv.style.display = 'block';
 
-            const chatArea = document.getElementById(`publicChatArea_${found.id}`);
-            if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+            // Auto-scroll ke bawah untuk setiap area chat
+            foundArray.forEach(found => {
+                const chatArea = document.getElementById(`publicChatArea_${found.id}`);
+                if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+            });
         }
 
         document.getElementById('formCekStatus').addEventListener('submit', function(e) {
@@ -1095,7 +1108,8 @@
             const resDiv = document.getElementById('hasilPencarian');
             const qNumOnly = rawQ.replace(/[^0-9]/g, '');
 
-            const found = servicesDB.find(s => {
+            // SEKARANG MENGGUNAKAN FILTER() UNTUK MENDAPATKAN SEMUA DATA YANG COCOK, BUKAN HANYA 1
+            const foundItems = servicesDB.filter(s => {
                 if (String(s.id).toLowerCase() === rawQ) return true;
                 let sWa = String(s.wa).replace(/[^0-9]/g, ''); 
                 if (qNumOnly.length >= 4 && sWa.length >= 4) {
@@ -1108,8 +1122,8 @@
                 return false;
             });
 
-            if(found) {
-                renderHasilPencarian(found);
+            if(foundItems.length > 0) {
+                renderHasilPencarian(foundItems);
             } else {
                 resDiv.innerHTML = `<div style="color:var(--danger-bg); padding: 10px; text-align: center; font-weight: 500;">Data tidak ditemukan.</div>`;
                 resDiv.style.display = 'block';
@@ -1136,7 +1150,21 @@
             sendToServer('saveService', srv);
             showToast('Pesan berhasil dikirim ke teknisi!');
             
-            renderHasilPencarian(srv);
+            // Render ulang layar pencarian dengan query yang sama agar chat muncul
+            const rawQ = document.getElementById('cek_no_wa').value.toLowerCase().trim();
+            const qNumOnly = rawQ.replace(/[^0-9]/g, '');
+            const foundItems = servicesDB.filter(s => {
+                if (String(s.id).toLowerCase() === rawQ) return true;
+                let sWa = String(s.wa).replace(/[^0-9]/g, ''); 
+                if (qNumOnly.length >= 4 && sWa.length >= 4) {
+                    let v1 = qNumOnly; let v2 = qNumOnly.startsWith('0') ? '62' + qNumOnly.substring(1) : qNumOnly; 
+                    let v3 = qNumOnly.startsWith('62') ? '0' + qNumOnly.substring(2) : qNumOnly; 
+                    let v4 = qNumOnly.startsWith('0') ? qNumOnly.substring(1) : (qNumOnly.startsWith('62') ? qNumOnly.substring(2) : qNumOnly); 
+                    return sWa.includes(v1) || sWa.includes(v2) || sWa.includes(v3) || sWa.includes(v4);
+                }
+                return false;
+            });
+            renderHasilPencarian(foundItems);
         }
 
         function kirimPesanTeknisi() {
