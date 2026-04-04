@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BanlieComputing - Store & Service</title>
+    
+    <!-- FAVICON DARI GOOGLE DRIVE -->
+    <link rel="icon" type="image/png" href="https://drive.google.com/uc?export=view&id=1jYMRx3cKiXZVo8AgZnoj2Fqmy_xasiLR">
+    
     <!-- Tambahan Library Chart.js untuk Grafik Dashboard -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
+            /* ========================================================= */
+            /* EDIT URL BACKGROUND DI BAWAH INI (Ganti link di dalam url) */
+            --bg-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop'); 
+            /* ========================================================= */
+            
+            --bg-overlay: rgba(15, 23, 42, 0.88); /* Overlay transparan hitam agar teks tetap terbaca */
             --bg-color: #0f172a; 
             --card-bg: #1e293b;  
             --text-main: #f8fafc; 
@@ -26,15 +36,26 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 
         body {
-            background-color: var(--bg-color); color: var(--text-main); display: flex;
-            justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px;
+            background-color: var(--bg-color); 
+            /* Menerapkan Background Image dengan Overlay */
+            background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), var(--bg-image);
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed;
+            color: var(--text-main); 
+            display: flex;
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+            padding: 20px;
         }
 
         .main-container {
             background-color: var(--card-bg); padding: 2rem; border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); border: 1px solid var(--border-color);
             width: 100%; max-width: 1050px; 
             margin-top: 2vh;
+            backdrop-filter: blur(10px); /* Efek kaca untuk card */
         }
 
         .tab-nav {
@@ -100,15 +121,25 @@
         .toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
             background-color: var(--success-bg); color: white; padding: 12px 24px; border-radius: 30px;
-            font-weight: 500; font-size: 0.95rem; z-index: 3000; opacity: 0; transition: 0.4s;
+            font-weight: 500; font-size: 0.95rem; z-index: 5000; opacity: 0; transition: 0.4s;
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-        /* --- Modal (Popup) Styling FIX HP ANDROID/IOS --- */
-        .modal-overlay { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: flex-start; justify-content: center; padding: 5vh 15px; overflow-y: auto; backdrop-filter: blur(3px); -webkit-overflow-scrolling: touch; }
-        .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease-out; }
-        .modal-content { background-color: var(--card-bg); padding: 25px; border-radius: 12px; width: 100%; max-width: 650px; margin: auto; border: 1px solid var(--border-color); position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
-        .close-modal { position: absolute; right: 20px; top: 20px; font-size: 1.5rem; font-weight: bold; color: var(--text-muted); cursor: pointer; line-height: 1; transition: 0.2s; }
+        /* --- Modal (Popup) Styling Responsif Mobile --- */
+        .modal-overlay { 
+            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.7); backdrop-filter: blur(3px); 
+            overflow-y: auto; padding: 15px 10px; 
+        }
+        .modal-overlay.show { display: block; animation: fadeIn 0.2s ease-out; }
+        .modal-content { 
+            background-color: var(--card-bg); padding: 25px; border-radius: 12px; 
+            width: 100%; max-width: 650px; 
+            margin: 10px auto; 
+            border: 1px solid var(--border-color); position: relative; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+        }
+        .close-modal { position: absolute; right: 20px; top: 20px; font-size: 1.5rem; font-weight: bold; color: var(--text-muted); cursor: pointer; line-height: 1; transition: 0.2s; z-index: 10;}
         .close-modal:hover { color: var(--danger-bg); }
 
         /* --- Tampilan Tracking & Katalog --- */
@@ -153,24 +184,20 @@
         .btn-beli { width: 100%; padding: 10px; background: var(--success-bg); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: block; }
         .btn-beli:hover { background: #059669; }
 
-        /* Gallery Styles untuk Store */
         .katalog-img-real { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid var(--border-color); }
         .katalog-thumb-container { display: flex; gap: 8px; padding: 10px 15px 0 15px; overflow-x: auto; }
         .katalog-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
         .katalog-thumb:hover { border-color: var(--accent-color); transform: scale(1.05); }
 
-        /* Dashboard Styles */
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .dash-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
         .dash-card h3 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
         .dash-card h2 { font-size: 1.8rem; color: var(--text-main); font-weight: 700; margin-bottom: 0; }
         .chart-container { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; height: 300px; }
 
-        /* Loader Animation */
         .spinner { border: 4px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-color); animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- Chat & Feedback Styles --- */
         .chat-area { max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; }
         .chat-bubble { padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; max-width: 85%; line-height: 1.4; word-wrap: break-word; }
         .chat-tech { background: rgba(59, 130, 246, 0.2); border: 1px solid var(--info-bg); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 2px; }
@@ -179,7 +206,6 @@
         .konfirmasi-box { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-bg); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
 
-        /* --- Konfirmasi Button Fix untuk Mobile --- */
         .konfirmasi-btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
         .konfirmasi-btn-group button { flex: 1 1 auto; min-width: 140px; padding: 12px 15px; font-size: 0.85rem; }
 
@@ -204,6 +230,8 @@
     <!-- HALAMAN LOGIN -->
     <div id="loginPage" class="main-container" style="display: none;">
         <div class="header-title">
+            <!-- LOGO TOKO -->
+            <img src="https://drive.google.com/uc?export=view&id=1Kfx0HXmeLxe1wCxbjEOfSvyL_OwSTESX" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
             <h2>BanlieComputing Portal</h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
@@ -227,9 +255,13 @@
         
         <!-- Top Bar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
-            <div style="font-size: 0.95rem; color: var(--text-muted);">
-                <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">BanlieComputing Layanan</span>
-                <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
+            <div style="font-size: 0.95rem; color: var(--text-muted); display: flex; align-items: center;">
+                <!-- LOGO TOKO KECIL -->
+                <img src="https://drive.google.com/uc?export=view&id=1Kfx0HXmeLxe1wCxbjEOfSvyL_OwSTESX" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
+                <div>
+                    <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">BanlieComputing Layanan</span>
+                    <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
+                </div>
             </div>
             <button id="btnLogout" type="button" onclick="showLoginForm()" style="background: transparent; border: 1px solid var(--info-bg); color: var(--info-bg); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Login Staff</button>
         </div>
@@ -249,12 +281,30 @@
             <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">Kelola Teknisi</button>
         </div>
 
-
         <!-- ================= HALAMAN KONTEN ================= -->
 
         <!-- 1B. KATALOG LAPTOP (Publik - Default Awal) -->
         <div id="katalog-publik" class="page-content active">
             <div class="header-title"><h2>BanlieComputing Store</h2><p>Katalog Laptop & Komputer Tersedia</p></div>
+            
+            <!-- Fitur Filter & Sortir Katalog -->
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Merek Produk</label>
+                    <select id="filterMerek" onchange="renderKatalogPublik()" class="input-catatan" style="padding: 10px;">
+                        <option value="">Semua Merek</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Urutkan Berdasarkan</label>
+                    <select id="sortKatalog" onchange="renderKatalogPublik()" class="input-catatan" style="padding: 10px;">
+                        <option value="baru">Paling Baru Ditambahkan</option>
+                        <option value="murah">Harga: Termurah ke Termahal</option>
+                        <option value="mahal">Harga: Termahal ke Termurah</option>
+                    </select>
+                </div>
+            </div>
+
             <div id="katalogGrid" class="katalog-grid"></div>
         </div>
 
@@ -287,7 +337,7 @@
             </div>
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>ID & Tgl Masuk</th><th>Merek & Tipe</th><th>Harga Dasar</th><th>Sisa Stok</th><th>Aksi Jual & Edit</th></tr></thead>
+                    <thead><tr><th>ID & Tgl Masuk</th><th>Merek, Tipe & Warna</th><th>Harga Dasar</th><th>Sisa Stok</th><th>Aksi Jual & Edit</th></tr></thead>
                     <tbody id="tbodyKatalogTersedia"></tbody>
                 </table>
             </div>
@@ -311,35 +361,15 @@
                 <h2 style="font-size: 1.3rem;">Dashboard & Analitik</h2>
                 <p>Ringkasan performa penjualan dan layanan perbaikan</p>
             </div>
-            
-            <!-- Cards Ringkasan -->
             <div class="dash-grid">
-                <div class="dash-card" style="border-top: 4px solid var(--success-bg);">
-                    <h3>Total Omset Penjualan</h3>
-                    <h2 id="dashOmsetJual">Rp 0</h2>
-                </div>
-                <div class="dash-card" style="border-top: 4px solid var(--info-bg);">
-                    <h3>Total Omset Servisan</h3>
-                    <h2 id="dashOmsetServis">Rp 0</h2>
-                </div>
-                <div class="dash-card" style="border-top: 4px solid var(--purple-bg);">
-                    <h3>Laptop Terjual</h3>
-                    <h2 id="dashLapTerjual">0 Unit</h2>
-                </div>
-                <div class="dash-card" style="border-top: 4px solid var(--warning-bg);">
-                    <h3>Servisan Selesai</h3>
-                    <h2 id="dashSrvSelesai">0 Tiket</h2>
-                </div>
+                <div class="dash-card" style="border-top: 4px solid var(--success-bg);"><h3>Total Omset Penjualan</h3><h2 id="dashOmsetJual">Rp 0</h2></div>
+                <div class="dash-card" style="border-top: 4px solid var(--info-bg);"><h3>Total Omset Servisan</h3><h2 id="dashOmsetServis">Rp 0</h2></div>
+                <div class="dash-card" style="border-top: 4px solid var(--purple-bg);"><h3>Laptop Terjual</h3><h2 id="dashLapTerjual">0 Unit</h2></div>
+                <div class="dash-card" style="border-top: 4px solid var(--warning-bg);"><h3>Servisan Selesai</h3><h2 id="dashSrvSelesai">0 Tiket</h2></div>
             </div>
-
-            <!-- Grafik -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <div class="chart-container">
-                    <canvas id="chartServis"></canvas>
-                </div>
-                <div class="chart-container">
-                    <canvas id="chartPendapatan"></canvas>
-                </div>
+                <div class="chart-container"><canvas id="chartServis"></canvas></div>
+                <div class="chart-container"><canvas id="chartPendapatan"></canvas></div>
             </div>
         </div>
 
@@ -352,15 +382,12 @@
                 </div>
                 <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahServis')">+ Buat Tiket Servis</button>
             </div>
-            
-            <!-- Pencarian Teknisi -->
             <div class="input-group" style="margin-bottom: 15px;">
                 <input type="text" id="searchTech" placeholder="🔍 Cari ID Tiket, Nama, WA, atau Merek..." onkeyup="renderTechServices()" style="max-width: 400px; border-radius: 30px; padding: 10px 20px;">
             </div>
-
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Log Terakhir</th></tr></thead>
+                    <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Aksi</th></tr></thead>
                     <tbody id="tbodyTechServices"></tbody>
                 </table>
             </div>
@@ -375,15 +402,12 @@
                 </div>
                 <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahServis')">+ Buat Tiket Servis</button>
             </div>
-            
-            <!-- Pencarian Admin -->
             <div class="input-group" style="margin-bottom: 15px;">
                 <input type="text" id="searchAdmin" placeholder="🔍 Cari ID Tiket, Nama, WA, Merek, atau Teknisi..." onkeyup="renderAdminServices()" style="max-width: 400px; border-radius: 30px; padding: 10px 20px;">
             </div>
-
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Log Terakhir</th></tr></thead>
+                    <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Aksi</th></tr></thead>
                     <tbody id="tbodyAdminServices"></tbody>
                 </table>
             </div>
@@ -398,7 +422,6 @@
                 </div>
                 <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahUser')">+ Tambah Karyawan</button>
             </div>
-
             <div class="table-responsive">
                 <table>
                     <thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Password</th><th>Aksi</th></tr></thead>
@@ -406,10 +429,21 @@
                 </table>
             </div>
         </div>
-
     </div>
 
     <!-- ================= KUMPULAN MODAL (POPUP FORMS) ================= -->
+
+    <!-- MODAL CUSTOM CONFIRMATION (Mencegah Alert Bawaan Diblokir) -->
+    <div id="modalConfirm" class="modal-overlay" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; margin-top: 30vh;">
+            <h3 id="confirmTitle" style="color: var(--danger-bg); margin-bottom: 15px;">Konfirmasi Tindakan</h3>
+            <p id="confirmMessage" style="margin-bottom: 20px; color: var(--text-main); font-size: 0.95rem;"></p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button type="button" class="btn-sm" style="padding: 10px 20px; background: transparent; border: 1px solid var(--text-muted); flex: 1;" onclick="closeConfirm()">Batal</button>
+                <button type="button" id="btnConfirmAction" class="btn-sm btn-danger" style="padding: 10px 20px; flex: 1;">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL 1: TAMBAH LAPTOP BARU (INVENTORY) -->
     <div id="modalTambahLaptop" class="modal-overlay">
@@ -428,12 +462,13 @@
                 <div class="form-row">
                     <div class="input-group"><label>Harga Jual</label><input type="text" id="lapHarga" class="input-rupiah" inputmode="numeric" placeholder="Rp" required></div>
                     <div class="input-group"><label>Total Stok Baru</label><input type="number" id="lapStok" inputmode="numeric" value="1" min="1" required></div>
+                    <div class="input-group"><label>Warna</label><input type="text" id="lapWarna" placeholder="Cth: Hitam, Silver"></div>
                 </div>
                 <div class="form-row">
                     <div class="input-group">
                         <label>Status Garansi</label>
                         <select id="lapGaransi">
-                            <option value="Garansi Toko 1 Bulan">Garansi Toko 1 Bulan</option>
+                            <option value="Garansi Toko 1 Tahun">Garansi Toko 1 Tahun</option>
                             <option value="Garansi Resmi">Garansi Resmi</option>
                             <option value="Non-Garansi">Non-Garansi</option>
                         </select>
@@ -463,11 +498,19 @@
                 <div class="form-row">
                     <div class="input-group"><label>Harga Dasar</label><input type="text" id="mEditHarga" class="input-rupiah" inputmode="numeric" required></div>
                     <div class="input-group"><label>Sisa Stok</label><input type="number" id="mEditStok" inputmode="numeric" min="1" required></div>
+                    <div class="input-group"><label>Warna</label><input type="text" id="mEditWarna" placeholder="Hitam/Silver"></div>
                 </div>
                 <div class="input-group"><label>Spesifikasi</label><textarea id="mEditSpek" rows="2" required></textarea></div>
                 
                 <div class="form-row">
-                    <div class="input-group"><label>Garansi</label><input type="text" id="mEditGaransi" required></div>
+                    <div class="input-group">
+                        <label>Garansi</label>
+                        <select id="mEditGaransi">
+                            <option value="Garansi Toko 1 Tahun">Garansi Toko 1 Tahun</option>
+                            <option value="Garansi Resmi">Garansi Resmi</option>
+                            <option value="Non-Garansi">Non-Garansi</option>
+                        </select>
+                    </div>
                     <div class="input-group"><label>Tanggal Masuk</label><input type="date" id="mEditTgl" required></div>
                 </div>
                 <div class="input-group">
@@ -514,7 +557,41 @@
         </div>
     </div>
 
-    <!-- MODAL 3: TAMBAH TIKET SERVIS -->
+    <!-- MODAL 2C: EDIT DATA LAPTOP TERJUAL -->
+    <div id="modalEditTerjual" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modalEditTerjual')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--danger-bg);">Revisi Data Penjualan</h3>
+            <form id="formEditTerjual">
+                <input type="hidden" id="etLapId">
+                <div class="form-row">
+                    <div class="input-group"><label>Merek</label><input type="text" id="etMerek" list="dlMerek" required></div>
+                    <div class="input-group"><label>Tipe</label><input type="text" id="etTipe" list="dlTipe" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Tanggal Terjual (Revisi)</label><input type="date" id="etTanggalJual" required></div>
+                    <div class="input-group"><label>Harga Akhir</label><input type="text" id="etHarga" class="input-rupiah" inputmode="numeric" required></div>
+                </div>
+                <div class="input-group">
+                    <label>Penjual</label>
+                    <select id="etPenjual"></select>
+                </div>
+                <div style="background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 8px; border: 1px dashed var(--border-color); margin-top: 10px;">
+                    <div class="form-row">
+                        <div class="input-group" style="margin-bottom: 0;"><label>Email Microsoft</label><input type="text" id="etEmail"></div>
+                        <div class="input-group" style="margin-bottom: 0;"><label>Password Microsoft</label><input type="text" id="etPass"></div>
+                    </div>
+                    <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
+                        <label>Catatan / Nama Pembeli</label>
+                        <textarea id="etCatatan" rows="2"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 20px;">Simpan Revisi Data Terjual</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3A: TAMBAH TIKET SERVIS -->
     <div id="modalTambahServis" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('modalTambahServis')">&times;</span>
@@ -549,6 +626,40 @@
         </div>
     </div>
 
+    <!-- MODAL 3B: EDIT DETAIL PERANGKAT & KONSUMEN -->
+    <div id="modalEditDataServis" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modalEditDataServis')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--success-bg);">Edit Data Servisan</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Perubahan ini tidak akan menghapus riwayat chat atau timeline perangkat.</p>
+            <form id="formEditDataServis">
+                <input type="hidden" id="eSrvId">
+                <div class="form-row">
+                    <div class="input-group"><label>Nama Pelanggan</label><input type="text" id="eSrvNama" required></div>
+                    <div class="input-group"><label>Kontak (WA)</label><input type="tel" id="eSrvWA" inputmode="numeric" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Jenis Perangkat</label>
+                        <select id="eSrvJenis" required><option value="Laptop">Laptop</option><option value="Handphone">Handphone</option><option value="PC">PC/Komputer</option><option value="Printer">Printer</option><option value="Lainnya">Lainnya</option></select>
+                    </div>
+                    <div class="input-group"><label>Merek</label><input type="text" id="eSrvMerek" list="dlMerek" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="eSrvTipe" list="dlTipe" required></div>
+                    <div class="input-group"><label>SNID / Serial</label><input type="text" id="eSrvSNID"></div>
+                </div>
+                <div class="input-group"><label>Kelengkapan</label><input type="text" id="eSrvKelengkapan" list="dlKelengkapan" required></div>
+                <div class="input-group"><label>Masalah Utama</label><input type="text" id="eSrvMasalah" list="dlMasalah" required></div>
+                <div class="input-group">
+                    <label>Deskripsi Detail</label>
+                    <textarea id="eSrvDeskripsi" rows="2" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 10px; background: var(--success-bg);">Simpan Perubahan Data</button>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL 4: TAMBAH USER/TEKNISI -->
     <div id="modalTambahUser" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
@@ -574,9 +685,9 @@
                 <h4 style="font-size:0.9rem; color:var(--accent-color); margin-bottom:10px;">💬 Ruang Diskusi & Pesan Konsumen</h4>
                 <div id="techChatArea" class="chat-area" style="height: 160px;"></div>
                 
-                <div style="display:flex; gap:8px; margin-bottom:10px;">
-                    <input type="text" id="uSrvKirimPesan" class="input-catatan" placeholder="Ketik pesan/pertanyaan untuk konsumen...">
-                    <button type="button" class="btn-sm btn-jual" onclick="kirimPesanTeknisi()" style="padding: 0 15px;">Kirim</button>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="uSrvKirimPesan" class="input-catatan" placeholder="Ketik pesan/pertanyaan..." style="flex:1;">
+                    <button type="button" class="btn-sm btn-jual" onclick="kirimPesanTeknisi()" style="padding: 10px 15px;">Kirim</button>
                 </div>
                 <label style="font-size:0.8rem; color:var(--warning-bg); cursor:pointer; display:flex; align-items:center; gap:8px;">
                     <input type="checkbox" id="uSrvButuhKonfirmasi" style="width:16px; height:16px;"> Tanya Konfirmasi Lanjut / Batal (Memunculkan tombol di HP konsumen)
@@ -651,7 +762,7 @@
 
         let currentUser = null; 
         let currentEditLapId = null;
-        let lastFoundArray = []; // Untuk navigasi tombol kembali ke daftar pencarian
+        let lastFoundArray = []; 
 
         // ================= SISTEM AKTIVITAS & AUTO LOGOUT =================
         function updateActivity() {
@@ -727,6 +838,16 @@
             document.getElementById('dlTipe').innerHTML = [...tipes].map(t => `<option value="${t}">`).join('');
             document.getElementById('dlKelengkapan').innerHTML = [...kelengkapans].map(k => `<option value="${k}">`).join('');
             document.getElementById('dlMasalah').innerHTML = [...masalahs].map(m => `<option value="${m}">`).join('');
+
+            // Perbarui juga Dropdown Filter Merek pada Katalog Publik
+            const filterEl = document.getElementById('filterMerek');
+            if(filterEl) {
+                let currentVal = filterEl.value;
+                let optHtml = '<option value="">Semua Merek</option>';
+                [...mereks].sort().forEach(m => optHtml += `<option value="${m}">${m}</option>`);
+                filterEl.innerHTML = optHtml;
+                filterEl.value = currentVal; 
+            }
         }
 
         // ================= FUNGSI LOAD DATA AWAL & PERBAIKAN GOOGLE SHEETS =================
@@ -743,9 +864,7 @@
                 servicesDB = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
                     try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
                     try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
-                    // FIX: Agar tidak error jika value boolean murni diterima dari Google Sheet
-                    if (s.butuhKonfirmasi !== undefined) s.butuhKonfirmasi = (String(s.butuhKonfirmasi).toLowerCase() === 'true');
-                    
+                    if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
                     if (!Array.isArray(s.history)) s.history = [];
                     if (!Array.isArray(s.pesanChat)) s.pesanChat = [];
                     return s;
@@ -791,6 +910,22 @@
             } 
             catch (error) { console.error("Error saving data:", error); }
         }
+
+        // ================= FUNGSI CUSTOM CONFIRMATION (Aman untuk HP / iFrame) =================
+        let confirmCallback = null;
+        function customConfirm(message, callback) {
+            document.getElementById('confirmMessage').textContent = message;
+            confirmCallback = callback;
+            document.getElementById('modalConfirm').classList.add('show');
+        }
+        function closeConfirm() {
+            document.getElementById('modalConfirm').classList.remove('show');
+            confirmCallback = null;
+        }
+        document.getElementById('btnConfirmAction').addEventListener('click', () => {
+            if (confirmCallback) confirmCallback();
+            closeConfirm();
+        });
 
         // ================= FUNGSI FORMAT RUPIAH & TANGGAL =================
         function formatRupiahText(value) {
@@ -859,7 +994,7 @@
 
         function showPublicView() {
             document.getElementById('loginPage').style.display = 'none'; document.getElementById('appPage').style.display = 'block';
-            document.getElementById('welcomeText').textContent = 'BanlieComputing Layanan'; document.getElementById('userRoleDisplay').style.display = 'none';
+            document.getElementById('welcomeText').textContent = 'BanlieComputing'; document.getElementById('userRoleDisplay').style.display = 'none';
             let btnLogout = document.getElementById('btnLogout'); btnLogout.textContent = 'Login Staff'; btnLogout.onclick = showLoginForm;
             btnLogout.style.borderColor = 'var(--info-bg)'; btnLogout.style.color = 'var(--info-bg)';
             document.querySelectorAll('.internal-only, .admin-only, .tech-only').forEach(el => el.style.display = 'none');
@@ -891,6 +1026,7 @@
                 spek: document.getElementById('lapSpek').value,
                 harga: parseRupiah(document.getElementById('lapHarga').value),
                 stok: parseInt(document.getElementById('lapStok').value),
+                warna: document.getElementById('lapWarna').value, // Field Warna Baru
                 garansi: document.getElementById('lapGaransi').value,
                 tanggal: document.getElementById('lapTgl').value,
                 statusJual: 'Tersedia',
@@ -969,15 +1105,12 @@
             if(lastFoundArray.length === 0) {
                 resDiv.innerHTML = `<div style="color:var(--danger-bg); padding: 10px; text-align: center; font-weight: 500;">Data tidak ditemukan. Silakan periksa kembali No WA / ID.</div>`;
             } else if (lastFoundArray.length === 1) {
-                // Jika hanya 1 barang, langsung tampilkan detail
                 renderDetailPencarian(lastFoundArray[0], false);
             } else {
-                // Jika > 1 barang, tampilkan kotak list thumbnail
                 renderDaftarPencarian(lastFoundArray);
             }
         });
 
-        // Merender tampilan grid/thumbnail list
         function renderDaftarPencarian(foundArray) {
             const resDiv = document.getElementById('hasilPencarian');
             let html = `<div style="margin-bottom: 15px; color: var(--info-bg); font-weight: bold; text-align: center; font-size: 0.95rem;">Ditemukan ${foundArray.length} perangkat yang terhubung. Pilih salah satu:</div>`;
@@ -1003,13 +1136,9 @@
 
         function renderDetailPencarianById(id) {
             const found = lastFoundArray.find(s => s.id === id);
-            if(found) {
-                // Tampilkan detail, dan setel showBackButton=true jika hasil lebih dari 1
-                renderDetailPencarian(found, lastFoundArray.length > 1);
-            }
+            if(found) renderDetailPencarian(found, lastFoundArray.length > 1);
         }
 
-        // Merender tampilan full detail pelacakan untuk 1 barang
         function renderDetailPencarian(found, showBackButton) {
             const resDiv = document.getElementById('hasilPencarian');
             let html = '';
@@ -1029,7 +1158,6 @@
             let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
             let costValue = found.status === 'Selesai' ? formatRupiahText(String(found.biayaAkhir || found.biaya || 0)) : (found.biayaEstimasi || found.biaya || '-');
 
-            // --- BAGIAN CHAT / RUANG DISKUSI ---
             let chatHTML = '';
             if (found.pesanChat && found.pesanChat.length > 0) {
                 found.pesanChat.forEach(p => {
@@ -1041,7 +1169,6 @@
                 chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada pesan/catatan khusus.</div>`;
             }
 
-            // PERBAIKAN TOMBOL KONFIRMASI (Responsif untuk Android)
             let confirmHTML = '';
             if (found.butuhKonfirmasi) {
                 confirmHTML = `
@@ -1103,8 +1230,7 @@
             const srv = servicesDB.find(s => s.id === id);
             if (!srv) return;
             
-            let inputEl = document.getElementById('inputPesanKonsumen_' + id);
-            let text = textOverride || (inputEl ? inputEl.value : '');
+            let text = textOverride || document.getElementById('inputPesanKonsumen_' + id).value;
             if(!text.trim()) return;
 
             if(!srv.pesanChat) srv.pesanChat = [];
@@ -1116,13 +1242,8 @@
                 srv.history.push({ time: formatDateWIB(), action: 'Konfirmasi Konsumen', note: text, by: 'Konsumen' });
             }
 
-            // Kosongkan kolom chat setelah kirim
-            if (inputEl) inputEl.value = '';
-
             sendToServer('saveService', srv);
             showToast('Pesan berhasil dikirim ke teknisi!');
-            
-            // Render ulang tampilan detail saja tanpa kembali ke daftar
             renderDetailPencarianById(id);
         }
 
@@ -1137,7 +1258,6 @@
             if(!srv.pesanChat) srv.pesanChat = [];
             if(text.trim()) { srv.pesanChat.push({ sender: 'teknisi', text: text, time: formatDateWIB() }); }
             srv.butuhKonfirmasi = butuhKonfirm;
-            
             sendToServer('saveService', srv);
             showToast('Pesan terkirim ke pelanggan!');
             document.getElementById('uSrvKirimPesan').value = '';
@@ -1146,11 +1266,28 @@
             if(currentUser.role === 'admin') renderAdminServices(); else renderTechServices();
         }
 
-        // ================= LOGIKA KATALOG (PUBLIK) =================
+        // ================= LOGIKA KATALOG DENGAN FILTER & SORT (PUBLIK) =================
         function renderKatalogPublik() {
             const grid = document.getElementById('katalogGrid');
             grid.innerHTML = '';
-            const tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
+            
+            let tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
+
+            // Proses Filter berdasarkan Merek
+            const filterMerekValue = document.getElementById('filterMerek').value;
+            if(filterMerekValue) {
+                tersediaDB = tersediaDB.filter(l => l.merek === filterMerekValue);
+            }
+
+            // Proses Sorting (Urutan)
+            const sortValue = document.getElementById('sortKatalog').value;
+            if (sortValue === 'murah') {
+                tersediaDB.sort((a, b) => parseInt(a.harga) - parseInt(b.harga));
+            } else if (sortValue === 'mahal') {
+                tersediaDB.sort((a, b) => parseInt(b.harga) - parseInt(a.harga));
+            } else { // 'baru' -> default (berdasarkan id atau posisi push terakhir)
+                tersediaDB.reverse(); // Membalik array untuk menampilkan item terbaru di atas
+            }
 
             if(tersediaDB.length === 0) {
                 grid.innerHTML = `<div style="text-align:center; width: 100%; padding: 40px; color: var(--text-muted);">Belum ada produk di etalase toko.</div>`; return;
@@ -1174,14 +1311,17 @@
                         <div class="katalog-content">
                             <div class="katalog-title">${lap.merek} ${lap.tipe}</div>
                             <div class="katalog-garansi">${lap.garansi}</div>
-                            <div class="katalog-spek">${lap.spek}</div>
+                            <div class="katalog-spek"><strong style="color: var(--text-main);">Warna:</strong> ${lap.warna || '-'}<br>${lap.spek}</div>
                             ${badgeStok}
                             <div class="katalog-harga">${formatRupiahText(String(lap.harga))}</div>
-                            <a href="https://wa.me/6281234567890?text=Halo BanlieComputing, saya tertarik dengan laptop ${lap.merek} ${lap.tipe} (ID: ${lap.id})" target="_blank" class="btn-beli" style="${btnState}">${btnText}</a>
+                            <a href="https://wa.me/6281234567890?text=Halo BanlieComputing, saya tertarik dengan laptop ${lap.merek} ${lap.tipe} warna ${lap.warna || '-'} (ID: ${lap.id})" target="_blank" class="btn-beli" style="${btnState}">${btnText}</a>
                         </div>
                     </div>
                 `;
             });
+            
+            // Revert reverse if it was applied so it doesn't mess the original array next time
+            if (sortValue === 'baru') tersediaDB.reverse(); 
         }
 
         function changeMainImg(lapId, index) {
@@ -1202,7 +1342,7 @@
                     tbTersedia.innerHTML += `
                         <tr>
                             <td><strong style="color:var(--accent-color);">${lap.id}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">Masuk: ${lap.tanggal}</span></td>
-                            <td><strong style="color:var(--text-main);">${lap.merek}</strong><br>${lap.tipe}</td>
+                            <td><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--accent-color);">Warna: ${lap.warna || '-'}</span></td>
                             <td>${formatRupiahText(String(lap.harga))}<br><span style="font-size:0.75rem;">${lap.garansi}</span></td>
                             <td><span style="font-weight:bold; font-size: 1.1rem; color:${lap.stok > 0 ? 'var(--success-bg)' : 'var(--danger-bg)'}">${lap.stok}</span> Unit</td>
                             <td style="display:flex; flex-direction:column; gap:6px;">
@@ -1218,7 +1358,8 @@
                         <tr>
                             <td>
                                 <strong style="color:var(--danger-bg);">${lap.id}</strong><br>
-                                <span style="font-weight:bold; color:var(--text-main);">${lap.merek} ${lap.tipe}</span>
+                                <span style="font-weight:bold; color:var(--text-main);">${lap.merek} ${lap.tipe}</span><br>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Warna: ${lap.warna || '-'}</span>
                             </td>
                             <td>
                                 <strong>${formatRupiahText(String(lap.harga))}</strong><br>
@@ -1271,7 +1412,7 @@
 
             let originalLap = laptopKatalogDB[originalIdx];
             let dataTerjual = {
-                id: generateID('LAP-SOLD'), merek: originalLap.merek, tipe: originalLap.tipe, spek: originalLap.spek, 
+                id: generateID('LAP-SOLD'), merek: originalLap.merek, tipe: originalLap.tipe, spek: originalLap.spek, warna: originalLap.warna,
                 garansi: originalLap.garansi, tanggal: originalLap.tanggal, fotos: originalLap.fotos, stok: 1, statusJual: 'Terjual',
                 harga: parseRupiah(document.getElementById('jHargaJual').value), tanggalTerjual: document.getElementById('jTanggalJual').value,
                 penjual: document.getElementById('jPenjual').value, email: document.getElementById('jEmail').value,
@@ -1294,6 +1435,7 @@
             currentEditLapId = lapId; const lap = laptopKatalogDB.find(l => l.id === lapId);
             document.getElementById('mEditMerek').value = lap.merek; document.getElementById('mEditTipe').value = lap.tipe;
             document.getElementById('mEditHarga').value = formatRupiahText(String(lap.harga)); document.getElementById('mEditStok').value = lap.stok;
+            document.getElementById('mEditWarna').value = lap.warna || '';
             document.getElementById('mEditSpek').value = lap.spek; document.getElementById('mEditGaransi').value = lap.garansi;
             document.getElementById('mEditTgl').value = lap.tanggal; document.getElementById('mEditFotos').value = ""; 
             openModal('modalEditLaptop');
@@ -1309,6 +1451,7 @@
 
                 laptopKatalogDB[idx].merek = document.getElementById('mEditMerek').value; laptopKatalogDB[idx].tipe = document.getElementById('mEditTipe').value;
                 laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('mEditHarga').value); laptopKatalogDB[idx].stok = document.getElementById('mEditStok').value;
+                laptopKatalogDB[idx].warna = document.getElementById('mEditWarna').value;
                 laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value; laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
                 laptopKatalogDB[idx].tanggal = document.getElementById('mEditTgl').value;
                 
@@ -1351,31 +1494,13 @@
         });
 
         function hapusLaptop(id) {
-            if(confirm('Yakin ingin menghapus data laptop ini secara permanen?')) {
+            customConfirm('Yakin ingin menghapus data laptop ini secara permanen?', () => {
                 const idx = laptopKatalogDB.findIndex(l => l.id === id);
                 if(idx > -1) {
                     laptopKatalogDB.splice(idx, 1); showToast('Data laptop dihapus!'); populateDatalists();
                     renderAdminKatalog(); renderKatalogPublik(); renderDashboard(); sendToServer('deleteKatalog', { id: id }); 
                 }
-            }
-        }
-
-        // ================= LOGIKA HAPUS SERVISAN =================
-        function hapusServis(id) {
-            if(confirm(`Yakin ingin menghapus data tiket servis ${id} ini secara permanen? Tindakan ini tidak dapat dibatalkan.`)) {
-                const idx = servicesDB.findIndex(s => s.id === id);
-                if(idx > -1) {
-                    servicesDB.splice(idx, 1);
-                    showToast('Data tiket servis dihapus!');
-                    populateDatalists();
-                    
-                    if (currentUser.role === 'admin') renderAdminServices();
-                    renderTechServices();
-                    renderDashboard();
-                    
-                    sendToServer('deleteService', { id: id }); 
-                }
-            }
+            });
         }
 
         // ================= LOGIKA INPUT SERVISAN BARU =================
@@ -1428,12 +1553,12 @@
                         <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
                         <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
                         <td>
-                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
-                            ${compactHistoryHTML}
+                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}
                             <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
-                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button>
+                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 Update Progres</button>
+                                <button class="btn-sm btn-success" onclick="openModalEditDataServis('${s.id}')">📝 Edit Detail</button>
                                 <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
-                                <button class="btn-sm btn-danger" onclick="hapusServis('${s.id}')">🗑️ Hapus</button>
+                                <button class="btn-sm btn-danger" onclick="hapusServisPrompt('${s.id}')">🗑️ Hapus</button>
                             </div>
                         </td>
                     </tr>
@@ -1469,12 +1594,12 @@
                         <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
                         <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
                         <td>
-                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>
-                            ${compactHistoryHTML}
+                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}
                             <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
-                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 & ✏️ Update Progres</button>
+                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 Update Progres</button>
+                                <button class="btn-sm btn-success" onclick="openModalEditDataServis('${s.id}')">📝 Edit Detail</button>
                                 <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
-                                <button class="btn-sm btn-danger" onclick="hapusServis('${s.id}')">🗑️ Hapus</button>
+                                <button class="btn-sm btn-danger" onclick="hapusServisPrompt('${s.id}')">🗑️ Hapus</button>
                             </div>
                         </td>
                     </tr>
@@ -1550,6 +1675,66 @@
             sendToServer('saveService', servicesDB[idx]); 
         });
 
+        // ================= FUNGSI EDIT DETAIL DATA SERVISAN (BARU) =================
+        function openModalEditDataServis(id) {
+            const s = servicesDB.find(x => x.id === id); if(!s) return;
+            document.getElementById('eSrvId').value = id;
+            document.getElementById('eSrvNama').value = s.nama;
+            document.getElementById('eSrvWA').value = s.wa;
+            document.getElementById('eSrvJenis').value = s.jenis;
+            document.getElementById('eSrvMerek').value = s.merek;
+            document.getElementById('eSrvTipe').value = s.tipe;
+            document.getElementById('eSrvSNID').value = s.snid || '';
+            document.getElementById('eSrvKelengkapan').value = s.kelengkapan;
+            document.getElementById('eSrvMasalah').value = s.masalah;
+            document.getElementById('eSrvDeskripsi').value = s.deskripsi;
+            
+            openModal('modalEditDataServis');
+        }
+
+        document.getElementById('formEditDataServis')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('eSrvId').value;
+            const idx = servicesDB.findIndex(s => s.id === id); if(idx === -1) return;
+
+            // Update field TANPA menyentuh .history atau .pesanChat agar tetap aman
+            servicesDB[idx].nama = document.getElementById('eSrvNama').value;
+            servicesDB[idx].wa = document.getElementById('eSrvWA').value;
+            servicesDB[idx].jenis = document.getElementById('eSrvJenis').value;
+            servicesDB[idx].merek = document.getElementById('eSrvMerek').value;
+            servicesDB[idx].tipe = document.getElementById('eSrvTipe').value;
+            servicesDB[idx].snid = document.getElementById('eSrvSNID').value;
+            servicesDB[idx].kelengkapan = document.getElementById('eSrvKelengkapan').value;
+            servicesDB[idx].masalah = document.getElementById('eSrvMasalah').value;
+            servicesDB[idx].deskripsi = document.getElementById('eSrvDeskripsi').value;
+
+            // Catat log pengeditan ini ke timeline perangkat terkait
+            if(!servicesDB[idx].history) servicesDB[idx].history = [];
+            servicesDB[idx].history.push({ time: formatDateWIB(), action: 'Edit Data Detail', note: 'Admin/Teknisi memperbarui detail informasi perangkat ini.', by: currentUser.username });
+
+            showToast(`Detail Perangkat berhasil diubah!`);
+            closeModal('modalEditDataServis');
+            
+            if (currentUser.role === 'admin') { renderAdminServices(); } else { renderTechServices(); }
+            sendToServer('saveService', servicesDB[idx]);
+        });
+
+        // ================= FUNGSI HAPUS SERVISAN (BARU) =================
+        function hapusServisPrompt(id) {
+            customConfirm(`Apakah Anda yakin ingin menghapus tiket servis ID: ${id} secara permanen? Data ini tidak dapat dikembalikan.`, () => {
+                const idx = servicesDB.findIndex(s => s.id === id);
+                if(idx > -1) {
+                    servicesDB.splice(idx, 1);
+                    showToast('Data Servis berhasil dihapus secara permanen!');
+                    if (currentUser.role === 'admin') { renderAdminServices(); renderDashboard(); } else { renderTechServices(); }
+                    
+                    // Gunakan Endpoint Google Sheet jika disupport, jika tidak abaikan
+                    sendToServer('deleteService', { id: id });
+                }
+            });
+        }
+
+
         function openModalHistory(id) {
             const s = servicesDB.find(x => x.id === id); if(!s) return;
             document.getElementById('hSrvTitle').textContent = `Servis ID: ${s.id} - ${s.merek} ${s.tipe}`;
@@ -1594,7 +1779,10 @@
         }
 
         function deleteUser(index) {
-            if(confirm('Yakin ingin menghapus karyawan ini?')) { const uname = usersDB[index].username; usersDB.splice(index, 1); showToast('Karyawan dihapus!'); renderUsers(); sendToServer('deleteUser', { username: uname }); }
+            customConfirm('Yakin ingin menghapus karyawan ini?', () => { 
+                const uname = usersDB[index].username; usersDB.splice(index, 1); 
+                showToast('Karyawan dihapus!'); renderUsers(); sendToServer('deleteUser', { username: uname }); 
+            });
         }
         
         window.onload = function() { fetchInitialData(); };
