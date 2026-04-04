@@ -611,11 +611,15 @@
                     fetch(API_URL + "?action=getKatalog").then(r => r.json())
                 ]);
                 
-                usersDB = resUsers;
-                servicesDB = resServices;
-                laptopKatalogDB = resKatalog;
+                // PERBAIKAN: Abaikan baris kosong yang mungkin terbaca oleh Spreadsheet
+                usersDB = resUsers.filter(u => u.username && String(u.username).trim() !== '');
+                servicesDB = resServices.filter(s => s.id && String(s.id).trim() !== '');
+                laptopKatalogDB = resKatalog.filter(l => l.id && String(l.id).trim() !== '');
 
-                // Buat Admin Default jika Database Kosong (First Run)
+                // Tampilkan log di console browser untuk membantu Anda mengecek jika ada error data (Tekan F12 di browser)
+                console.log("Data Users tersinkron:", usersDB);
+
+                // Buat Admin Default jika Database BENAR-BENAR Kosong
                 if(usersDB.length === 0) {
                     let defaultAdmin = { username: 'admin', password: '123', role: 'admin', nama: 'Admin Toko' };
                     usersDB.push(defaultAdmin);
@@ -627,7 +631,7 @@
 
             } catch (err) {
                 console.error("Gagal koneksi ke Google Sheets:", err);
-                document.getElementById('globalLoader').innerHTML = `<h2 style="color:var(--danger-bg);">Gagal Terhubung ke Database Server</h2><p>Pastikan URL API benar dan internet Anda stabil.</p><button onclick="location.reload()" class="submit-btn" style="width:200px; margin-top:20px;">Coba Lagi</button>`;
+                document.getElementById('globalLoader').innerHTML = `<h2 style="color:var(--danger-bg);">Gagal Terhubung ke Database Server</h2><p>Pastikan URL API benar dan Google Sheet memiliki header yang tepat.</p><button onclick="location.reload()" class="submit-btn" style="width:200px; margin-top:20px;">Coba Lagi</button>`;
             }
         }
 
@@ -732,17 +736,22 @@
 
         document.getElementById('formLogin').addEventListener('submit', function(e) {
             e.preventDefault();
-            const u = document.getElementById('loginUsername').value;
-            const p = document.getElementById('loginPassword').value;
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value.trim();
             
-            const user = usersDB.find(x => x.username === u && x.password === p);
+            // PERBAIKAN: Menggunakan String() agar Angka (seperti 123) dari spreadsheet bisa dicocokkan dengan input Teks
+            const user = usersDB.find(x => 
+                String(x.username).trim() === u && 
+                String(x.password).trim() === p
+            );
+
             if(user) {
                 currentUser = user;
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appPage').style.display = 'block';
                 
                 document.getElementById('welcomeText').innerHTML = `Halo, <strong style="color:#fff">${user.nama}</strong>`;
-                document.getElementById('userRoleDisplay').textContent = user.role.toUpperCase();
+                document.getElementById('userRoleDisplay').textContent = String(user.role).toUpperCase();
                 document.getElementById('userRoleDisplay').style.display = 'inline-block';
                 
                 let btnLogout = document.getElementById('btnLogout');
@@ -754,7 +763,7 @@
                 document.querySelectorAll('.public-only').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('.internal-only').forEach(el => el.style.display = 'block');
                 
-                if(user.role === 'admin') {
+                if(String(user.role).toLowerCase() === 'admin') {
                     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
                     document.querySelectorAll('.tech-only').forEach(el => el.style.display = 'none');
                     openTab('admin-servis', document.getElementById('tabAdminServis'));
