@@ -107,6 +107,7 @@
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
             background-color: var(--success-bg); color: white; padding: 12px 24px; border-radius: 30px;
             font-weight: 500; font-size: 0.95rem; z-index: 5000; opacity: 0; transition: 0.4s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
@@ -179,13 +180,13 @@
         .spinner { border: 4px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-color); animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .chat-area { max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; }
+        .chat-area { max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
         .chat-bubble { padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; max-width: 85%; line-height: 1.4; word-wrap: break-word; }
         .chat-tech { background: rgba(59, 130, 246, 0.2); border: 1px solid var(--info-bg); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 2px; }
         .chat-cust { background: rgba(16, 185, 129, 0.2); border: 1px solid var(--success-bg); color: var(--text-main); align-self: flex-end; border-bottom-right-radius: 2px; }
         .chat-time { font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; text-align: right; opacity: 0.8; }
-        .konfirmasi-box { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-bg); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+        .konfirmasi-box { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-bg); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
 
         .konfirmasi-btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
         .konfirmasi-btn-group button { flex: 1 1 auto; min-width: 140px; padding: 12px 15px; font-size: 0.85rem; }
@@ -754,7 +755,7 @@
 
     <script>
         // ================= KONEKSI DATABASE SERVER =================
-        const API_URL = "https://script.google.com/macros/s/AKfycbxZS6865YN4AgviVxNVql9fgKb72r_n9_Lf1FjN3HSJlltDSeZ_dnQXE2f1_sLMEC8Qlg/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwa8s0Xv7x_eNuHVdZgvblB1uf4Zpvuj4EfkAH-up_D_cI9nf6N3kSm2Gi7di0o8P54Lw/exec";
         const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 Menit
 
         let usersDB = [];
@@ -882,8 +883,8 @@
                     try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
                     try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
                     if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
-                    if (!Array.isArray(s.history)) s.history = [];
-                    if (!Array.isArray(s.pesanChat)) s.pesanChat = [];
+                    s.unreadByAdmin = (String(s.unreadByAdmin).toLowerCase() === 'true');
+                    s.unreadByCust = (String(s.unreadByCust).toLowerCase() === 'true');
                     if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(String(s.tanggalMasuk));
                     return s;
                 }) : [];
@@ -925,12 +926,9 @@
                 let payload = JSON.parse(JSON.stringify(dataObj));
                 ['history', 'pesanChat', 'fotos'].forEach(key => {
                     if (payload[key] !== undefined && typeof payload[key] !== 'string') { 
-                        // Hapus atribut previewData sebelum dikirim agar tidak membebani server/jaringan
                         if (key === 'fotos') {
                             payload[key] = payload[key].map(f => {
-                                if (f && typeof f === 'object' && f.previewData) {
-                                    delete f.previewData;
-                                }
+                                if (f && typeof f === 'object' && f.previewData) { delete f.previewData; }
                                 return f;
                             });
                         }
@@ -941,6 +939,56 @@
             } 
             catch (error) { console.error("Error saving data:", error); }
         }
+
+        // ================= BACKGROUND POLLING UNTUK NOTIFIKASI =================
+        async function pollData() {
+            if (document.hidden) return; // Hemat resource jika tab tidak aktif
+            try {
+                let resServices = await fetch(API_URL + "?action=getServices").then(r => r.json());
+                let updatedServices = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
+                    try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
+                    try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
+                    if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
+                    s.unreadByAdmin = (String(s.unreadByAdmin).toLowerCase() === 'true');
+                    s.unreadByCust = (String(s.unreadByCust).toLowerCase() === 'true');
+                    if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(String(s.tanggalMasuk));
+                    return s;
+                }) : [];
+
+                // Cek Pesan Baru
+                if (currentUser) {
+                    updatedServices.forEach(newSrv => {
+                        let oldSrv = servicesDB.find(o => o.id === newSrv.id);
+                        if (newSrv.unreadByAdmin && (!oldSrv || !oldSrv.unreadByAdmin)) {
+                            if (currentUser.role === 'admin' || newSrv.techId === currentUser.username) {
+                                showToast(`💬 Pesan baru dari ${newSrv.nama} (ID: ${newSrv.id})!`, false, 6000);
+                            }
+                        }
+                    });
+                } else {
+                    if (lastFoundArray.length > 0) {
+                        updatedServices.forEach(newSrv => {
+                            let inMyList = lastFoundArray.find(o => o.id === newSrv.id);
+                            if (inMyList && newSrv.unreadByCust && !inMyList.unreadByCust) {
+                                showToast(`💬 Teknisi membalas pesan untuk perangkat ${newSrv.merek} (ID: ${newSrv.id})!`, false, 6000);
+                            }
+                        });
+                        lastFoundArray = lastFoundArray.map(old => updatedServices.find(n => n.id === old.id) || old);
+                    }
+                }
+
+                servicesDB = updatedServices;
+                
+                // Render Ulang UI
+                if (currentUser && document.getElementById('data-servis').classList.contains('active')) {
+                    renderServisan();
+                } else if (!currentUser && document.getElementById('hasilPencarian').style.display === 'block') {
+                    if (lastFoundArray.length === 1) renderDetailPencarian(lastFoundArray[0], false, true); // true = isPolling (jangan auto clear)
+                    else renderDaftarPencarian(lastFoundArray);
+                }
+            } catch(e) { console.error("Polling error", e); }
+        }
+        setInterval(pollData, 15000); // 15 detik cek notif
 
         let confirmCallback = null;
         function customConfirm(message, callback) {
@@ -977,10 +1025,10 @@
             return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()} WIB`;
         }
 
-        function showToast(msg, isError=false) {
+        function showToast(msg, isError=false, duration=3000) {
             const t = document.getElementById('toast');
             t.textContent = msg; t.style.backgroundColor = isError ? 'var(--danger-bg)' : 'var(--success-bg)';
-            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), duration);
         }
 
         function generateID(prefix) { return prefix + '-' + Math.floor(Math.random() * 9000 + 1000); }
@@ -1006,7 +1054,6 @@
 
         function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
-        // ================= BARU: UPLOAD ORIGINAL TANPA KOMPRESI CANVAS =================
         function getBase64File(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1015,9 +1062,7 @@
                     resolve({
                         name: file.name,
                         mimeType: file.type,
-                        // Data mentah Base64 untuk dikirim ke Backend Google Apps Script
                         data: reader.result.split(',')[1],
-                        // Data URL penuh untuk ditampikan secara instant di Browser Frontend 
                         previewData: reader.result 
                     });
                 };
@@ -1066,7 +1111,6 @@
             if (fileInput.files.length > 0) {
                 let limit = Math.min(fileInput.files.length, 4); 
                 for (let i = 0; i < limit; i++) {
-                    // Ambil file resolusi original
                     let fileObj = await getBase64File(fileInput.files[i]);
                     newLap.fotos.push(fileObj);
                 }
@@ -1076,7 +1120,6 @@
             showToast('Laptop baru berhasil ditambahkan! File Original dikirim.');
             populateDatalists(); this.reset(); closeModal('modalTambahLaptop'); renderAdminKatalog(); renderKatalogPublik();
             
-            // Backend akan men-handle ekstrak Object menjadi Google Drive Url
             sendToServer('saveKatalog', newLap);
             btn.textContent = prevText; btn.disabled = false;
         });
@@ -1189,6 +1232,9 @@
             foundArray.forEach(found => {
                 let badgeStatus = `<span class="badge ${found.status === 'Selesai' ? 'bg-selesai' : found.status === 'Proses' ? 'bg-proses' : found.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${found.status}</span>`;
                 if (found.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px; margin-top:5px; display:inline-block;">⚠️ Konfirmasi Tertunda</span>`;
+                
+                // NOTIFIKASI KONSUMEN - BAGE MERAH
+                if (found.unreadByCust) badgeStatus += ` <span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite; margin-top:5px; display:inline-block;">💬 Balasan Baru</span>`;
 
                 html += `
                     <div class="tracking-card" style="margin-top:0; cursor:pointer; transition:0.2s;" onclick="renderDetailPencarianById('${found.id}')" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateY(0)';">
@@ -1209,7 +1255,13 @@
             if(found) renderDetailPencarian(found, lastFoundArray.length > 1);
         }
 
-        function renderDetailPencarian(found, showBackButton) {
+        function renderDetailPencarian(found, showBackButton, isPolling = false) {
+            // Ketika dibuka, hilangkan notif unread untuk Konsumen
+            if (!isPolling && found.unreadByCust) {
+                found.unreadByCust = false;
+                sendToServer('saveService', found);
+            }
+
             const resDiv = document.getElementById('hasilPencarian');
             let html = '';
 
@@ -1257,7 +1309,7 @@
             resDiv.innerHTML = html;
 
             const chatArea = document.getElementById(`publicChatArea_${found.id}`);
-            if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+            if(chatArea && !isPolling) chatArea.scrollTop = chatArea.scrollHeight;
         }
 
         // ================= FUNGSI KIRIM PESAN =================
@@ -1267,6 +1319,7 @@
 
             if(!srv.pesanChat) srv.pesanChat = [];
             srv.pesanChat.push({ sender: 'konsumen', text: text, time: formatDateWIB() });
+            srv.unreadByAdmin = true; // Tandai belum dibaca oleh admin/teknisi
             
             if (textOverride && srv.butuhKonfirmasi) {
                 srv.butuhKonfirmasi = false;
@@ -1284,7 +1337,11 @@
             if(!text.trim() && !butuhKonfirm) return showToast('Pesan kosong. Ketik sesuatu atau centang konfirmasi.', true);
             if(!srv.pesanChat) srv.pesanChat = [];
             if(text.trim()) { srv.pesanChat.push({ sender: 'teknisi', text: text, time: formatDateWIB() }); }
-            srv.butuhKonfirmasi = butuhKonfirm; sendToServer('saveService', srv); showToast('Pesan terkirim ke pelanggan!');
+            
+            srv.butuhKonfirmasi = butuhKonfirm; 
+            srv.unreadByCust = true; // Tandai belum dibaca oleh konsumen
+
+            sendToServer('saveService', srv); showToast('Pesan terkirim ke pelanggan!');
             document.getElementById('uSrvKirimPesan').value = ''; openModalUpdateServis(id); renderServisan();
         }
 
@@ -1310,7 +1367,6 @@
 
                 let imagesHTML = `<div class="katalog-img">💻</div>`; 
                 if (lap.fotos && lap.fotos.length > 0) {
-                    // Extract previewData or direct URL
                     let mainImg = lap.fotos[0].previewData || lap.fotos[0];
                     let thumbs = lap.fotos.map((f, i) => `<img src="${f.previewData || f}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
                     imagesHTML = `<img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama" style="cursor:zoom-in;" onclick="viewImagePopup(this.src)"><div class="katalog-thumb-container">${thumbs}</div>`;
@@ -1329,7 +1385,7 @@
             }
         }
 
-        // ================= LOGIKA MANAJEMEN LAPTOP ADMIN =================
+        // ================= LOGIKA MANAJEMEN LAPTOP ADMIN & TEKNISI =================
         function renderAdminKatalog() {
             const tbTersedia = document.getElementById('tbodyKatalogTersedia'); const tbTerjual = document.getElementById('tbodyKatalogTerjual');
             if(!tbTersedia || !tbTerjual) return;
@@ -1346,6 +1402,7 @@
                 let imgThumbSrc = (lap.fotos && lap.fotos.length > 0) ? (lap.fotos[0].previewData || lap.fotos[0]) : '';
                 let imgThumb = lap.fotos && lap.fotos.length > 0 ? `<img src="${imgThumbSrc}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; cursor:zoom-in;" onclick="viewImagePopup(this.src)">` : `<div style="width:40px; height:40px; background:var(--border-color); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px;">💻</div>`;
                 
+                // Teknisi HANYA BISA JUAL, Admin BISA SEMUA
                 let aksiTersediaHTML = `<button class="btn-sm btn-jual" onclick="bukaModalJual('${lap.id}')">🛒 Jual</button>`;
                 let aksiTerjualHTML = ``;
 
@@ -1406,7 +1463,6 @@
             } else {
                 laptopKatalogDB[originalIdx] = dataTerjual; 
                 sendToServer('saveKatalog', dataTerjual); 
-                // Kita tambahkan preservePhotos agar gambar di drive tidak terhapus ketika pindah ke terjual!
                 sendToServer('deleteKatalog', { id: originalLap.id, preservePhotos: true }); 
             }
 
@@ -1439,7 +1495,6 @@
                 laptopKatalogDB[idx].tanggal = cleanDateForInput(document.getElementById('mEditTgl').value) || getTodayDate();
                 
                 let fileInput = document.getElementById('mEditFotos');
-                // PERBAIKAN UPLOAD GAMBAR: File asli
                 if (fileInput.files.length > 0) {
                     let lapFotosArray = []; let limit = Math.min(fileInput.files.length, 4); 
                     for (let i = 0; i < limit; i++) { 
@@ -1525,6 +1580,9 @@
             myData.forEach(s => {
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
                 if (s.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px;">⏱️ Menunggu Konfirmasi</span>`;
+                
+                // NOTIFIKASI TEKNISI / ADMIN - BAGE MERAH
+                if (s.unreadByAdmin) badgeStatus += ` <span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite; margin-top:5px; display:inline-block;">💬 Pesan Baru</span>`;
 
                 let compactHistoryHTML = '';
                 if(s.history && s.history.length > 0) {
@@ -1550,7 +1608,7 @@
                 kelengkapan: document.getElementById('srvKelengkapan').value, masalah: document.getElementById('srvMasalah').value,
                 deskripsi: document.getElementById('srvDeskripsi').value, biayaEstimasi: document.getElementById('srvBiaya').value || '', biayaAkhir: 0,
                 garansi: '', status: 'Masuk', techId: currentUser.username, catatan: 'Barang diterima, menunggu antrean pengecekan.',
-                history: [ { time: formatDateWIB(), action: 'Tiket Servis Dibuat', note: 'Barang masuk dan antre pengecekan', by: currentUser.username } ], pesanChat: [], butuhKonfirmasi: false
+                history: [ { time: formatDateWIB(), action: 'Tiket Servis Dibuat', note: 'Barang masuk dan antre pengecekan', by: currentUser.username } ], pesanChat: [], butuhKonfirmasi: false, unreadByAdmin: false, unreadByCust: false
             };
             servicesDB.push(newSrv); showToast(`Tiket Servis Dibuat: ${newSrv.id}`); populateDatalists();
             this.reset(); closeModal('modalTambahServis'); renderServisan();
@@ -1565,6 +1623,14 @@
 
         function openModalUpdateServis(id) {
             const s = servicesDB.find(x => x.id === id); if(!s) return;
+            
+            // Ketika dibuka, hilangkan notif unread untuk Teknisi/Admin
+            if (s.unreadByAdmin) {
+                s.unreadByAdmin = false;
+                sendToServer('saveService', s);
+                renderServisan();
+            }
+
             document.getElementById('uSrvId').value = id; document.getElementById('uSrvStatus').value = s.status;
             document.getElementById('uSrvBiayaEstimasi').value = s.biayaEstimasi || s.biaya || '';
             document.getElementById('uSrvBiayaAkhir').value = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biaya ? formatRupiahText(String(s.biaya)) : '');
