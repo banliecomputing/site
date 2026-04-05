@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BanlieComputing - Store & Service</title>
+    <title>Banlie Computing - Store & Service</title>
     
     <!-- FAVICON DARI GOOGLE DRIVE -->
     <link rel="icon" type="image/png" href="https://drive.google.com/uc?export=view&id=1jYMRx3cKiXZVo8AgZnoj2Fqmy_xasiLR">
@@ -232,7 +232,7 @@
         <div class="header-title">
             <!-- LOGO TOKO -->
             <img src="https://drive.google.com/uc?export=view&id=1Kfx0HXmeLxe1wCxbjEOfSvyL_OwSTESX" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
-            <h2>BanlieComputing Portal</h2>
+            <h2>Banlie Computing Portal</h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
 
@@ -272,11 +272,10 @@
             <button id="tabKatalogPublik" class="tab-btn public-only active" onclick="openTab('katalog-publik', this); renderKatalogPublik();">Store & Laptop</button>
             <button id="tabStatusPublik" class="tab-btn public-only" onclick="openTab('status', this)">Cek Status Servis</button>
             
-            <!-- Internal -->
-            <button id="tabDataServis" class="tab-btn tech-only" onclick="openTab('data-servis', this); renderTechServices();" style="display: none;">Kelola Servisan</button>
-            <button id="tabPenjualan" class="tab-btn internal-only" onclick="openTab('penjualan', this)" style="display: none;">Katalog & Penjualan</button>
+            <!-- Internal (Gabungan Teknisi & Admin) -->
+            <button id="tabServisan" class="tab-btn internal-only admin-only tech-only" onclick="openTab('data-servis', this); renderServisan();" style="display: none;">Servisan</button>
+            <button id="tabPenjualan" class="tab-btn internal-only admin-only tech-only" onclick="openTab('penjualan', this)" style="display: none;">Katalog & Penjualan</button>
             
-            <button id="tabAdminServis" class="tab-btn admin-only" onclick="openTab('admin-servis', this); renderAdminServices();" style="display: none;">Semua Servisan</button>
             <button id="tabDashboard" class="tab-btn admin-only" onclick="openTab('dashboard', this); renderDashboard();" style="display: none;">📊 Dashboard</button>
             <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">Kelola Teknisi</button>
         </div>
@@ -285,7 +284,7 @@
 
         <!-- 1B. KATALOG LAPTOP (Publik - Default Awal) -->
         <div id="katalog-publik" class="page-content active">
-            <div class="header-title"><h2>BanlieComputing Store</h2><p>Katalog Laptop & Komputer Tersedia</p></div>
+            <div class="header-title"><h2>Banlie Computing Store</h2><p>Katalog Laptop & Komputer Tersedia</p></div>
             
             <!-- Fitur Filter & Sortir Katalog -->
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
@@ -327,7 +326,7 @@
                     <h2 style="font-size: 1.3rem;">Manajemen Katalog & Stok</h2>
                     <p>Kelola etalase dan rekapan penjualan toko</p>
                 </div>
-                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahLaptop')">+ Tambah Laptop Baru</button>
+                <button class="submit-btn admin-only" style="width: auto; padding: 10px 20px; font-size: 0.9rem; display:none;" onclick="openModal('modalTambahLaptop')">+ Tambah Laptop Baru</button>
             </div>
             
             <div class="input-group" style="margin-bottom: 15px;">
@@ -347,11 +346,11 @@
             </div>
 
             <!-- TABEL 2: LAPTOP TERJUAL -->
-            <div class="header-title" style="margin-top: 3rem; text-align: left;">
+            <div class="header-title admin-only" style="margin-top: 3rem; text-align: left; display:none;">
                 <h2 style="font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: var(--danger-bg);">🔴 Rekap Penjualan (Terjual)</h2>
                 <p style="text-align: left; font-size: 0.8rem; margin-top: 2px;">Data barang yang sudah laku (Privat Admin)</p>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive admin-only" style="display:none;">
                 <table>
                     <thead><tr><th>Produk</th><th>Detail Transaksi</th><th>Data Pembeli & Sensitif</th><th style="min-width: 180px;">Aksi</th></tr></thead>
                     <tbody id="tbodyKatalogTerjual"></tbody>
@@ -413,47 +412,38 @@
             </div>
         </div>
 
-        <!-- 4. DATA SERVISAN SAYA (Hanya Teknisi) -->
+        <!-- 4. GABUNGAN DATA SERVISAN (Admin & Teknisi dengan Sub-Menu) -->
         <div id="data-servis" class="page-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div class="header-title" style="margin-bottom: 0; text-align: left;">
-                    <h2 style="font-size: 1.3rem;">Kelola Servisan</h2>
-                    <p>Perbarui progres perangkat pelanggan</p>
+                    <h2 style="font-size: 1.3rem;">Data Servisan</h2>
+                    <p>Pantau dan kelola tiket pelanggan</p>
                 </div>
                 <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahServis')">+ Buat Tiket Servis</button>
             </div>
+
+            <!-- Pencarian -->
             <div class="input-group" style="margin-bottom: 15px;">
-                <input type="text" id="searchTech" placeholder="🔍 Cari ID Tiket, Nama, WA, atau Merek..." onkeyup="renderTechServices()" style="max-width: 400px; border-radius: 30px; padding: 10px 20px;">
+                <input type="text" id="searchServisan" placeholder="🔍 Cari ID Tiket, Nama, WA, Merek..." onkeyup="renderServisan()" style="max-width: 400px; border-radius: 30px; padding: 10px 20px;">
             </div>
+
+            <!-- Sub Menu Filter -->
+            <div style="display:flex; gap:10px; margin-bottom:15px; overflow-x:auto; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
+                <button class="btn-sm btn-filter-srv" style="background:var(--accent-color); border:1px solid var(--accent-color);" onclick="setFilterSrv('Semua', this)">Semua Data</button>
+                <button class="btn-sm btn-filter-srv" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterSrv('Masuk', this)">📥 Masuk (Antrean)</button>
+                <button class="btn-sm btn-filter-srv" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterSrv('Proses', this)">⚙️ Sedang Proses</button>
+                <button class="btn-sm btn-filter-srv" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterSrv('SelesaiBatal', this)">✅ Selesai / ❌ Batal</button>
+            </div>
+
             <div class="table-responsive">
                 <table>
                     <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Aksi</th></tr></thead>
-                    <tbody id="tbodyTechServices"></tbody>
+                    <tbody id="tbodyServisan"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- 5. KELOLA SEMUA SERVISAN (Hanya Admin) -->
-        <div id="admin-servis" class="page-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div class="header-title" style="margin-bottom: 0; text-align: left;">
-                    <h2 style="font-size: 1.3rem;">Semua Data Servis</h2>
-                    <p>Pantau dan kelola tiket seluruh pelanggan</p>
-                </div>
-                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahServis')">+ Buat Tiket Servis</button>
-            </div>
-            <div class="input-group" style="margin-bottom: 15px;">
-                <input type="text" id="searchAdmin" placeholder="🔍 Cari ID Tiket, Nama, WA, Merek, atau Teknisi..." onkeyup="renderAdminServices()" style="max-width: 400px; border-radius: 30px; padding: 10px 20px;">
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead><tr><th>Tiket & Tanggal</th><th>Pelanggan</th><th>Detail Perangkat</th><th style="min-width: 260px;">Status & Aksi</th></tr></thead>
-                    <tbody id="tbodyAdminServices"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 6. KELOLA TEKNISI / USER (Hanya Admin) -->
+        <!-- 5. KELOLA TEKNISI / USER (Hanya Admin) -->
         <div id="kelola-user" class="page-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div class="header-title" style="margin-bottom: 0; text-align: left;">
@@ -518,7 +508,7 @@
                 <div class="input-group">
                     <label>Upload Foto (1 - 4 Gambar)</label>
                     <input type="file" id="lapFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">*Tahan tombol Ctrl/Shift untuk pilih s/d 4 foto sekaligus.</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">*Gambar belum dikirim ke Google Drive. Tahan tombol Ctrl untuk pilih s/d 4 foto.</div>
                 </div>
                 <button type="submit" id="btnSimpanLaptop" class="submit-btn" style="margin-top: 10px;">+ Simpan ke Etalase</button>
             </form>
@@ -811,6 +801,7 @@
         let currentUser = null; 
         let currentEditLapId = null;
         let lastFoundArray = []; 
+        let currentSrvFilter = 'Semua';
 
         // ================= FUNGSI HELPER TANGGAL UNIVERSAL =================
         function cleanDateForInput(dateStr) {
@@ -876,15 +867,13 @@
             
             if(String(user.role).toLowerCase() === 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-                document.querySelectorAll('.tech-only').forEach(el => el.style.display = 'none');
                 openTab('dashboard', document.getElementById('tabDashboard'));
-                renderAdminServices();
+                renderServisan();
                 renderAdminKatalog();
             } else {
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.tech-only').forEach(el => el.style.display = 'block');
-                openTab('data-servis', document.getElementById('tabDataServis'));
-                renderTechServices();
+                openTab('data-servis', document.getElementById('tabServisan'));
+                renderServisan();
                 renderAdminKatalog();
             }
         }
@@ -909,7 +898,6 @@
             document.getElementById('dlKelengkapan').innerHTML = [...kelengkapans].map(k => `<option value="${k}">`).join('');
             document.getElementById('dlMasalah').innerHTML = [...masalahs].map(m => `<option value="${m}">`).join('');
 
-            // Perbarui juga Dropdown Filter Merek pada Katalog Publik
             const filterEl = document.getElementById('filterMerek');
             if(filterEl) {
                 let currentVal = filterEl.value;
@@ -937,15 +925,15 @@
                     if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
                     if (!Array.isArray(s.history)) s.history = [];
                     if (!Array.isArray(s.pesanChat)) s.pesanChat = [];
-                    if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(String(s.tanggalMasuk)); // Bersihkan tanggal
+                    if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(String(s.tanggalMasuk));
                     return s;
                 }) : [];
 
                 laptopKatalogDB = Array.isArray(resKatalog) ? resKatalog.filter(l => l.id && String(l.id).trim() !== '').map(l => {
                     try { if (typeof l.fotos === 'string') l.fotos = JSON.parse(l.fotos); } catch(e) { l.fotos = []; }
                     if (!Array.isArray(l.fotos)) l.fotos = [];
-                    if (l.tanggal) l.tanggal = cleanDateForInput(String(l.tanggal)); // Bersihkan tanggal masuk
-                    if (l.tanggalTerjual) l.tanggalTerjual = cleanDateForInput(String(l.tanggalTerjual)); // Bersihkan tanggal jual
+                    if (l.tanggal) l.tanggal = cleanDateForInput(String(l.tanggal));
+                    if (l.tanggalTerjual) l.tanggalTerjual = cleanDateForInput(String(l.tanggalTerjual));
                     return l;
                 }) : [];
 
@@ -984,7 +972,7 @@
             catch (error) { console.error("Error saving data:", error); }
         }
 
-        // ================= FUNGSI CUSTOM CONFIRMATION (Aman untuk HP / iFrame) =================
+        // ================= FUNGSI CUSTOM CONFIRMATION =================
         let confirmCallback = null;
         function customConfirm(message, callback) {
             document.getElementById('confirmMessage').textContent = message;
@@ -1054,15 +1042,9 @@
             return new Promise((resolve) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = event => {
-                    const img = new Image(); img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                        // Turunkan resolusi kompresi sedikit agar payload tidak terlalu besar untuk Google Sheets
-                        const maxWidth = 500; let width = img.width, height = img.height;
-                        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
-                        canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.5)); 
-                    }
+                    // SEMENTARA kita masih mengirim base64 ke spreadsheet.
+                    // Jika ingin Google Drive, ini harus diganti nanti.
+                    resolve(event.target.result); 
                 }
             });
         }
@@ -1141,7 +1123,6 @@
             let startDate = document.getElementById('filterStart').value;
             let endDate = document.getElementById('filterEnd').value;
 
-            // Filter data sesuai rentang tanggal (jika diisi)
             let filteredLaptops = laptopKatalogDB;
             let filteredServices = servicesDB;
 
@@ -1152,7 +1133,7 @@
                 });
                 filteredServices = servicesDB.filter(s => {
                     let d = s.tanggalMasuk;
-                    if(d.includes(' ')) d = d.split(' ')[0]; // Ekstrak tanggal jika format WIB
+                    if(d.includes(' ')) d = d.split(' ')[0];
                     return d >= startDate && d <= endDate;
                 });
             }
@@ -1168,11 +1149,9 @@
                     lapTerjual += parseInt(l.stok); 
                     omsetJual += parseInt(l.harga) || 0; 
                     
-                    // Hitung Merek
                     let mrk = String(l.merek).toUpperCase().trim();
                     merkCount[mrk] = (merkCount[mrk] || 0) + parseInt(l.stok);
 
-                    // Hitung Penjual
                     let ksr = String(l.penjual || 'Tidak Diketahui').trim();
                     kasirCount[ksr] = (kasirCount[ksr] || 0) + parseInt(l.stok);
                 } else {
@@ -1187,34 +1166,28 @@
                 else if(s.status === 'Batal') srvBatal++;
             });
 
-            // Update UI Ringkasan Global
             document.getElementById('dashOmsetJual').textContent = formatRupiahText(omsetJual.toString()); 
             document.getElementById('dashOmsetServis').textContent = formatRupiahText(omsetServis.toString());
             document.getElementById('dashLapTerjual').textContent = lapTerjual + " Unit"; 
             document.getElementById('dashSrvSelesai').textContent = srvSelesai + " Tiket";
 
-            // Update UI Detail Servis
             document.getElementById('dtSrvMasuk').textContent = srvMasuk + " Unit";
             document.getElementById('dtSrvProses').textContent = srvProses + " Unit";
             document.getElementById('dtSrvSelesai').textContent = srvSelesai + " Unit";
             document.getElementById('dtSrvBatal').textContent = srvBatal + " Unit";
 
-            // Update UI Detail Katalog
             document.getElementById('dtLapTersedia').textContent = lapTersedia + " Unit";
             document.getElementById('dtLapTerjualDetail').textContent = lapTerjual + " Unit";
 
-            // Render List Merek
             let merkHtml = '';
             for (const [merk, qty] of Object.entries(merkCount)) { merkHtml += `<span class="badge" style="background:var(--card-bg); border:1px solid var(--border-color); margin:2px;">${merk}: ${qty}</span>`; }
             document.getElementById('dashMerkList').innerHTML = merkHtml || '-';
 
-            // Render List Kasir
             let kasirHtml = '';
             for (const [ksr, qty] of Object.entries(kasirCount)) { kasirHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:4px; padding-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:var(--text-muted);">${ksr}</span><strong style="color:var(--text-main);">${qty} Unit</strong></div>`; }
             document.getElementById('dashKasirList').innerHTML = kasirHtml || '-';
 
 
-            // Render Charts
             const ctxSrv = document.getElementById('chartServis').getContext('2d'); const ctxInc = document.getElementById('chartPendapatan').getContext('2d');
             Chart.defaults.color = '#94a3b8';
             if(chartSrvIns) chartSrvIns.destroy(); if(chartIncIns) chartIncIns.destroy();
@@ -1411,7 +1384,7 @@
             document.getElementById('uSrvKirimPesan').value = '';
             
             openModalUpdateServis(id); 
-            if(currentUser.role === 'admin') renderAdminServices(); else renderTechServices();
+            renderServisan();
         }
 
         // ================= LOGIKA KATALOG DENGAN FILTER & SORT (PUBLIK) =================
@@ -1421,21 +1394,13 @@
             
             let tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
 
-            // Proses Filter berdasarkan Merek
             const filterMerekValue = document.getElementById('filterMerek').value;
-            if(filterMerekValue) {
-                tersediaDB = tersediaDB.filter(l => l.merek === filterMerekValue);
-            }
+            if(filterMerekValue) { tersediaDB = tersediaDB.filter(l => l.merek === filterMerekValue); }
 
-            // Proses Sorting (Urutan)
             const sortValue = document.getElementById('sortKatalog').value;
-            if (sortValue === 'murah') {
-                tersediaDB.sort((a, b) => parseInt(a.harga) - parseInt(b.harga));
-            } else if (sortValue === 'mahal') {
-                tersediaDB.sort((a, b) => parseInt(b.harga) - parseInt(a.harga));
-            } else { // 'baru' -> default (berdasarkan id atau posisi push terakhir)
-                tersediaDB.reverse(); // Membalik array untuk menampilkan item terbaru di atas
-            }
+            if (sortValue === 'murah') { tersediaDB.sort((a, b) => parseInt(a.harga) - parseInt(b.harga)); } 
+            else if (sortValue === 'mahal') { tersediaDB.sort((a, b) => parseInt(b.harga) - parseInt(a.harga)); } 
+            else { tersediaDB.reverse(); }
 
             if(tersediaDB.length === 0) {
                 grid.innerHTML = `<div style="text-align:center; width: 100%; padding: 40px; color: var(--text-muted);">Belum ada produk di etalase toko.</div>`; return;
@@ -1468,7 +1433,6 @@
                 `;
             });
             
-            // Revert reverse if it was applied so it doesn't mess the original array next time
             if (sortValue === 'baru') tersediaDB.reverse(); 
         }
 
@@ -1483,7 +1447,6 @@
             if(!tbTersedia || !tbTerjual) return;
             tbTersedia.innerHTML = ''; tbTerjual.innerHTML = '';
             
-            // Logika Pencarian Admin
             const q = document.getElementById('searchAdminKatalog')?.value.toLowerCase() || '';
             const filteredDB = laptopKatalogDB.filter(l => 
                 String(l.id).toLowerCase().includes(q) || 
@@ -1497,18 +1460,17 @@
             filteredDB.forEach((lap) => {
                 let imgThumb = lap.fotos && lap.fotos.length > 0 ? `<img src="${lap.fotos[0]}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; cursor:zoom-in;" onclick="viewImagePopup(this.src)">` : `<div style="width:40px; height:40px; background:var(--border-color); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px;">💻</div>`;
                 
-                // Hak Akses Tombol: Admin bisa semua, Teknisi hanya bisa jual
-                let aksiTersediaHTML = `<button class="btn-sm btn-jual" onclick="bukaModalJual('${lap.id}')">🛒 Jual 1 Unit</button>`;
+                let aksiTersediaHTML = `<button class="btn-sm btn-jual" onclick="bukaModalJual('${lap.id}')">🛒 Jual</button>`;
                 let aksiTerjualHTML = ``;
 
                 if (currentUser && currentUser.role === 'admin') {
                     aksiTersediaHTML += `
                         <button class="btn-sm btn-edit" onclick="openModalEditInventory('${lap.id}')">✏️ Edit</button>
-                        <button class="btn-sm btn-danger" onclick="hapusLaptop('${lap.id}')">🗑️ Hapus</button>
+                        <button class="btn-sm btn-danger" onclick="hapusLaptop('${lap.id}')">🗑️</button>
                     `;
                     aksiTerjualHTML += `
                         <button class="btn-sm btn-edit" onclick="openModalEditTerjual('${lap.id}')">✏️ Edit</button>
-                        <button class="btn-sm btn-danger" onclick="hapusLaptop('${lap.id}')">🗑️ Hapus</button>
+                        <button class="btn-sm btn-danger" onclick="hapusLaptop('${lap.id}')">🗑️</button>
                     `;
                 }
 
@@ -1630,7 +1592,6 @@
                 laptopKatalogDB[idx].tanggal = cleanDateForInput(document.getElementById('mEditTgl').value) || getTodayDate();
                 
                 let fileInput = document.getElementById('mEditFotos');
-                // PERBAIKAN UPLOAD GAMBAR: Cek file terisi
                 if (fileInput.files.length > 0) {
                     let lapFotosArray = []; let limit = Math.min(fileInput.files.length, 4); 
                     for (let i = 0; i < limit; i++) { 
@@ -1696,60 +1657,55 @@
             };
             servicesDB.push(newSrv); showToast(`Tiket Servis Dibuat: ${newSrv.id}`); populateDatalists();
             this.reset(); closeModal('modalTambahServis');
-            if(currentUser.role === 'teknisi') renderTechServices();
-            if(currentUser.role === 'admin') { renderAdminServices(); renderDashboard(); }
+            renderServisan();
+            if(currentUser.role === 'admin') { renderDashboard(); }
             sendToServer('saveService', newSrv);
         });
 
-        // ================= LOGIKA TEKNISI & ADMIN SERVISAN =================
-        function renderTechServices() {
-            const tbody = document.getElementById('tbodyTechServices'); tbody.innerHTML = '';
-            const q = document.getElementById('searchTech').value.toLowerCase();
-            const myData = servicesDB.filter(s => s.techId === currentUser.username && (s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || s.wa.includes(q) || s.merek.toLowerCase().includes(q)));
-            
-            if(myData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">Tidak ada data ditemukan</td></tr>`; return; }
-
-            myData.forEach(s => {
-                let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
-                if (s.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px;">⏱️ Menunggu Konfirmasi</span>`;
-
-                let compactHistoryHTML = '';
-                if(s.history && s.history.length > 0) {
-                    compactHistoryHTML = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
-                    let displayHistory = s.history.slice(-3); 
-                    if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
-                    
-                    displayHistory.forEach(h => {
-                        compactHistoryHTML += `<div class="history-item" style="margin-bottom: 8px;"><div class="history-time" style="font-size:0.7rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:1px 4px; border-radius:3px;">${h.by}</span></div><div class="history-action" style="font-size:0.75rem; color:var(--accent-color);">${h.action}</div>${h.note ? `<div class="history-note" style="font-size:0.75rem; color:var(--text-muted); margin-top:0;">"${h.note}"</div>` : ''}</div>`;
-                    });
-                    compactHistoryHTML += '</div>';
-                }
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${displayDateReadably(s.tanggalMasuk)}</span></td>
-                        <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
-                        <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
-                        <td>
-                            <div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}
-                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
-                                <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 Update Progres</button>
-                                <button class="btn-sm btn-success" onclick="openModalEditDataServis('${s.id}')">📝 Edit Detail</button>
-                                <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
-                                <button class="btn-sm btn-danger" onclick="hapusServisPrompt('${s.id}')">🗑️ Hapus</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+        // ================= LOGIKA GABUNGAN TAB SERVISAN (ADMIN & TEKNISI) =================
+        function setFilterSrv(status, btnElement) {
+            currentSrvFilter = status;
+            document.querySelectorAll('.btn-filter-srv').forEach(b => {
+                b.style.background = 'var(--input-bg)';
+                b.style.borderColor = 'var(--border-color)';
             });
+            btnElement.style.background = 'var(--accent-color)';
+            btnElement.style.borderColor = 'var(--accent-color)';
+            renderServisan();
         }
 
-        function renderAdminServices() {
-            const tbody = document.getElementById('tbodyAdminServices'); tbody.innerHTML = '';
-            const q = document.getElementById('searchAdmin').value.toLowerCase();
-            const myData = servicesDB.filter(s => s.id.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q) || s.wa.includes(q) || s.merek.toLowerCase().includes(q) || s.techId.toLowerCase().includes(q));
+        function renderServisan() {
+            const tbody = document.getElementById('tbodyServisan'); tbody.innerHTML = '';
+            const q = document.getElementById('searchServisan').value.toLowerCase();
+            
+            let myData = servicesDB;
 
-            if(myData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">Tidak ada data ditemukan</td></tr>`; return; }
+            // 1. Filter Role: Teknisi hanya melihat miliknya
+            if (currentUser && currentUser.role !== 'admin') {
+                myData = myData.filter(s => s.techId === currentUser.username);
+            }
+
+            // 2. Filter Search Box
+            if (q) {
+                myData = myData.filter(s => 
+                    s.id.toLowerCase().includes(q) || 
+                    s.nama.toLowerCase().includes(q) || 
+                    s.wa.includes(q) || 
+                    s.merek.toLowerCase().includes(q) ||
+                    (currentUser.role === 'admin' && s.techId.toLowerCase().includes(q))
+                );
+            }
+
+            // 3. Filter Sub-Tab Status
+            if (currentSrvFilter !== 'Semua') {
+                if (currentSrvFilter === 'SelesaiBatal') {
+                    myData = myData.filter(s => s.status === 'Selesai' || s.status === 'Batal');
+                } else {
+                    myData = myData.filter(s => s.status === currentSrvFilter);
+                }
+            }
+
+            if(myData.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px;">Tidak ada data ditemukan di kategori ini.</td></tr>`; return; }
 
             myData.forEach(s => {
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
@@ -1766,9 +1722,11 @@
                     compactHistoryHTML += '</div>';
                 }
 
+                let infoTeknisi = currentUser.role === 'admin' ? `<br><span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: var(--info-bg); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Teknisi: ${s.techId}</span>` : '';
+
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${displayDateReadably(s.tanggalMasuk)}</span><br><span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: var(--info-bg); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Teknisi: ${s.techId}</span></td>
+                        <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${displayDateReadably(s.tanggalMasuk)}</span>${infoTeknisi}</td>
                         <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
                         <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
                         <td>
@@ -1777,7 +1735,7 @@
                                 <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 Update Progres</button>
                                 <button class="btn-sm btn-success" onclick="openModalEditDataServis('${s.id}')">📝 Edit Detail</button>
                                 <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button>
-                                <button class="btn-sm btn-danger" onclick="hapusServisPrompt('${s.id}')">🗑️ Hapus</button>
+                                <button class="btn-sm btn-danger" onclick="hapusServisPrompt('${s.id}')">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -1849,7 +1807,8 @@
             }
             
             showToast(`Update & Log Timeline berhasil disimpan!`); this.reset(); closeModal('modalUpdateServis');
-            if (currentUser.role === 'admin') { renderAdminServices(); renderDashboard(); } else renderTechServices();
+            renderServisan();
+            if (currentUser.role === 'admin') { renderDashboard(); }
             sendToServer('saveService', servicesDB[idx]); 
         });
 
@@ -1875,7 +1834,6 @@
             const id = document.getElementById('eSrvId').value;
             const idx = servicesDB.findIndex(s => s.id === id); if(idx === -1) return;
 
-            // Update field TANPA menyentuh .history atau .pesanChat agar tetap aman
             servicesDB[idx].nama = document.getElementById('eSrvNama').value;
             servicesDB[idx].wa = document.getElementById('eSrvWA').value;
             servicesDB[idx].jenis = document.getElementById('eSrvJenis').value;
@@ -1886,14 +1844,13 @@
             servicesDB[idx].masalah = document.getElementById('eSrvMasalah').value;
             servicesDB[idx].deskripsi = document.getElementById('eSrvDeskripsi').value;
 
-            // Catat log pengeditan ini ke timeline perangkat terkait
             if(!servicesDB[idx].history) servicesDB[idx].history = [];
             servicesDB[idx].history.push({ time: formatDateWIB(), action: 'Edit Data Detail', note: 'Admin/Teknisi memperbarui detail informasi perangkat ini.', by: currentUser.username });
 
             showToast(`Detail Perangkat berhasil diubah!`);
             closeModal('modalEditDataServis');
             
-            if (currentUser.role === 'admin') { renderAdminServices(); } else { renderTechServices(); }
+            renderServisan();
             sendToServer('saveService', servicesDB[idx]);
         });
 
@@ -1904,9 +1861,8 @@
                 if(idx > -1) {
                     servicesDB.splice(idx, 1);
                     showToast('Data Servis berhasil dihapus secara permanen!');
-                    if (currentUser.role === 'admin') { renderAdminServices(); renderDashboard(); } else { renderTechServices(); }
-                    
-                    // Gunakan Endpoint Google Sheet jika disupport, jika tidak abaikan
+                    renderServisan();
+                    if (currentUser.role === 'admin') { renderDashboard(); }
                     sendToServer('deleteService', { id: id });
                 }
             });
@@ -1968,7 +1924,6 @@
             let oldUname = usersDB[index].username;
             let newUname = document.getElementById(`editUname-${index}`).value;
             
-            // Cek apabila username baru sudah dipakai oleh orang lain
             if(oldUname !== newUname && usersDB.find(x => x.username === newUname)) {
                 showToast('Username tersebut sudah digunakan orang lain!', true); return;
             }
@@ -1981,7 +1936,6 @@
             showToast('Perubahan disimpan!'); 
             renderUsers(); 
 
-            // Jika username berubah, beritahu server untuk menghapus yg lama (karena server kita mendeteksi berdasarkan username)
             if (oldUname !== newUname) {
                 sendToServer('deleteUser', { username: oldUname });
             }
