@@ -250,8 +250,13 @@
             <button id="tabKatalogPublik" class="tab-btn public-only active" onclick="openTab('katalog-publik', this); renderKatalogPublik();">Store & Laptop</button>
             <button id="tabStatusPublik" class="tab-btn public-only" onclick="openTab('status', this)">Cek Status Servis</button>
             
-            <button id="tabServisan" class="tab-btn internal-only admin-only tech-only" onclick="openTab('data-servis', this); renderServisan();" style="display: none;">Servisan</button>
-            <button id="tabPenjualan" class="tab-btn internal-only admin-only tech-only" onclick="openTab('penjualan', this)" style="display: none;">Katalog & Penjualan</button>
+            <button id="tabServisan" class="tab-btn internal-only" onclick="openTab('data-servis', this); renderServisan();" style="display: none;">Servisan</button>
+            
+            <!-- Tab Katalog Terlihat untuk Teknisi dan Admin -->
+            <button id="tabPenjualan" class="tab-btn internal-only" onclick="openTab('penjualan', this)" style="display: none;">Katalog & Penjualan</button>
+            
+            <!-- Tab Baru: Pesan Chat -->
+            <button id="tabPesan" class="tab-btn internal-only" onclick="openTab('pesan', this); renderPesan();" style="display: none;">💬 Pesan</button>
             
             <button id="tabDashboard" class="tab-btn admin-only" onclick="openTab('dashboard', this); renderDashboard();" style="display: none;">📊 Dashboard</button>
             <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">Kelola Teknisi</button>
@@ -300,7 +305,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div class="header-title" style="margin-bottom: 0; text-align: left;">
                     <h2 style="font-size: 1.3rem;">Manajemen Katalog & Stok</h2>
-                    <p>Kelola etalase dan rekapan penjualan toko</p>
+                    <p>Kelola etalase toko (Teknisi hanya bisa menjual)</p>
                 </div>
                 <button class="submit-btn admin-only" style="width: auto; padding: 10px 20px; font-size: 0.9rem; display:none;" onclick="openModal('modalTambahLaptop')">+ Tambah Laptop Baru</button>
             </div>
@@ -410,6 +415,15 @@
                     <tbody id="tbodyServisan"></tbody>
                 </table>
             </div>
+        </div>
+        
+        <!-- HALAMAN BARU: PESAN & CHAT KONSUMEN -->
+        <div id="pesan" class="page-content">
+            <div class="header-title" style="text-align: left; margin-bottom: 20px;">
+                <h2 style="font-size: 1.3rem;">Ruang Pesan & Diskusi</h2>
+                <p>Daftar percakapan aktif dengan pelanggan</p>
+            </div>
+            <div id="listPesanContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
 
         <!-- 5. KELOLA TEKNISI / USER (Hanya Admin) -->
@@ -970,7 +984,7 @@
                         updatedServices.forEach(newSrv => {
                             let inMyList = lastFoundArray.find(o => o.id === newSrv.id);
                             if (inMyList && newSrv.unreadByCust && !inMyList.unreadByCust) {
-                                showToast(`💬 Teknisi membalas pesan untuk perangkat ${newSrv.merek} (ID: ${newSrv.id})!`, false, 6000);
+                                showToast(`💬 Pihak toko membalas pesan untuk perangkat ${newSrv.merek} (ID: ${newSrv.id})!`, false, 6000);
                             }
                         });
                         lastFoundArray = lastFoundArray.map(old => updatedServices.find(n => n.id === old.id) || old);
@@ -982,13 +996,15 @@
                 // Render Ulang UI
                 if (currentUser && document.getElementById('data-servis').classList.contains('active')) {
                     renderServisan();
+                } else if (currentUser && document.getElementById('pesan').classList.contains('active')) {
+                    renderPesan();
                 } else if (!currentUser && document.getElementById('hasilPencarian').style.display === 'block') {
-                    if (lastFoundArray.length === 1) renderDetailPencarian(lastFoundArray[0], false, true); // true = isPolling (jangan auto clear)
+                    if (lastFoundArray.length === 1) renderDetailPencarian(lastFoundArray[0], false, true); 
                     else renderDaftarPencarian(lastFoundArray);
                 }
             } catch(e) { console.error("Polling error", e); }
         }
-        setInterval(pollData, 15000); // 15 detik cek notif
+        setInterval(pollData, 15000); 
 
         let confirmCallback = null;
         function customConfirm(message, callback) {
@@ -1020,9 +1036,12 @@
             inp.addEventListener('input', function(e) { this.value = formatRupiahText(this.value); });
         });
 
+        // ================= PENYESUAIAN FORMAT TANGGAL & JAM =================
         function formatDateWIB() {
-            const d = new Date(); const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()} WIB`;
+            const d = new Date(); 
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()} ${time} WIB`;
         }
 
         function showToast(msg, isError=false, duration=3000) {
@@ -1281,7 +1300,9 @@
             let chatHTML = '';
             if (found.pesanChat && found.pesanChat.length > 0) {
                 found.pesanChat.forEach(p => {
-                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; let senderName = p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Anda';
+                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; 
+                    // Menampilkan role dan nama Staff secara dinamis
+                    let senderName = p.sender === 'teknisi' ? `👨‍🔧 ${p.senderName || 'Staff'} (${String(p.senderRole||'Teknisi').toUpperCase()})` : '👤 Anda';
                     chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
                 });
             } else { chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada pesan/catatan khusus.</div>`; }
@@ -1336,13 +1357,66 @@
 
             if(!text.trim() && !butuhKonfirm) return showToast('Pesan kosong. Ketik sesuatu atau centang konfirmasi.', true);
             if(!srv.pesanChat) srv.pesanChat = [];
-            if(text.trim()) { srv.pesanChat.push({ sender: 'teknisi', text: text, time: formatDateWIB() }); }
+            if(text.trim()) { 
+                // Simpan nama pengirim dan role
+                srv.pesanChat.push({ sender: 'teknisi', senderName: currentUser.nama, senderRole: currentUser.role, text: text, time: formatDateWIB() }); 
+            }
             
             srv.butuhKonfirmasi = butuhKonfirm; 
             srv.unreadByCust = true; // Tandai belum dibaca oleh konsumen
 
             sendToServer('saveService', srv); showToast('Pesan terkirim ke pelanggan!');
             document.getElementById('uSrvKirimPesan').value = ''; openModalUpdateServis(id); renderServisan();
+        }
+
+        // ================= LOGIKA TAB PESAN / CHAT =================
+        function renderPesan() {
+            const container = document.getElementById('listPesanContainer');
+            container.innerHTML = '';
+            
+            let myData = servicesDB;
+            // Jika teknisi, hanya lihat chat pelanggannya sendiri
+            if (currentUser && currentUser.role !== 'admin') {
+                myData = myData.filter(s => s.techId === currentUser.username);
+            }
+            
+            // Filter hanya yang punya pesan chat
+            let chatList = myData.filter(s => s.pesanChat && s.pesanChat.length > 0);
+            
+            // Urutkan (Pesan Paling Baru di Atas). Kita pakai kebalikan urutan ID
+            chatList.sort((a, b) => b.id.localeCompare(a.id));
+
+            if (chatList.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--text-muted); background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px dashed var(--border-color);">Belum ada pesan / obrolan aktif.</div>`;
+                return;
+            }
+
+            chatList.forEach(s => {
+                let lastMsg = s.pesanChat[s.pesanChat.length - 1];
+                let unreadBadge = s.unreadByAdmin ? `<span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite;">Pesan Baru</span>` : '';
+                
+                // Cek siapa pengirim pesan terakhir
+                let senderDisp = '👤 Konsumen';
+                if (lastMsg.sender === 'teknisi') {
+                    senderDisp = (lastMsg.senderName === currentUser.nama) ? '👨‍🔧 Anda' : `👨‍🔧 ${lastMsg.senderName || 'Staff'}`;
+                }
+                
+                let textSnippet = lastMsg.text.length > 70 ? lastMsg.text.substring(0, 70) + '...' : lastMsg.text;
+
+                container.innerHTML += `
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onclick="openModalUpdateServis('${s.id}')" onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="color: var(--accent-color); font-size: 1.05rem;">${s.id} - ${s.merek} ${s.tipe}</strong>
+                                ${unreadBadge}
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 6px;"><strong>${senderDisp}:</strong> ${textSnippet}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">A/n: ${s.nama} | <span style="opacity:0.8;">⏱️ ${lastMsg.time}</span></div>
+                        </div>
+                        <button class="btn-sm btn-jual" style="padding: 10px 15px; border-radius: 8px;">Buka Chat</button>
+                    </div>
+                `;
+            });
         }
 
         // ================= LOGIKA KATALOG =================
@@ -1629,6 +1703,7 @@
                 s.unreadByAdmin = false;
                 sendToServer('saveService', s);
                 renderServisan();
+                if(document.getElementById('pesan').classList.contains('active')) renderPesan();
             }
 
             document.getElementById('uSrvId').value = id; document.getElementById('uSrvStatus').value = s.status;
@@ -1639,7 +1714,15 @@
             const chatArea = document.getElementById('techChatArea'); let chatHTML = '';
             if (s.pesanChat && s.pesanChat.length > 0) {
                 s.pesanChat.forEach(p => {
-                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; let senderName = p.sender === 'teknisi' ? '👨‍🔧 Anda' : '👤 Konsumen';
+                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; 
+                    // Tampilkan role/nama teknisi atau "Anda" secara dinamis
+                    let senderName = '';
+                    if (p.sender === 'teknisi') {
+                        senderName = (p.senderName === currentUser.nama) ? '👨‍🔧 Anda' : `👨‍🔧 ${p.senderName || 'Staff'} (${String(p.senderRole||'').toUpperCase()})`;
+                    } else {
+                        senderName = '👤 Konsumen';
+                    }
+
                     chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
                 });
             } else { chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada riwayat percakapan.</div>`; }
@@ -1708,7 +1791,11 @@
             let html = '<div style="margin-bottom: 20px;"><h4 style="color:var(--info-bg); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">💬 Riwayat Chat & Konfirmasi</h4>';
             if(s.pesanChat && s.pesanChat.length > 0) {
                 html += '<div class="chat-area" style="max-height:200px; margin-bottom: 20px;">';
-                s.pesanChat.forEach(p => { html += `<div class="chat-bubble ${p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'}"><strong>${p.sender === 'teknisi' ? '👨‍🔧 Teknisi' : '👤 Konsumen'}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`; });
+                s.pesanChat.forEach(p => { 
+                    let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
+                    let senderName = p.sender === 'teknisi' ? `👨‍🔧 ${p.senderName || 'Staff'}` : '👤 Konsumen';
+                    html += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`; 
+                });
                 html += '</div>';
             } else { html += '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Belum ada riwayat percakapan.</div>'; }
             html += '<h4 style="color:var(--accent-color); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">📜 Timeline Aktivitas Sistem</h4><div class="history-list" style="border-left: 2px solid var(--accent-color); padding-left: 10px;">';
