@@ -452,8 +452,8 @@
             <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tambah Stok Laptop (Etalase)</h3>
             <form id="formPenjualan">
                 <div class="form-row">
-                    <div class="input-group"><label>Merek</label><input type="text" id="lapMerek" list="dlMerek" placeholder="Cth: Lenovo, Asus" required></div>
-                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="lapTipe" list="dlTipe" placeholder="Cth: Thinkpad T480" required></div>
+                    <div class="input-group"><label>Merek</label><input type="text" id="lapMerek" list="dlMerek" placeholder="Cth: LENOVO, ASUS" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="lapTipe" list="dlTipe" placeholder="Cth: THINKPAD T480" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="input-group">
                     <label>Deskripsi & Spesifikasi (Ditampilkan ke publik)</label>
@@ -473,7 +473,7 @@
                             <option value="Non-Garansi">Non-Garansi</option>
                         </select>
                     </div>
-                    <div class="input-group"><label>Tanggal Masuk Toko</label><input type="date" id="lapTgl" required></div>
+                    <div class="input-group"><label>Tanggal Masuk Toko</label><input type="date" id="lapTgl"></div>
                 </div>
                 <div class="input-group">
                     <label>Upload Foto (1 - 4 Gambar)</label>
@@ -492,8 +492,8 @@
             <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Edit Detail Inventory & Foto</h3>
             <form id="formEditLaptop">
                 <div class="form-row">
-                    <div class="input-group"><label>Merek</label><input type="text" id="mEditMerek" list="dlMerek" required></div>
-                    <div class="input-group"><label>Tipe</label><input type="text" id="mEditTipe" list="dlTipe" required></div>
+                    <div class="input-group"><label>Merek</label><input type="text" id="mEditMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe</label><input type="text" id="mEditTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
                     <div class="input-group"><label>Harga Dasar</label><input type="text" id="mEditHarga" class="input-rupiah" inputmode="numeric" required></div>
@@ -511,7 +511,7 @@
                             <option value="Non-Garansi">Non-Garansi</option>
                         </select>
                     </div>
-                    <div class="input-group"><label>Tanggal Masuk</label><input type="date" id="mEditTgl" required></div>
+                    <div class="input-group"><label>Tanggal Masuk</label><input type="date" id="mEditTgl"></div>
                 </div>
                 <div class="input-group">
                     <label>Update Foto (Kosongkan jika tidak ingin mengubah foto lama)</label>
@@ -565,8 +565,8 @@
             <form id="formEditTerjual">
                 <input type="hidden" id="etLapId">
                 <div class="form-row">
-                    <div class="input-group"><label>Merek</label><input type="text" id="etMerek" list="dlMerek" required></div>
-                    <div class="input-group"><label>Tipe</label><input type="text" id="etTipe" list="dlTipe" required></div>
+                    <div class="input-group"><label>Merek</label><input type="text" id="etMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe</label><input type="text" id="etTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
                     <div class="input-group"><label>Tanggal Terjual (Revisi)</label><input type="date" id="etTanggalJual" required></div>
@@ -606,10 +606,10 @@
                         <label>Jenis Perangkat</label>
                         <select id="srvJenis" required><option value="Laptop">Laptop</option><option value="Handphone">Handphone</option><option value="PC">PC/Komputer</option><option value="Printer">Printer</option><option value="Lainnya">Lainnya</option></select>
                     </div>
-                    <div class="input-group"><label>Merek</label><input type="text" id="srvMerek" list="dlMerek" placeholder="Cth: Samsung, Asus" required></div>
+                    <div class="input-group"><label>Merek</label><input type="text" id="srvMerek" list="dlMerek" placeholder="Cth: SAMSUNG, ASUS" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="srvTipe" list="dlTipe" placeholder="Cth: S23 Ultra" required></div>
+                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="srvTipe" list="dlTipe" placeholder="Cth: S23 ULTRA" oninput="this.value = this.value.toUpperCase()" required></div>
                     <div class="input-group"><label>SNID / Serial Number</label><input type="text" id="srvSNID" placeholder="Opsional"></div>
                 </div>
                 <div class="form-row">
@@ -643,10 +643,10 @@
                         <label>Jenis Perangkat</label>
                         <select id="eSrvJenis" required><option value="Laptop">Laptop</option><option value="Handphone">Handphone</option><option value="PC">PC/Komputer</option><option value="Printer">Printer</option><option value="Lainnya">Lainnya</option></select>
                     </div>
-                    <div class="input-group"><label>Merek</label><input type="text" id="eSrvMerek" list="dlMerek" required></div>
+                    <div class="input-group"><label>Merek</label><input type="text" id="eSrvMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="eSrvTipe" list="dlTipe" required></div>
+                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="eSrvTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
                     <div class="input-group"><label>SNID / Serial</label><input type="text" id="eSrvSNID"></div>
                 </div>
                 <div class="input-group"><label>Kelengkapan</label><input type="text" id="eSrvKelengkapan" list="dlKelengkapan" required></div>
@@ -1028,7 +1028,7 @@
                 stok: parseInt(document.getElementById('lapStok').value),
                 warna: document.getElementById('lapWarna').value, // Field Warna Baru
                 garansi: document.getElementById('lapGaransi').value,
-                tanggal: document.getElementById('lapTgl').value,
+                tanggal: document.getElementById('lapTgl').value || getTodayDate(),
                 statusJual: 'Tersedia',
                 fotos: []
             };
@@ -1453,7 +1453,7 @@
                 laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('mEditHarga').value); laptopKatalogDB[idx].stok = document.getElementById('mEditStok').value;
                 laptopKatalogDB[idx].warna = document.getElementById('mEditWarna').value;
                 laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value; laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
-                laptopKatalogDB[idx].tanggal = document.getElementById('mEditTgl').value;
+                laptopKatalogDB[idx].tanggal = document.getElementById('mEditTgl').value || getTodayDate();
                 
                 let fileInput = document.getElementById('mEditFotos');
                 if (fileInput.files.length > 0) {
