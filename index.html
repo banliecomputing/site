@@ -829,10 +829,10 @@
         // ================= FUNGSI AUTOCOMPLETE SUGGESTIONS =================
         function populateDatalists() {
             let mereks = new Set(); let tipes = new Set(); let kelengkapans = new Set(); let masalahs = new Set();
-            laptopKatalogDB.forEach(l => { if(l.merek) mereks.add(l.merek.trim()); if(l.tipe) tipes.add(l.tipe.trim()); });
+            laptopKatalogDB.forEach(l => { if(l.merek) mereks.add(String(l.merek).trim()); if(l.tipe) tipes.add(String(l.tipe).trim()); });
             servicesDB.forEach(s => { 
-                if(s.merek) mereks.add(s.merek.trim()); if(s.tipe) tipes.add(s.tipe.trim()); 
-                if(s.kelengkapan) kelengkapans.add(s.kelengkapan.trim()); if(s.masalah) masalahs.add(s.masalah.trim()); 
+                if(s.merek) mereks.add(String(s.merek).trim()); if(s.tipe) tipes.add(String(s.tipe).trim()); 
+                if(s.kelengkapan) kelengkapans.add(String(s.kelengkapan).trim()); if(s.masalah) masalahs.add(String(s.masalah).trim()); 
             });
             document.getElementById('dlMerek').innerHTML = [...mereks].map(m => `<option value="${m}">`).join('');
             document.getElementById('dlTipe').innerHTML = [...tipes].map(t => `<option value="${t}">`).join('');
@@ -994,7 +994,7 @@
 
         function showPublicView() {
             document.getElementById('loginPage').style.display = 'none'; document.getElementById('appPage').style.display = 'block';
-            document.getElementById('welcomeText').textContent = 'BanlieComputing'; document.getElementById('userRoleDisplay').style.display = 'none';
+            document.getElementById('welcomeText').textContent = 'BanlieComputing Layanan'; document.getElementById('userRoleDisplay').style.display = 'none';
             let btnLogout = document.getElementById('btnLogout'); btnLogout.textContent = 'Login Staff'; btnLogout.onclick = showLoginForm;
             btnLogout.style.borderColor = 'var(--info-bg)'; btnLogout.style.color = 'var(--info-bg)';
             document.querySelectorAll('.internal-only, .admin-only, .tech-only').forEach(el => el.style.display = 'none');
