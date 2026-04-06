@@ -9,9 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            /* EDIT URL BACKGROUND DI BAWAH INI (Ganti link di dalam url) */
             --bg-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop'); 
-            
             --bg-overlay: rgba(15, 23, 42, 0.88);
             --bg-color: #0f172a; 
             --card-bg: #1e293b;  
@@ -448,9 +446,7 @@
                 <p>Daftar percakapan aktif dengan pelanggan</p>
             </div>
             
-            <!-- TAMBAHAN: FILTER TEKNISI KHUSUS ADMIN -->
             <div id="filterPesanAdmin" class="admin-only" style="display:none; flex-wrap:wrap; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;"></div>
-            
             <div id="listPesanContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
 
@@ -518,7 +514,7 @@
                 <div class="input-group">
                     <label>Upload Foto</label>
                     <input type="file" id="lapFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
-                    <div style="font-size: 0.75rem; color: var(--success-bg); margin-top: 4px;">*Auto-Compress Aktif. File foto besar dari HP akan otomatis dikecilkan agar aman masuk ke database.</div>
+                    <div style="font-size: 0.75rem; color: var(--success-bg); margin-top: 4px;">*Auto-Compress Super Ekstra. Foto dari HP akan dikompres maksimal (Max 400px) agar bisa melewati batasan karakter Google Spreadsheet.</div>
                 </div>
                 <button type="submit" id="btnSimpanLaptop" class="submit-btn" style="margin-top: 10px;">+ Simpan ke Etalase</button>
             </form>
@@ -891,23 +887,34 @@
             showPublicView();
         }
 
+        // ================= PERBAIKAN SORTIR MEREK (UPPERCASE) =================
         function populateDatalists() {
             let mereks = new Set(); let tipes = new Set(); let kelengkapans = new Set(); let masalahs = new Set();
-            laptopKatalogDB.forEach(l => { if(l.merek) mereks.add(String(l.merek).trim()); if(l.tipe) tipes.add(String(l.tipe).trim()); });
-            servicesDB.forEach(s => { 
-                if(s.merek) mereks.add(String(s.merek).trim()); if(s.tipe) tipes.add(String(s.tipe).trim()); 
-                if(s.kelengkapan) kelengkapans.add(String(s.kelengkapan).trim()); if(s.masalah) masalahs.add(String(s.masalah).trim()); 
+            
+            laptopKatalogDB.forEach(l => { 
+                if(l.merek) mereks.add(String(l.merek).toUpperCase().trim()); 
+                if(l.tipe) tipes.add(String(l.tipe).toUpperCase().trim()); 
             });
-            document.getElementById('dlMerek').innerHTML = [...mereks].map(m => `<option value="${m}">`).join('');
-            document.getElementById('dlTipe').innerHTML = [...tipes].map(t => `<option value="${t}">`).join('');
-            document.getElementById('dlKelengkapan').innerHTML = [...kelengkapans].map(k => `<option value="${k}">`).join('');
-            document.getElementById('dlMasalah').innerHTML = [...masalahs].map(m => `<option value="${m}">`).join('');
+            servicesDB.forEach(s => { 
+                if(s.merek) mereks.add(String(s.merek).toUpperCase().trim()); 
+                if(s.tipe) tipes.add(String(s.tipe).toUpperCase().trim()); 
+                if(s.kelengkapan) kelengkapans.add(String(s.kelengkapan).trim()); 
+                if(s.masalah) masalahs.add(String(s.masalah).trim()); 
+            });
+
+            // Urutkan Merek secara Alfabetis
+            let sortedMereks = [...mereks].sort();
+
+            document.getElementById('dlMerek').innerHTML = sortedMereks.map(m => `<option value="${m}">`).join('');
+            document.getElementById('dlTipe').innerHTML = [...tipes].sort().map(t => `<option value="${t}">`).join('');
+            document.getElementById('dlKelengkapan').innerHTML = [...kelengkapans].sort().map(k => `<option value="${k}">`).join('');
+            document.getElementById('dlMasalah').innerHTML = [...masalahs].sort().map(m => `<option value="${m}">`).join('');
 
             const filterEl = document.getElementById('filterMerek');
             if(filterEl) {
                 let currentVal = filterEl.value;
                 let optHtml = '<option value="">Semua Merek</option>';
-                [...mereks].sort().forEach(m => optHtml += `<option value="${m}">${m}</option>`);
+                sortedMereks.forEach(m => optHtml += `<option value="${m}">${m}</option>`);
                 filterEl.innerHTML = optHtml;
                 filterEl.value = currentVal; 
             }
@@ -972,6 +979,7 @@
                     if (payload[key] !== undefined && typeof payload[key] !== 'string') { 
                         if (key === 'fotos') {
                             payload[key] = payload[key].map(f => {
+                                // Membersihkan previewData jika berbentuk object agar ringan dikirim
                                 if (f && typeof f === 'object' && f.previewData) { delete f.previewData; }
                                 return f;
                             });
@@ -984,9 +992,8 @@
             catch (error) { console.error("Error saving data:", error); }
         }
 
-        // ================= BACKGROUND POLLING UNTUK NOTIFIKASI =================
         async function pollData() {
-            if (document.hidden) return; // Hemat resource jika tab tidak aktif
+            if (document.hidden) return; 
             try {
                 let resServices = await fetch(API_URL + "?action=getServices").then(r => r.json());
                 let updatedServices = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
@@ -999,7 +1006,6 @@
                     return s;
                 }) : [];
 
-                // Cek Pesan Baru
                 if (currentUser) {
                     updatedServices.forEach(newSrv => {
                         let oldSrv = servicesDB.find(o => o.id === newSrv.id);
@@ -1023,7 +1029,6 @@
 
                 servicesDB = updatedServices;
                 
-                // Render Ulang UI
                 if (currentUser && document.getElementById('data-servis').classList.contains('active')) {
                     renderServisan();
                 } else if (currentUser && document.getElementById('pesan').classList.contains('active')) {
@@ -1066,7 +1071,6 @@
             inp.addEventListener('input', function(e) { this.value = formatRupiahText(this.value); });
         });
 
-        // ================= PENYESUAIAN FORMAT TANGGAL & JAM =================
         function formatDateWIB() {
             const d = new Date(); 
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -1103,15 +1107,24 @@
 
         function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
+        // ================= PERBAIKAN RENDER FOTO AGAR TAHAN BANTING =================
         function getImgSrc(f) {
             if (!f) return '';
-            if (typeof f === 'string') return f;
+            
+            // Jika formatnya murni string panjang (langsung berupa data url hasil kompresi terbaru)
+            if (typeof f === 'string') {
+                if (f === '[object Object]') return ''; // Menyembunyikan gambar rusak bawaan bug lama
+                if (f.startsWith('data:') || f.startsWith('http')) return f;
+                return '';
+            }
+
+            // Jika format berbentuk objek JSON lama
             if (f.previewData) return f.previewData;
             if (f.mimeType && f.data) return `data:${f.mimeType};base64,${f.data}`;
             return '';
         }
 
-        // ================= COMPRESSOR GAMBAR (CANVAS) UNTUK FIX UPLOAD GDRIVE =================
+        // ================= COMPRESSOR GAMBAR EKSTRA KETAT (FIX LIMIT GS 50.000 CHAR) =================
         function getBase64File(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1121,22 +1134,17 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        // Batasi ukuran gambar ke max 800px agar tidak membebani limit App Script / GDrive
-                        const MAX_WIDTH = 800; 
-                        const MAX_HEIGHT = 800;
+                        
+                        // Limit Resolusi Dikecilkan lagi menjadi 400px (Sangat ringan)
+                        const MAX_WIDTH = 400; 
+                        const MAX_HEIGHT = 400;
                         let width = img.width;
                         let height = img.height;
 
                         if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                         } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                         }
                         
                         canvas.width = width;
@@ -1144,15 +1152,11 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Kompresi ke format JPEG (70% Quality) -> Mengurangi ukuran dari 5MB menjadi ~80KB
-                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        // Kompresi ketat ke format JPEG (Kualitas 50%) -> Ukuran base64 menjadi sangat kecil
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
                         
-                        resolve({
-                            name: file.name,
-                            mimeType: 'image/jpeg',
-                            data: compressedDataUrl.split(',')[1],
-                            previewData: compressedDataUrl 
-                        });
+                        // KITA LANGSUNG ME-RETURN STRING URL BASE64 (Bukan Objek) agar lebih aman tersimpan.
+                        resolve(compressedDataUrl);
                     };
                     img.onerror = () => reject(new Error("Gagal memuat gambar"));
                 };
@@ -1192,7 +1196,7 @@
             btn.textContent = 'Menyimpan & Mengunggah...'; btn.disabled = true;
 
             const newLap = {
-                id: generateID('LAP'), merek: document.getElementById('lapMerek').value, tipe: document.getElementById('lapTipe').value, spek: document.getElementById('lapSpek').value,
+                id: generateID('LAP'), merek: document.getElementById('lapMerek').value.toUpperCase(), tipe: document.getElementById('lapTipe').value.toUpperCase(), spek: document.getElementById('lapSpek').value,
                 harga: parseRupiah(document.getElementById('lapHarga').value), stok: parseInt(document.getElementById('lapStok').value), warna: document.getElementById('lapWarna').value, 
                 garansi: document.getElementById('lapGaransi').value, tanggal: cleanDateForInput(document.getElementById('lapTgl').value) || getTodayDate(), statusJual: 'Tersedia', fotos: []
             };
@@ -1201,13 +1205,14 @@
             if (fileInput.files.length > 0) {
                 let limit = Math.min(fileInput.files.length, 4); 
                 for (let i = 0; i < limit; i++) {
-                    let fileObj = await getBase64File(fileInput.files[i]);
-                    newLap.fotos.push(fileObj);
+                    // Karena fungsi sekarang me-return Base64 String, masukkan langsung ke array.
+                    let fileBase64String = await getBase64File(fileInput.files[i]);
+                    newLap.fotos.push(fileBase64String);
                 }
             }
 
             laptopKatalogDB.push(newLap);
-            showToast('Laptop baru berhasil ditambahkan! File Original dikirim.');
+            showToast('Laptop baru berhasil ditambahkan beserta foto!');
             populateDatalists(); this.reset(); closeModal('modalTambahLaptop'); renderAdminKatalog(); renderKatalogPublik();
             
             sendToServer('saveKatalog', newLap);
@@ -1254,7 +1259,6 @@
                         kasirCount[ksr] = (kasirCount[ksr] || 0) + parseInt(l.stok);
                     }
                 } else { 
-                    // Stok tersedia selalu yang aktual (tidak kena filter tanggal jual)
                     lapTersedia += parseInt(l.stok); 
                 }
             });
@@ -1275,13 +1279,11 @@
             let sortedMerek = Object.entries(merkCount).sort((a,b) => b[1] - a[1]);
             let topMerek = sortedMerek.length > 0 ? sortedMerek[0][0] : '-';
 
-            // -- POPULATE: SEMUA VIEW --
             document.getElementById('dashTotOmset').textContent = formatRupiahText(totalOmset.toString());
             document.getElementById('dashTotJual').textContent = formatRupiahText(omsetJual.toString());
             document.getElementById('dashTotServis').textContent = formatRupiahText(omsetServis.toString());
             document.getElementById('dashTotTransaksi').textContent = (lapTerjual + srvSelesai) + " Transaksi";
 
-            // -- POPULATE: KATALOG VIEW --
             document.getElementById('dkOmset').textContent = formatRupiahText(omsetJual.toString());
             document.getElementById('dkTerjual').textContent = lapTerjual + " Unit";
             document.getElementById('dkTersedia').textContent = lapTersedia + " Unit";
@@ -1299,7 +1301,6 @@
             }
             document.getElementById('dashMerkListDetail').innerHTML = merkHtml || '<div style="color:var(--text-muted); font-size:0.85rem;">Belum ada penjualan di periode ini.</div>';
 
-            // -- POPULATE: SERVIS VIEW --
             document.getElementById('dsOmset').textContent = formatRupiahText(omsetServis.toString());
             document.getElementById('dsSelesai').textContent = srvSelesai + " Tiket";
             document.getElementById('dsProses').textContent = srvProses + " Tiket";
@@ -1309,8 +1310,6 @@
             document.getElementById('dtSrvSelesaiList').textContent = srvSelesai + " Tiket";
             document.getElementById('dtSrvBatalList').textContent = srvBatal + " Tiket";
 
-
-            // -- SETUP CHARTS --
             const ctxSemua = document.getElementById('chartPendapatanSemua').getContext('2d'); 
             const ctxServis = document.getElementById('chartServisStatus').getContext('2d');
             Chart.defaults.color = '#94a3b8';
@@ -1360,7 +1359,6 @@
                 let badgeStatus = `<span class="badge ${found.status === 'Selesai' ? 'bg-selesai' : found.status === 'Proses' ? 'bg-proses' : found.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${found.status}</span>`;
                 if (found.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px; margin-top:5px; display:inline-block;">⚠️ Konfirmasi Tertunda</span>`;
                 
-                // NOTIFIKASI KONSUMEN - BAGE MERAH
                 if (found.unreadByCust) badgeStatus += ` <span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite; margin-top:5px; display:inline-block;">💬 Balasan Baru</span>`;
 
                 html += `
@@ -1383,7 +1381,6 @@
         }
 
         function renderDetailPencarian(found, showBackButton, isPolling = false) {
-            // Ketika dibuka, hilangkan notif unread untuk Konsumen
             if (!isPolling && found.unreadByCust) {
                 found.unreadByCust = false;
                 sendToServer('saveService', found);
@@ -1403,8 +1400,6 @@
             let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
             let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
             
-            // PENYELESAIAN BUG HARGA FIXED TIDAK MUNCUL
-            // Ambil dari biayaAkhir atau fallback ke properti biaya lama
             let actualFixedCost = found.biayaAkhir || found.biaya || 0;
             let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
             let costValue = found.status === 'Selesai' 
@@ -1415,8 +1410,6 @@
             if (found.pesanChat && found.pesanChat.length > 0) {
                 found.pesanChat.forEach(p => {
                     let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; 
-                    
-                    // MENYEMBUNYIKAN NAMA TEKNISI DI MATA KONSUMEN (PUBLIK)
                     let roleName = p.senderRole ? String(p.senderRole).toUpperCase() : 'TEKNISI';
                     let senderName = p.sender === 'teknisi' ? `👨‍🔧 ${roleName === 'ADMIN' ? 'Admin' : 'Teknisi'}` : '👤 Anda';
                     
@@ -1457,7 +1450,7 @@
 
             if(!srv.pesanChat) srv.pesanChat = [];
             srv.pesanChat.push({ sender: 'konsumen', text: text, time: formatDateWIB() });
-            srv.unreadByAdmin = true; // Tandai belum dibaca oleh admin/teknisi
+            srv.unreadByAdmin = true; 
             
             if (textOverride && srv.butuhKonfirmasi) {
                 srv.butuhKonfirmasi = false;
@@ -1475,12 +1468,11 @@
             if(!text.trim() && !butuhKonfirm) return showToast('Pesan kosong. Ketik sesuatu atau centang konfirmasi.', true);
             if(!srv.pesanChat) srv.pesanChat = [];
             if(text.trim()) { 
-                // Simpan nama pengirim dan role
                 srv.pesanChat.push({ sender: 'teknisi', senderName: currentUser.nama, senderRole: currentUser.role, text: text, time: formatDateWIB() }); 
             }
             
             srv.butuhKonfirmasi = butuhKonfirm; 
-            srv.unreadByCust = true; // Tandai belum dibaca oleh konsumen
+            srv.unreadByCust = true; 
 
             sendToServer('saveService', srv); showToast('Pesan terkirim ke pelanggan!');
             document.getElementById('uSrvKirimPesan').value = ''; openModalUpdateServis(id); renderServisan();
@@ -1497,14 +1489,10 @@
             container.innerHTML = '';
             let myData = servicesDB;
             
-            // JIKA ADMIN: BISA FILTER PESAN BERDASARKAN TEKNISI YANG DITUGASKAN
             if (currentUser && currentUser.role === 'admin') {
                 const filterContainer = document.getElementById('filterPesanAdmin');
                 filterContainer.style.display = 'flex';
-                
-                // Kumpulkan nama teknisi yang punya data pesan masuk
                 let techs = [...new Set(servicesDB.filter(s => s.pesanChat && s.pesanChat.length > 0).map(s => s.techId))];
-                
                 let htmlFilter = `<button class="btn-sm" style="${currentPesanFilter === 'Semua' ? 'background:var(--accent-color); border:1px solid var(--accent-color);' : 'background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-muted);'}" onclick="setFilterPesan('Semua')">Semua Pesan</button>`;
                 
                 techs.forEach(t => {
@@ -1519,15 +1507,11 @@
                     myData = myData.filter(s => s.techId === currentPesanFilter);
                 }
             } else if (currentUser) {
-                // JIKA TEKNISI BIASA: Hanya melihat pesannya sendiri
                 document.getElementById('filterPesanAdmin').style.display = 'none';
                 myData = myData.filter(s => s.techId === currentUser.username);
             }
             
-            // Filter data yang hanya punya chat
             let chatList = myData.filter(s => s.pesanChat && s.pesanChat.length > 0);
-            
-            // Urutkan (Pesan Paling Baru di Atas).
             chatList.sort((a, b) => b.id.localeCompare(a.id));
 
             if (chatList.length === 0) {
@@ -1567,8 +1551,9 @@
             const grid = document.getElementById('katalogGrid'); grid.innerHTML = '';
             let tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
 
-            const filterMerekValue = document.getElementById('filterMerek').value;
-            if(filterMerekValue) { tersediaDB = tersediaDB.filter(l => l.merek === filterMerekValue); }
+            const filterMerekValue = document.getElementById('filterMerek').value.toUpperCase();
+            // FILTER Disesuaikan agar membandingkan uppercase juga
+            if(filterMerekValue) { tersediaDB = tersediaDB.filter(l => String(l.merek).toUpperCase().trim() === filterMerekValue); }
 
             const sortValue = document.getElementById('sortKatalog').value;
             if (sortValue === 'murah') { tersediaDB.sort((a, b) => parseInt(a.harga) - parseInt(b.harga)); } 
@@ -1585,8 +1570,11 @@
                 let imagesHTML = `<div class="katalog-img">💻</div>`; 
                 if (lap.fotos && lap.fotos.length > 0) {
                     let mainImg = getImgSrc(lap.fotos[0]);
-                    let thumbs = lap.fotos.map((f, i) => `<img src="${getImgSrc(f)}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
-                    imagesHTML = `<img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama" style="cursor:zoom-in;" onclick="viewImagePopup(this.src)"><div class="katalog-thumb-container">${thumbs}</div>`;
+                    
+                    if (mainImg) {
+                        let thumbs = lap.fotos.map((f, i) => `<img src="${getImgSrc(f)}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
+                        imagesHTML = `<img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama" style="cursor:zoom-in;" onclick="viewImagePopup(this.src)"><div class="katalog-thumb-container">${thumbs}</div>`;
+                    }
                 }
 
                 grid.innerHTML += `<div class="katalog-card">${imagesHTML}<div class="katalog-content"><div class="katalog-title">${lap.merek} ${lap.tipe}</div><div class="katalog-garansi">${lap.garansi}</div><div class="katalog-spek"><strong style="color: var(--text-main);">Warna:</strong> ${lap.warna || '-'}<br>${lap.spek}</div>${badgeStok}<div class="katalog-harga">${formatRupiahText(String(lap.harga))}</div><a href="https://wa.me/6285250857087?text=Halo Banlie Computing, saya tertarik dengan laptop ${lap.merek} ${lap.tipe} warna ${lap.warna || '-'} (ID: ${lap.id})" target="_blank" class="btn-beli" style="${btnState}">${btnText}</a></div></div>`;
@@ -1617,9 +1605,8 @@
 
             filteredDB.forEach((lap) => {
                 let imgThumbSrc = (lap.fotos && lap.fotos.length > 0) ? getImgSrc(lap.fotos[0]) : '';
-                let imgThumb = lap.fotos && lap.fotos.length > 0 ? `<img src="${imgThumbSrc}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; cursor:zoom-in;" onclick="viewImagePopup(this.src)">` : `<div style="width:40px; height:40px; background:var(--border-color); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px;">💻</div>`;
+                let imgThumb = imgThumbSrc ? `<img src="${imgThumbSrc}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; cursor:zoom-in;" onclick="viewImagePopup(this.src)">` : `<div style="width:40px; height:40px; background:var(--border-color); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px;">💻</div>`;
                 
-                // Teknisi HANYA BISA JUAL, Admin BISA SEMUA
                 let aksiTersediaHTML = `<button class="btn-sm btn-jual" onclick="bukaModalJual('${lap.id}')">🛒 Jual</button>`;
                 let aksiTerjualHTML = ``;
 
@@ -1705,7 +1692,7 @@
                 let btn = document.getElementById('btnSimpanEditLaptop'); let prevText = btn.textContent;
                 btn.textContent = 'Menyimpan & Mengunggah...'; btn.disabled = true;
 
-                laptopKatalogDB[idx].merek = document.getElementById('mEditMerek').value; laptopKatalogDB[idx].tipe = document.getElementById('mEditTipe').value;
+                laptopKatalogDB[idx].merek = document.getElementById('mEditMerek').value.toUpperCase(); laptopKatalogDB[idx].tipe = document.getElementById('mEditTipe').value.toUpperCase();
                 laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('mEditHarga').value); laptopKatalogDB[idx].stok = document.getElementById('mEditStok').value;
                 laptopKatalogDB[idx].warna = document.getElementById('mEditWarna').value;
                 laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value; laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
@@ -1715,8 +1702,8 @@
                 if (fileInput.files.length > 0) {
                     let lapFotosArray = []; let limit = Math.min(fileInput.files.length, 4); 
                     for (let i = 0; i < limit; i++) { 
-                        let fileObj = await getBase64File(fileInput.files[i]); 
-                        lapFotosArray.push(fileObj); 
+                        let fileBase64String = await getBase64File(fileInput.files[i]); 
+                        lapFotosArray.push(fileBase64String); 
                     }
                     laptopKatalogDB[idx].fotos = lapFotosArray;
                 }
@@ -1744,7 +1731,7 @@
             e.preventDefault(); if(!currentEditLapId) return;
             const idx = laptopKatalogDB.findIndex(l => l.id === currentEditLapId);
             if(idx > -1) {
-                laptopKatalogDB[idx].merek = document.getElementById('etMerek').value; laptopKatalogDB[idx].tipe = document.getElementById('etTipe').value;
+                laptopKatalogDB[idx].merek = document.getElementById('etMerek').value.toUpperCase(); laptopKatalogDB[idx].tipe = document.getElementById('etTipe').value.toUpperCase();
                 laptopKatalogDB[idx].tanggalTerjual = document.getElementById('etTanggalJual').value; laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('etHarga').value);
                 laptopKatalogDB[idx].penjual = document.getElementById('etPenjual').value; laptopKatalogDB[idx].email = document.getElementById('etEmail').value;
                 laptopKatalogDB[idx].pass = document.getElementById('etPass').value; laptopKatalogDB[idx].catatanInternal = document.getElementById('etCatatan').value;
@@ -1798,7 +1785,6 @@
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
                 if (s.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px;">⏱️ Menunggu Konfirmasi</span>`;
                 
-                // NOTIFIKASI TEKNISI / ADMIN - BAGE MERAH
                 if (s.unreadByAdmin) badgeStatus += ` <span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite; margin-top:5px; display:inline-block;">💬 Pesan Baru</span>`;
 
                 let compactHistoryHTML = '';
@@ -1820,8 +1806,8 @@
             e.preventDefault();
             const newSrv = {
                 id: generateID('SRV'), tanggalMasuk: getTodayDate(), nama: document.getElementById('srvNama').value, wa: document.getElementById('srvWA').value,
-                jenis: document.getElementById('srvJenis').value, merek: document.getElementById('srvMerek').value,
-                tipe: document.getElementById('srvTipe').value, snid: document.getElementById('srvSNID').value,
+                jenis: document.getElementById('srvJenis').value, merek: document.getElementById('srvMerek').value.toUpperCase(),
+                tipe: document.getElementById('srvTipe').value.toUpperCase(), snid: document.getElementById('srvSNID').value,
                 kelengkapan: document.getElementById('srvKelengkapan').value, masalah: document.getElementById('srvMasalah').value,
                 deskripsi: document.getElementById('srvDeskripsi').value, biayaEstimasi: document.getElementById('srvBiaya').value || '', biayaAkhir: 0,
                 garansi: '', status: 'Masuk', techId: currentUser.username, catatan: 'Barang diterima, menunggu antrean pengecekan.',
@@ -1841,7 +1827,6 @@
         function openModalUpdateServis(id) {
             const s = servicesDB.find(x => x.id === id); if(!s) return;
             
-            // Ketika dibuka, hilangkan notif unread untuk Teknisi/Admin
             if (s.unreadByAdmin) {
                 s.unreadByAdmin = false;
                 sendToServer('saveService', s);
@@ -1849,19 +1834,17 @@
                 if(document.getElementById('pesan').classList.contains('active')) renderPesan();
             }
 
-            // PENYELESAIAN BUG HARGA FIXED PADA MODAL UPDATE
             let hargaTampil = s.biayaAkhir ? s.biayaAkhir : s.biaya;
             
             document.getElementById('uSrvId').value = id; document.getElementById('uSrvStatus').value = s.status;
             document.getElementById('uSrvBiayaEstimasi').value = s.biayaEstimasi || s.biaya || '';
             document.getElementById('uSrvBiayaAkhir').value = hargaTampil ? formatRupiahText(String(hargaTampil)) : '';
-            toggleBiayaAkhir(); document.getElementById('uSrvGaransi').value = s.garansi; document.getElementById('uSrvCatatan').value = ''; 
+            toggleBiayaAkhir(); document.getElementById('uSrvGaransi').value = s.garansi || ''; document.getElementById('uSrvCatatan').value = ''; 
             
             const chatArea = document.getElementById('techChatArea'); let chatHTML = '';
             if (s.pesanChat && s.pesanChat.length > 0) {
                 s.pesanChat.forEach(p => {
                     let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; 
-                    // Tampilkan role/nama teknisi atau "Anda" secara dinamis
                     let senderName = '';
                     if (p.sender === 'teknisi') {
                         senderName = (p.senderName === currentUser.nama) ? '👨‍🔧 Anda' : `👨‍🔧 ${p.senderName || 'Staff'} (${String(p.senderRole||'').toUpperCase()})`;
@@ -1894,11 +1877,9 @@
             }
             servicesDB[idx].butuhKonfirmasi = document.getElementById('uSrvButuhKonfirmasi').checked; servicesDB[idx].status = newStatus; servicesDB[idx].biayaEstimasi = document.getElementById('uSrvBiayaEstimasi').value; 
             
-            // PENYELESAIAN BUG HARGA FIXED AGAR TIDAK HILANG SAAT DISIMPAN
             if (newStatus === 'Selesai') {
                 let parsedFixed = parseRupiah(document.getElementById('uSrvBiayaAkhir').value) || 0;
                 servicesDB[idx].biayaAkhir = parsedFixed;
-                // FALLBACK: Simpan juga ke properti 'biaya' untuk menghindari kehilangan data jika kolom biayaAkhir belum ada di Spreadsheet
                 servicesDB[idx].biaya = parsedFixed; 
             } else {
                 servicesDB[idx].biaya = document.getElementById('uSrvBiayaEstimasi').value; 
@@ -1926,12 +1907,12 @@
         document.getElementById('formEditDataServis')?.addEventListener('submit', function(e) {
             e.preventDefault(); const id = document.getElementById('eSrvId').value; const idx = servicesDB.findIndex(s => s.id === id); if(idx === -1) return;
             servicesDB[idx].nama = document.getElementById('eSrvNama').value; servicesDB[idx].wa = document.getElementById('eSrvWA').value; servicesDB[idx].jenis = document.getElementById('eSrvJenis').value;
-            servicesDB[idx].merek = document.getElementById('eSrvMerek').value; servicesDB[idx].tipe = document.getElementById('eSrvTipe').value; servicesDB[idx].snid = document.getElementById('eSrvSNID').value;
+            servicesDB[idx].merek = document.getElementById('eSrvMerek').value.toUpperCase(); servicesDB[idx].tipe = document.getElementById('eSrvTipe').value.toUpperCase(); servicesDB[idx].snid = document.getElementById('eSrvSNID').value;
             servicesDB[idx].kelengkapan = document.getElementById('eSrvKelengkapan').value; servicesDB[idx].masalah = document.getElementById('eSrvMasalah').value; servicesDB[idx].deskripsi = document.getElementById('eSrvDeskripsi').value;
 
             if(!servicesDB[idx].history) servicesDB[idx].history = [];
             servicesDB[idx].history.push({ time: formatDateWIB(), action: 'Edit Data Detail', note: 'Admin/Teknisi memperbarui detail informasi perangkat ini.', by: currentUser.username });
-            showToast(`Detail Perangkat berhasil diubah!`); closeModal('modalEditDataServis'); renderServisan(); sendToServer('saveService', servicesDB[idx]);
+            showToast(`Detail Perangkat berhasil diubah!`); closeModal('modalEditDataServis'); populateDatalists(); renderServisan(); sendToServer('saveService', servicesDB[idx]);
         });
 
         function hapusServisPrompt(id) {
