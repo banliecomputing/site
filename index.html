@@ -512,16 +512,15 @@
                     <div class="input-group"><label>Tanggal Masuk Toko</label><input type="date" id="lapTgl"></div>
                 </div>
                 <div class="input-group">
-                    <label>Upload Foto</label>
+                    <label>Upload Foto (Otomatis dikompres ekstra)</label>
                     <input type="file" id="lapFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
-                    <div style="font-size: 0.75rem; color: var(--success-bg); margin-top: 4px;">*Auto-Compress Super Ekstra. Foto dari HP akan dikompres maksimal (Max 400px) agar bisa melewati batasan karakter Google Spreadsheet.</div>
                 </div>
                 <button type="submit" id="btnSimpanLaptop" class="submit-btn" style="margin-top: 10px;">+ Simpan ke Etalase</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL 2A: EDIT LAPTOP LENGKAP -->
+    <!-- MODAL 2A: EDIT LAPTOP LENGKAP DENGAN IMAGE MANAGER -->
     <div id="modalEditLaptop" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('modalEditLaptop')">&times;</span>
@@ -549,10 +548,18 @@
                     </div>
                     <div class="input-group"><label>Tanggal Masuk</label><input type="date" id="mEditTgl"></div>
                 </div>
+
+                <!-- IMAGE MANAGER SECTION -->
                 <div class="input-group">
-                    <label>Update Foto (Kosongkan jika tidak ingin mengubah foto lama)</label>
+                    <label>Kelola Foto (Klik "Jadikan Utama" agar tampil di depan)</label>
+                    <div id="mEditFotoPreview" style="display:flex; gap:12px; overflow-x:auto; padding:15px 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom: 8px;">
+                        <!-- Thumbs rendered by JS -->
+                    </div>
+                    
+                    <label style="font-size:0.8rem; margin-top:10px;">+ Tambah Foto Susulan (Maks Total 4 Foto)</label>
                     <input type="file" id="mEditFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
                 </div>
+
                 <button type="submit" id="btnSimpanEditLaptop" class="submit-btn" style="margin-top: 10px;">Simpan Perubahan</button>
             </form>
         </div>
@@ -802,6 +809,7 @@
 
         let currentUser = null; 
         let currentEditLapId = null;
+        let tempEditFotos = []; // ARRAY SEMENTARA UNTUK IMAGE MANAGER
         let lastFoundArray = []; 
         let currentSrvFilter = 'Semua';
         let currentDashFilter = 'Semua';
@@ -887,7 +895,6 @@
             showPublicView();
         }
 
-        // ================= PERBAIKAN SORTIR MEREK (UPPERCASE) =================
         function populateDatalists() {
             let mereks = new Set(); let tipes = new Set(); let kelengkapans = new Set(); let masalahs = new Set();
             
@@ -902,7 +909,6 @@
                 if(s.masalah) masalahs.add(String(s.masalah).trim()); 
             });
 
-            // Urutkan Merek secara Alfabetis
             let sortedMereks = [...mereks].sort();
 
             document.getElementById('dlMerek').innerHTML = sortedMereks.map(m => `<option value="${m}">`).join('');
@@ -979,7 +985,6 @@
                     if (payload[key] !== undefined && typeof payload[key] !== 'string') { 
                         if (key === 'fotos') {
                             payload[key] = payload[key].map(f => {
-                                // Membersihkan previewData jika berbentuk object agar ringan dikirim
                                 if (f && typeof f === 'object' && f.previewData) { delete f.previewData; }
                                 return f;
                             });
@@ -1097,7 +1102,8 @@
         function openModal(modalId) { document.getElementById(modalId).classList.add('show'); }
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('show');
-            if(modalId === 'modalEditLaptop' || modalId === 'modalEditTerjual' || modalId === 'modalJualLaptop') currentEditLapId = null;
+            if(modalId === 'modalEditLaptop') { currentEditLapId = null; tempEditFotos = []; }
+            if(modalId === 'modalEditTerjual' || modalId === 'modalJualLaptop') currentEditLapId = null;
         }
 
         function viewImagePopup(src) {
@@ -1107,24 +1113,18 @@
 
         function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
-        // ================= PERBAIKAN RENDER FOTO AGAR TAHAN BANTING =================
         function getImgSrc(f) {
             if (!f) return '';
-            
-            // Jika formatnya murni string panjang (langsung berupa data url hasil kompresi terbaru)
             if (typeof f === 'string') {
-                if (f === '[object Object]') return ''; // Menyembunyikan gambar rusak bawaan bug lama
+                if (f === '[object Object]') return ''; 
                 if (f.startsWith('data:') || f.startsWith('http')) return f;
                 return '';
             }
-
-            // Jika format berbentuk objek JSON lama
             if (f.previewData) return f.previewData;
             if (f.mimeType && f.data) return `data:${f.mimeType};base64,${f.data}`;
             return '';
         }
 
-        // ================= COMPRESSOR GAMBAR EKSTRA KETAT (FIX LIMIT GS 50.000 CHAR) =================
         function getBase64File(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1134,12 +1134,8 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        
-                        // Limit Resolusi Dikecilkan lagi menjadi 400px (Sangat ringan)
-                        const MAX_WIDTH = 400; 
-                        const MAX_HEIGHT = 400;
-                        let width = img.width;
-                        let height = img.height;
+                        const MAX_WIDTH = 400; const MAX_HEIGHT = 400;
+                        let width = img.width; let height = img.height;
 
                         if (width > height) {
                             if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
@@ -1147,15 +1143,11 @@
                             if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                         }
                         
-                        canvas.width = width;
-                        canvas.height = height;
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Kompresi ketat ke format JPEG (Kualitas 50%) -> Ukuran base64 menjadi sangat kecil
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
-                        
-                        // KITA LANGSUNG ME-RETURN STRING URL BASE64 (Bukan Objek) agar lebih aman tersimpan.
                         resolve(compressedDataUrl);
                     };
                     img.onerror = () => reject(new Error("Gagal memuat gambar"));
@@ -1188,7 +1180,6 @@
             } else { showToast('Username atau password salah', true); }
         });
 
-        // ================= LOGIKA TAMBAH LAPTOP =================
         document.getElementById('formPenjualan')?.addEventListener('submit', async function(e) {
             e.preventDefault();
             let btn = document.getElementById('btnSimpanLaptop');
@@ -1205,7 +1196,6 @@
             if (fileInput.files.length > 0) {
                 let limit = Math.min(fileInput.files.length, 4); 
                 for (let i = 0; i < limit; i++) {
-                    // Karena fungsi sekarang me-return Base64 String, masukkan langsung ke array.
                     let fileBase64String = await getBase64File(fileInput.files[i]);
                     newLap.fotos.push(fileBase64String);
                 }
@@ -1225,11 +1215,9 @@
         function setFilterDash(view, btnElement) {
             currentDashFilter = view;
             document.querySelectorAll('.btn-filter-dash').forEach(b => {
-                b.style.background = 'var(--input-bg)';
-                b.style.borderColor = 'var(--border-color)';
+                b.style.background = 'var(--input-bg)'; b.style.borderColor = 'var(--border-color)';
             });
-            btnElement.style.background = 'var(--accent-color)';
-            btnElement.style.borderColor = 'var(--accent-color)';
+            btnElement.style.background = 'var(--accent-color)'; btnElement.style.borderColor = 'var(--accent-color)';
 
             document.getElementById('dashSemuaView').style.display = view === 'Semua' ? 'block' : 'none';
             document.getElementById('dashKatalogView').style.display = view === 'Katalog' ? 'block' : 'none';
@@ -1358,7 +1346,6 @@
             foundArray.forEach(found => {
                 let badgeStatus = `<span class="badge ${found.status === 'Selesai' ? 'bg-selesai' : found.status === 'Proses' ? 'bg-proses' : found.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${found.status}</span>`;
                 if (found.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px; margin-top:5px; display:inline-block;">⚠️ Konfirmasi Tertunda</span>`;
-                
                 if (found.unreadByCust) badgeStatus += ` <span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite; margin-top:5px; display:inline-block;">💬 Balasan Baru</span>`;
 
                 html += `
@@ -1381,17 +1368,10 @@
         }
 
         function renderDetailPencarian(found, showBackButton, isPolling = false) {
-            if (!isPolling && found.unreadByCust) {
-                found.unreadByCust = false;
-                sendToServer('saveService', found);
-            }
+            if (!isPolling && found.unreadByCust) { found.unreadByCust = false; sendToServer('saveService', found); }
 
-            const resDiv = document.getElementById('hasilPencarian');
-            let html = '';
-
-            if (showBackButton) {
-                html += `<button type="button" class="btn-sm" style="background:transparent; border:1px solid var(--text-muted); color:var(--text-main); margin-bottom:15px; padding:8px 15px;" onclick="renderDaftarPencarian(lastFoundArray)">🔙 Kembali ke Daftar Perangkat</button>`;
-            }
+            const resDiv = document.getElementById('hasilPencarian'); let html = '';
+            if (showBackButton) { html += `<button type="button" class="btn-sm" style="background:transparent; border:1px solid var(--text-muted); color:var(--text-main); margin-bottom:15px; padding:8px 15px;" onclick="renderDaftarPencarian(lastFoundArray)">🔙 Kembali ke Daftar Perangkat</button>`; }
 
             let s1 = '', s2 = '', s3 = '';
             if(found.status === 'Masuk') { s1 = 'step-active'; } else if(found.status === 'Proses') { s1 = 'step-done'; s2 = 'step-active'; }
@@ -1399,12 +1379,9 @@
 
             let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
             let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
-            
             let actualFixedCost = found.biayaAkhir || found.biaya || 0;
             let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
-            let costValue = found.status === 'Selesai' 
-                ? (actualFixedCost != 0 ? formatRupiahText(String(actualFixedCost)) : '<span style="color:var(--success-bg);">Gratis / Menunggu</span>') 
-                : (found.biayaEstimasi || found.biaya || '-');
+            let costValue = found.status === 'Selesai' ? (actualFixedCost != 0 ? formatRupiahText(String(actualFixedCost)) : '<span style="color:var(--success-bg);">Gratis / Menunggu</span>') : (found.biayaEstimasi || found.biaya || '-');
 
             let chatHTML = '';
             if (found.pesanChat && found.pesanChat.length > 0) {
@@ -1412,15 +1389,12 @@
                     let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; 
                     let roleName = p.senderRole ? String(p.senderRole).toUpperCase() : 'TEKNISI';
                     let senderName = p.sender === 'teknisi' ? `👨‍🔧 ${roleName === 'ADMIN' ? 'Admin' : 'Teknisi'}` : '👤 Anda';
-                    
                     chatHTML += `<div class="chat-bubble ${cls}"><strong>${senderName}</strong><br>${p.text}<div class="chat-time">${p.time}</div></div>`;
                 });
             } else { chatHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding: 10px;">Belum ada pesan/catatan khusus.</div>`; }
 
             let confirmHTML = '';
-            if (found.butuhKonfirmasi) {
-                confirmHTML = `<div class="konfirmasi-box"><strong style="color:var(--warning-bg); display:block; margin-bottom:12px;">⚠️ Teknisi Menunggu Keputusan Anda</strong><div class="konfirmasi-btn-group"><button type="button" class="btn-sm btn-success" onclick="kirimPesanKonsumen('${found.id}', 'Ya, Lanjutkan Servis')">✅ Ya, Lanjutkan</button><button type="button" class="btn-sm btn-danger" onclick="kirimPesanKonsumen('${found.id}', 'Tidak, Batalkan Servis')">❌ Tidak, Batalkan</button></div></div>`;
-            }
+            if (found.butuhKonfirmasi) { confirmHTML = `<div class="konfirmasi-box"><strong style="color:var(--warning-bg); display:block; margin-bottom:12px;">⚠️ Teknisi Menunggu Keputusan Anda</strong><div class="konfirmasi-btn-group"><button type="button" class="btn-sm btn-success" onclick="kirimPesanKonsumen('${found.id}', 'Ya, Lanjutkan Servis')">✅ Ya, Lanjutkan</button><button type="button" class="btn-sm btn-danger" onclick="kirimPesanKonsumen('${found.id}', 'Tidak, Batalkan Servis')">❌ Tidak, Batalkan</button></div></div>`; }
 
             html += `
                 <div class="tracking-card" style="margin-top:0;">
@@ -1438,7 +1412,6 @@
                 </div>
             `;
             resDiv.innerHTML = html;
-
             const chatArea = document.getElementById(`publicChatArea_${found.id}`);
             if(chatArea && !isPolling) chatArea.scrollTop = chatArea.scrollHeight;
         }
@@ -1451,13 +1424,11 @@
             if(!srv.pesanChat) srv.pesanChat = [];
             srv.pesanChat.push({ sender: 'konsumen', text: text, time: formatDateWIB() });
             srv.unreadByAdmin = true; 
-            
             if (textOverride && srv.butuhKonfirmasi) {
                 srv.butuhKonfirmasi = false;
                 if(!srv.history) srv.history = [];
                 srv.history.push({ time: formatDateWIB(), action: 'Konfirmasi Konsumen', note: text, by: 'Konsumen' });
             }
-
             sendToServer('saveService', srv); showToast('Pesan berhasil dikirim ke teknisi!'); renderDetailPencarianById(id);
         }
 
@@ -1467,31 +1438,21 @@
 
             if(!text.trim() && !butuhKonfirm) return showToast('Pesan kosong. Ketik sesuatu atau centang konfirmasi.', true);
             if(!srv.pesanChat) srv.pesanChat = [];
-            if(text.trim()) { 
-                srv.pesanChat.push({ sender: 'teknisi', senderName: currentUser.nama, senderRole: currentUser.role, text: text, time: formatDateWIB() }); 
-            }
-            
-            srv.butuhKonfirmasi = butuhKonfirm; 
-            srv.unreadByCust = true; 
-
+            if(text.trim()) { srv.pesanChat.push({ sender: 'teknisi', senderName: currentUser.nama, senderRole: currentUser.role, text: text, time: formatDateWIB() }); }
+            srv.butuhKonfirmasi = butuhKonfirm; srv.unreadByCust = true; 
             sendToServer('saveService', srv); showToast('Pesan terkirim ke pelanggan!');
             document.getElementById('uSrvKirimPesan').value = ''; openModalUpdateServis(id); renderServisan();
         }
 
         // ================= LOGIKA TAB PESAN / CHAT =================
-        function setFilterPesan(tech) {
-            currentPesanFilter = tech;
-            renderPesan();
-        }
+        function setFilterPesan(tech) { currentPesanFilter = tech; renderPesan(); }
 
         function renderPesan() {
-            const container = document.getElementById('listPesanContainer');
-            container.innerHTML = '';
+            const container = document.getElementById('listPesanContainer'); container.innerHTML = '';
             let myData = servicesDB;
             
             if (currentUser && currentUser.role === 'admin') {
-                const filterContainer = document.getElementById('filterPesanAdmin');
-                filterContainer.style.display = 'flex';
+                const filterContainer = document.getElementById('filterPesanAdmin'); filterContainer.style.display = 'flex';
                 let techs = [...new Set(servicesDB.filter(s => s.pesanChat && s.pesanChat.length > 0).map(s => s.techId))];
                 let htmlFilter = `<button class="btn-sm" style="${currentPesanFilter === 'Semua' ? 'background:var(--accent-color); border:1px solid var(--accent-color);' : 'background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-muted);'}" onclick="setFilterPesan('Semua')">Semua Pesan</button>`;
                 
@@ -1502,32 +1463,21 @@
                 });
                 
                 filterContainer.innerHTML = htmlFilter;
-
-                if (currentPesanFilter !== 'Semua') {
-                    myData = myData.filter(s => s.techId === currentPesanFilter);
-                }
+                if (currentPesanFilter !== 'Semua') { myData = myData.filter(s => s.techId === currentPesanFilter); }
             } else if (currentUser) {
-                document.getElementById('filterPesanAdmin').style.display = 'none';
-                myData = myData.filter(s => s.techId === currentUser.username);
+                document.getElementById('filterPesanAdmin').style.display = 'none'; myData = myData.filter(s => s.techId === currentUser.username);
             }
             
             let chatList = myData.filter(s => s.pesanChat && s.pesanChat.length > 0);
             chatList.sort((a, b) => b.id.localeCompare(a.id));
 
-            if (chatList.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--text-muted); background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px dashed var(--border-color);">Belum ada pesan / obrolan aktif di kategori ini.</div>`;
-                return;
-            }
+            if (chatList.length === 0) { container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--text-muted); background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px dashed var(--border-color);">Belum ada pesan / obrolan aktif di kategori ini.</div>`; return; }
 
             chatList.forEach(s => {
                 let lastMsg = s.pesanChat[s.pesanChat.length - 1];
                 let unreadBadge = s.unreadByAdmin ? `<span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite;">Pesan Baru</span>` : '';
-                
                 let senderDisp = '👤 Konsumen';
-                if (lastMsg.sender === 'teknisi') {
-                    senderDisp = (lastMsg.senderName === currentUser.nama) ? '👨‍🔧 Anda' : `👨‍🔧 ${lastMsg.senderName || 'Staff'}`;
-                }
-                
+                if (lastMsg.sender === 'teknisi') { senderDisp = (lastMsg.senderName === currentUser.nama) ? '👨‍🔧 Anda' : `👨‍🔧 ${lastMsg.senderName || 'Staff'}`; }
                 let textSnippet = lastMsg.text.length > 70 ? lastMsg.text.substring(0, 70) + '...' : lastMsg.text;
 
                 container.innerHTML += `
@@ -1552,7 +1502,6 @@
             let tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
 
             const filterMerekValue = document.getElementById('filterMerek').value.toUpperCase();
-            // FILTER Disesuaikan agar membandingkan uppercase juga
             if(filterMerekValue) { tersediaDB = tersediaDB.filter(l => String(l.merek).toUpperCase().trim() === filterMerekValue); }
 
             const sortValue = document.getElementById('sortKatalog').value;
@@ -1570,7 +1519,6 @@
                 let imagesHTML = `<div class="katalog-img">💻</div>`; 
                 if (lap.fotos && lap.fotos.length > 0) {
                     let mainImg = getImgSrc(lap.fotos[0]);
-                    
                     if (mainImg) {
                         let thumbs = lap.fotos.map((f, i) => `<img src="${getImgSrc(f)}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
                         imagesHTML = `<img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama" style="cursor:zoom-in;" onclick="viewImagePopup(this.src)"><div class="katalog-thumb-container">${thumbs}</div>`;
@@ -1579,15 +1527,12 @@
 
                 grid.innerHTML += `<div class="katalog-card">${imagesHTML}<div class="katalog-content"><div class="katalog-title">${lap.merek} ${lap.tipe}</div><div class="katalog-garansi">${lap.garansi}</div><div class="katalog-spek"><strong style="color: var(--text-main);">Warna:</strong> ${lap.warna || '-'}<br>${lap.spek}</div>${badgeStok}<div class="katalog-harga">${formatRupiahText(String(lap.harga))}</div><a href="https://wa.me/6285250857087?text=Halo Banlie Computing, saya tertarik dengan laptop ${lap.merek} ${lap.tipe} warna ${lap.warna || '-'} (ID: ${lap.id})" target="_blank" class="btn-beli" style="${btnState}">${btnText}</a></div></div>`;
             });
-            
             if (sortValue === 'baru') tersediaDB.reverse(); 
         }
 
         function changeMainImg(lapId, index) {
             const lap = laptopKatalogDB.find(l => l.id === lapId);
-            if(lap && lap.fotos[index]) {
-                document.getElementById(`mainImg-${lapId}`).src = getImgSrc(lap.fotos[index]);
-            }
+            if(lap && lap.fotos[index]) { document.getElementById(`mainImg-${lapId}`).src = getImgSrc(lap.fotos[index]); }
         }
 
         // ================= LOGIKA MANAJEMEN LAPTOP ADMIN & TEKNISI =================
@@ -1597,9 +1542,7 @@
             tbTersedia.innerHTML = ''; tbTerjual.innerHTML = '';
             
             const q = document.getElementById('searchAdminKatalog')?.value.toLowerCase() || '';
-            const filteredDB = laptopKatalogDB.filter(l => 
-                String(l.id).toLowerCase().includes(q) || String(l.merek).toLowerCase().includes(q) || String(l.tipe).toLowerCase().includes(q) || String(l.warna).toLowerCase().includes(q)
-            );
+            const filteredDB = laptopKatalogDB.filter(l => String(l.id).toLowerCase().includes(q) || String(l.merek).toLowerCase().includes(q) || String(l.tipe).toLowerCase().includes(q) || String(l.warna).toLowerCase().includes(q));
 
             let countTersedia = 0, countTerjual = 0;
 
@@ -1674,23 +1617,98 @@
             renderAdminKatalog(); renderKatalogPublik(); renderDashboard();
         });
 
+        // --- IMAGE MANAGER UI UTILITIES ---
         function openModalEditInventory(lapId) {
             currentEditLapId = lapId; const lap = laptopKatalogDB.find(l => l.id === lapId);
             document.getElementById('mEditMerek').value = lap.merek; document.getElementById('mEditTipe').value = lap.tipe;
             document.getElementById('mEditHarga').value = formatRupiahText(String(lap.harga)); document.getElementById('mEditStok').value = lap.stok;
             document.getElementById('mEditWarna').value = lap.warna || '';
             document.getElementById('mEditSpek').value = lap.spek; document.getElementById('mEditGaransi').value = lap.garansi;
-            document.getElementById('mEditTgl').value = lap.tanggal; document.getElementById('mEditFotos').value = ""; 
+            document.getElementById('mEditTgl').value = lap.tanggal; 
+            document.getElementById('mEditFotos').value = ""; 
+
+            // Load foto lama ke array sementara
+            tempEditFotos = lap.fotos && Array.isArray(lap.fotos) ? [...lap.fotos] : [];
+            renderEditFotos();
+
             openModal('modalEditLaptop');
         }
 
-        document.getElementById('formEditLaptop')?.addEventListener('submit', async function(e) {
+        function renderEditFotos() {
+            const container = document.getElementById('mEditFotoPreview');
+            container.innerHTML = '';
+
+            if (tempEditFotos.length === 0) {
+                container.innerHTML = '<div style="font-size:0.85rem; color:var(--text-muted); width:100%; text-align:center;">Belum ada foto tersimpan.</div>';
+                return;
+            }
+
+            tempEditFotos.forEach((f, idx) => {
+                let src = getImgSrc(f);
+                if(!src) return; // Skip broken images
+                let isMain = idx === 0;
+                
+                let btnUtama = isMain ? 
+                    `<div style="font-size:0.6rem; color:var(--success-bg); font-weight:bold; margin-bottom:4px; text-align:center;">🌟 GAMBAR UTAMA</div>` : 
+                    `<button type="button" onclick="setFotoUtama(${idx})" style="font-size:0.65rem; padding:4px; background:var(--accent-color); color:white; border:none; border-radius:4px; cursor:pointer; margin-bottom:4px;">Jadikan Utama</button>`;
+
+                container.innerHTML += `
+                    <div style="position:relative; width:90px; flex-shrink:0; background: var(--bg-color); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <img src="${src}" style="width:100%; height:75px; object-fit:cover; border-radius:4px; margin-bottom:5px; border:${isMain ? '2px solid var(--success-bg)' : '1px solid transparent'};">
+                        <div style="display:flex; flex-direction:column;">
+                            ${btnUtama}
+                            <button type="button" onclick="hapusTempFoto(${idx})" style="font-size:0.65rem; padding:4px; background:transparent; color:var(--danger-bg); border:1px solid var(--danger-bg); border-radius:4px; cursor:pointer; font-weight:bold;">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function setFotoUtama(idx) {
+            let selected = tempEditFotos.splice(idx, 1)[0];
+            tempEditFotos.unshift(selected); // Pindahkan ke array paling depan (index 0)
+            renderEditFotos();
+        }
+
+        function hapusTempFoto(idx) {
+            tempEditFotos.splice(idx, 1);
+            renderEditFotos();
+            document.getElementById('mEditFotos').value = ""; // Reset input biar bisa masukin file yang sama lagi
+        }
+
+        // Event saat pilih file foto baru di Modal Edit (Otomatis masuk preview tanpa perlu disubmit dulu)
+        document.getElementById('mEditFotos')?.addEventListener('change', async function(e) {
+            let files = this.files;
+            if(files.length === 0) return;
+            
+            let availableSlots = 4 - tempEditFotos.length;
+            if (availableSlots <= 0) {
+                showToast('Maksimal 4 foto per laptop. Hapus foto lama terlebih dahulu.', true);
+                this.value = ''; return;
+            }
+
+            let limit = Math.min(files.length, availableSlots);
+            let btn = document.getElementById('btnSimpanEditLaptop');
+            btn.textContent = 'Memproses Foto...'; btn.disabled = true;
+
+            for (let i = 0; i < limit; i++) {
+                let fileBase64String = await getBase64File(files[i]);
+                tempEditFotos.push(fileBase64String); // Tambahkan ke paling akhir
+            }
+
+            renderEditFotos();
+            this.value = ''; // Bersihkan input file lagi
+            
+            btn.textContent = 'Simpan Perubahan'; btn.disabled = false;
+        });
+
+        document.getElementById('formEditLaptop')?.addEventListener('submit', function(e) {
             e.preventDefault(); if(!currentEditLapId) return;
             const idx = laptopKatalogDB.findIndex(l => l.id === currentEditLapId);
             
             if(idx > -1) {
                 let btn = document.getElementById('btnSimpanEditLaptop'); let prevText = btn.textContent;
-                btn.textContent = 'Menyimpan & Mengunggah...'; btn.disabled = true;
+                btn.textContent = 'Menyimpan...'; btn.disabled = true;
 
                 laptopKatalogDB[idx].merek = document.getElementById('mEditMerek').value.toUpperCase(); laptopKatalogDB[idx].tipe = document.getElementById('mEditTipe').value.toUpperCase();
                 laptopKatalogDB[idx].harga = parseRupiah(document.getElementById('mEditHarga').value); laptopKatalogDB[idx].stok = document.getElementById('mEditStok').value;
@@ -1698,17 +1716,10 @@
                 laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value; laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
                 laptopKatalogDB[idx].tanggal = cleanDateForInput(document.getElementById('mEditTgl').value) || getTodayDate();
                 
-                let fileInput = document.getElementById('mEditFotos');
-                if (fileInput.files.length > 0) {
-                    let lapFotosArray = []; let limit = Math.min(fileInput.files.length, 4); 
-                    for (let i = 0; i < limit; i++) { 
-                        let fileBase64String = await getBase64File(fileInput.files[i]); 
-                        lapFotosArray.push(fileBase64String); 
-                    }
-                    laptopKatalogDB[idx].fotos = lapFotosArray;
-                }
+                // Simpan urutan foto final dari temp array ke database
+                laptopKatalogDB[idx].fotos = [...tempEditFotos];
 
-                showToast('Etalase diperbarui. Jika upload foto baru, butuh beberapa saat tersimpan di Drive.'); 
+                showToast('Etalase dan susunan foto diperbarui.'); 
                 populateDatalists(); closeModal('modalEditLaptop');
                 renderAdminKatalog(); renderKatalogPublik(); 
                 sendToServer('saveKatalog', laptopKatalogDB[idx]);
@@ -1741,10 +1752,10 @@
         });
 
         function hapusLaptop(id) {
-            customConfirm('Yakin ingin menghapus data laptop ini secara permanen? Foto di Google Drive juga akan ikut terhapus secara otomatis.', () => {
+            customConfirm('Yakin ingin menghapus data laptop ini secara permanen?', () => {
                 const idx = laptopKatalogDB.findIndex(l => l.id === id);
                 if(idx > -1) {
-                    laptopKatalogDB.splice(idx, 1); showToast('Data laptop dihapus beserta foto di Google Drive!'); populateDatalists();
+                    laptopKatalogDB.splice(idx, 1); showToast('Data laptop dihapus!'); populateDatalists();
                     renderAdminKatalog(); renderKatalogPublik(); renderDashboard(); sendToServer('deleteKatalog', { id: id }); 
                 }
             });
@@ -1754,11 +1765,9 @@
         function setFilterSrv(status, btnElement) {
             currentSrvFilter = status;
             document.querySelectorAll('.btn-filter-srv').forEach(b => {
-                b.style.background = 'var(--input-bg)';
-                b.style.borderColor = 'var(--border-color)';
+                b.style.background = 'var(--input-bg)'; b.style.borderColor = 'var(--border-color)';
             });
-            btnElement.style.background = 'var(--accent-color)';
-            btnElement.style.borderColor = 'var(--accent-color)';
+            btnElement.style.background = 'var(--accent-color)'; btnElement.style.borderColor = 'var(--accent-color)';
             renderServisan();
         }
 
@@ -1784,7 +1793,6 @@
             myData.forEach(s => {
                 let badgeStatus = `<span class="badge ${s.status === 'Selesai' ? 'bg-selesai' : s.status === 'Proses' ? 'bg-proses' : s.status === 'Batal' ? 'bg-batal' : 'bg-masuk'}">${s.status}</span>`;
                 if (s.butuhKonfirmasi) badgeStatus += ` <span style="font-size:0.7rem; background:var(--warning-bg); color:#fff; padding:2px 5px; border-radius:4px;">⏱️ Menunggu Konfirmasi</span>`;
-                
                 if (s.unreadByAdmin) badgeStatus += ` <span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite; margin-top:5px; display:inline-block;">💬 Pesan Baru</span>`;
 
                 let compactHistoryHTML = '';
