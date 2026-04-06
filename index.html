@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Banlie Computing - Store & Service</title>
     
-    <link rel="icon" type="image/png" href="https://drive.google.com/uc?export=view&id=1jYMRx3cKiXZVo8AgZnoj2Fqmy_xasiLR">
+    <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1775473744461-6ce0dbd2-a423-456a-aea5-ac571a08addb.ico">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -211,7 +211,7 @@
     <!-- HALAMAN LOGIN -->
     <div id="loginPage" class="main-container" style="display: none;">
         <div class="header-title">
-            <img src="https://drive.google.com/uc?export=view&id=1Kfx0HXmeLxe1wCxbjEOfSvyL_OwSTESX" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
+            <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
             <h2>Banlie Computing Portal</h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
@@ -236,7 +236,7 @@
         <!-- Top Bar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
             <div style="font-size: 0.95rem; color: var(--text-muted); display: flex; align-items: center;">
-                <img src="https://drive.google.com/uc?export=view&id=1Kfx0HXmeLxe1wCxbjEOfSvyL_OwSTESX" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
+                <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
                 <div>
                     <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">Banlie Computing</span>
                     <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
@@ -1073,6 +1073,14 @@
 
         function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
+        function getImgSrc(f) {
+            if (!f) return '';
+            if (typeof f === 'string') return f;
+            if (f.previewData) return f.previewData;
+            if (f.mimeType && f.data) return `data:${f.mimeType};base64,${f.data}`;
+            return '';
+        }
+
         // ================= COMPRESSOR GAMBAR (CANVAS) UNTUK FIX UPLOAD GDRIVE =================
         function getBase64File(file) {
             return new Promise((resolve, reject) => {
@@ -1480,8 +1488,8 @@
 
                 let imagesHTML = `<div class="katalog-img">💻</div>`; 
                 if (lap.fotos && lap.fotos.length > 0) {
-                    let mainImg = lap.fotos[0].previewData || lap.fotos[0];
-                    let thumbs = lap.fotos.map((f, i) => `<img src="${f.previewData || f}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
+                    let mainImg = getImgSrc(lap.fotos[0]);
+                    let thumbs = lap.fotos.map((f, i) => `<img src="${getImgSrc(f)}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
                     imagesHTML = `<img src="${mainImg}" id="mainImg-${lap.id}" class="katalog-img-real" alt="Foto Utama" style="cursor:zoom-in;" onclick="viewImagePopup(this.src)"><div class="katalog-thumb-container">${thumbs}</div>`;
                 }
 
@@ -1494,7 +1502,7 @@
         function changeMainImg(lapId, index) {
             const lap = laptopKatalogDB.find(l => l.id === lapId);
             if(lap && lap.fotos[index]) {
-                document.getElementById(`mainImg-${lapId}`).src = lap.fotos[index].previewData || lap.fotos[index];
+                document.getElementById(`mainImg-${lapId}`).src = getImgSrc(lap.fotos[index]);
             }
         }
 
@@ -1512,7 +1520,7 @@
             let countTersedia = 0, countTerjual = 0;
 
             filteredDB.forEach((lap) => {
-                let imgThumbSrc = (lap.fotos && lap.fotos.length > 0) ? (lap.fotos[0].previewData || lap.fotos[0]) : '';
+                let imgThumbSrc = (lap.fotos && lap.fotos.length > 0) ? getImgSrc(lap.fotos[0]) : '';
                 let imgThumb = lap.fotos && lap.fotos.length > 0 ? `<img src="${imgThumbSrc}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; cursor:zoom-in;" onclick="viewImagePopup(this.src)">` : `<div style="width:40px; height:40px; background:var(--border-color); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px;">💻</div>`;
                 
                 // Teknisi HANYA BISA JUAL, Admin BISA SEMUA
