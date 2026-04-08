@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banlie Computing - Store & Service v2.2</title>
+    <title>Banlie Computing - Store & Service v2.2.1 (Stable)</title>
     
     <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1775473744461-6ce0dbd2-a423-456a-aea5-ac571a08addb.ico">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -213,14 +213,14 @@
         <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
         <div class="spinner"></div>
         <h2 style="color:var(--text-main); font-size: 1.2rem;">Menyinkronkan Database...</h2>
-        <p style="color:var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Banlie Computing System <span class="version-badge">v2.2</span></p>
+        <p style="color:var(--text-muted); font-size: 0.85rem; margin-top: 5px;" id="loaderText">Membaca data dari Spreadsheet...</p>
     </div>
 
     <!-- HALAMAN LOGIN -->
     <div id="loginPage" class="main-container" style="display: none;">
         <div class="header-title">
             <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
-            <h2>Banlie Computing Portal <span class="version-badge">v2.2</span></h2>
+            <h2>Banlie Computing Portal <span class="version-badge">v2.2.1</span></h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
 
@@ -247,7 +247,7 @@
                 <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
                 <div>
                     <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">Banlie Computing</span>
-                    <span class="version-badge">v2.2</span>
+                    <span class="version-badge">v2.2.1</span>
                     <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
                 </div>
             </div>
@@ -898,8 +898,44 @@
 
     <script>
         // ================= KONEKSI DATABASE SERVER & KAMUS SISTEM =================
-        const API_URL = "https://script.google.com/macros/s/AKfycbxjSEe-W5UzrzFjdc6qb-QfEp7sxort7tisYEnGamy0sX8dAQVojprGtM9EFX39aXMxPw/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyuJIHX9_PwjjrdPAAZ4LHjzSZGXOrtMZjvyM5Mbr69xWk-CAIjeEK50XUOryKeLf9Ulg/exec";
         const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 Menit
+
+        // Fungsi Anti-Crash untuk Format Rupiah
+        function formatRupiahText(value) {
+            if (value === undefined || value === null || value === '') return "";
+            let strValue = String(value);
+            let number_string = strValue.replace(/[^,\d]/g, '');
+            if (!number_string) return "";
+            let split = number_string.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+            if(ribuan){ let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah ? 'Rp ' + rupiah : '';
+        }
+
+        // FUNGSI BARU DIPERBAIKI: Pastikan data Array selalu aman & tidak mengembalikan objek/teks yang bikin crash
+        function safeJSONParse(val, defaultVal) {
+            if (!val) return defaultVal;
+            if (typeof val !== 'string') {
+                if (Array.isArray(defaultVal) && !Array.isArray(val)) return defaultVal;
+                return val;
+            }
+            if (val.trim() === '') return defaultVal;
+            try { 
+                let parsed = JSON.parse(val); 
+                if (Array.isArray(defaultVal) && !Array.isArray(parsed)) return defaultVal;
+                return parsed;
+            } catch(e) { return defaultVal; }
+        }
+
+        function parseRupiah(value) { return parseInt(String(value).replace(/[^0-9]/g, '')) || 0; }
+
+        document.querySelectorAll('.input-rupiah').forEach(inp => {
+            inp.addEventListener('input', function(e) { this.value = formatRupiahText(this.value); });
+        });
 
         // KAMUS DEFAULT
         const kamusSistem = {
@@ -938,12 +974,13 @@
 
         function cleanDateForInput(dateStr) {
             if (!dateStr) return '';
-            if (dateStr.includes('T')) {
-                let d = new Date(dateStr);
+            let s = String(dateStr);
+            if (s.includes('T')) {
+                let d = new Date(s);
                 if(isNaN(d.getTime())) return '';
                 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             }
-            return dateStr;
+            return s;
         }
 
         function displayDateReadably(dateStr) {
@@ -1027,8 +1064,8 @@
         function populateDatalists() {
             let activeKamus = baseKamusDB || kamusSistem;
             
-            let mereks = new Set(activeKamus.merek.map(x => x.toUpperCase())); 
-            let tipes = new Set((activeKamus.tipe || []).map(x => x.toUpperCase())); 
+            let mereks = new Set(activeKamus.merek.map(x => String(x).toUpperCase())); 
+            let tipes = new Set((activeKamus.tipe || []).map(x => String(x).toUpperCase())); 
             let kelengkapans = new Set(activeKamus.kelengkapan); 
             let masalahs = new Set(activeKamus.masalah);
             
@@ -1077,10 +1114,10 @@
 
         async function fetchInitialData() {
             try {
-                // Fetch Settings from API, tangani agar tidak crash jika API lama
+                // Fetch Settings from API
                 let resSettings = null;
                 try { resSettings = await fetch(API_URL + "?action=getSettings").then(r => r.json()); } 
-                catch(e) { console.warn("API Settings belum didukung"); }
+                catch(e) { console.warn("API Settings belum siap"); }
 
                 const [resUsers, resServices, resKatalog] = await Promise.all([
                     fetch(API_URL + "?action=getUsers").then(r => r.json()),
@@ -1091,20 +1128,19 @@
                 usersDB = Array.isArray(resUsers) ? resUsers.filter(u => u.username && String(u.username).trim() !== '') : [];
                 
                 servicesDB = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
-                    try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
-                    try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
+                    s.history = safeJSONParse(s.history, []);
+                    s.pesanChat = safeJSONParse(s.pesanChat, []);
                     if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
                     s.unreadByAdmin = (String(s.unreadByAdmin).toLowerCase() === 'true');
                     s.unreadByCust = (String(s.unreadByCust).toLowerCase() === 'true');
-                    if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(String(s.tanggalMasuk));
+                    if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(s.tanggalMasuk);
                     return s;
                 }) : [];
 
                 laptopKatalogDB = Array.isArray(resKatalog) ? resKatalog.filter(l => l.id && String(l.id).trim() !== '').map(l => {
-                    try { if (typeof l.fotos === 'string') l.fotos = JSON.parse(l.fotos); } catch(e) { l.fotos = []; }
-                    if (!Array.isArray(l.fotos)) l.fotos = [];
-                    if (l.tanggal) l.tanggal = cleanDateForInput(String(l.tanggal));
-                    if (l.tanggalTerjual) l.tanggalTerjual = cleanDateForInput(String(l.tanggalTerjual));
+                    l.fotos = safeJSONParse(l.fotos, []);
+                    if (l.tanggal) l.tanggal = cleanDateForInput(l.tanggal);
+                    if (l.tanggalTerjual) l.tanggalTerjual = cleanDateForInput(l.tanggalTerjual);
                     return l;
                 }) : [];
 
@@ -1122,7 +1158,7 @@
                     }
                 }
                 
-                // Fallback LocalStorage jika server belum siap
+                // Fallback LocalStorage
                 if (!waTemplatesDB || Object.keys(waTemplatesDB).length === 0) {
                     waTemplatesDB = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
                 }
@@ -1142,7 +1178,7 @@
 
             } catch (err) {
                 console.error("Gagal koneksi ke Google Sheets:", err);
-                document.getElementById('globalLoader').innerHTML = `<h2 style="color:var(--danger-bg);">Gagal Terhubung ke Database Server</h2><p>Pastikan URL API Google Apps Script sudah benar versi terbarunya.</p><button onclick="location.reload()" class="submit-btn" style="width:200px; margin-top:20px;">Coba Lagi</button>`;
+                document.getElementById('globalLoader').innerHTML = `<h2 style="color:var(--danger-bg);">Gangguan Koneksi ke Database</h2><p>Terjadi kendala saat membaca data. Pastikan URL API sudah benar.</p><button onclick="location.reload()" class="submit-btn" style="width:200px; margin-top:20px;">Coba Ulangi</button>`;
             }
         }
 
@@ -1170,12 +1206,12 @@
             try {
                 let resServices = await fetch(API_URL + "?action=getServices").then(r => r.json());
                 let updatedServices = Array.isArray(resServices) ? resServices.filter(s => s.id && String(s.id).trim() !== '').map(s => {
-                    try { if (typeof s.history === 'string') s.history = JSON.parse(s.history); } catch(e) { s.history = []; }
-                    try { if (typeof s.pesanChat === 'string') s.pesanChat = JSON.parse(s.pesanChat); } catch(e) { s.pesanChat = []; }
+                    s.history = safeJSONParse(s.history, []);
+                    s.pesanChat = safeJSONParse(s.pesanChat, []);
                     if (typeof s.butuhKonfirmasi === 'string') s.butuhKonfirmasi = (s.butuhKonfirmasi.toLowerCase() === 'true');
                     s.unreadByAdmin = (String(s.unreadByAdmin).toLowerCase() === 'true');
                     s.unreadByCust = (String(s.unreadByCust).toLowerCase() === 'true');
-                    if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(String(s.tanggalMasuk));
+                    if (s.tanggalMasuk) s.tanggalMasuk = cleanDateForInput(s.tanggalMasuk);
                     return s;
                 }) : [];
 
@@ -1229,21 +1265,6 @@
             closeConfirm();
         });
 
-        function formatRupiahText(value) {
-            if(!value) return "";
-            let number_string = value.replace(/[^,\d]/g, '').toString(), split = number_string.split(','),
-            sisa = split[0].length % 3, rupiah = split[0].substr(0, sisa), ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-            if(ribuan){ separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
-            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-            return rupiah ? 'Rp ' + rupiah : '';
-        }
-
-        function parseRupiah(value) { return parseInt(value.replace(/[^0-9]/g, '')) || 0; }
-
-        document.querySelectorAll('.input-rupiah').forEach(inp => {
-            inp.addEventListener('input', function(e) { this.value = formatRupiahText(this.value); });
-        });
-
         function formatDateWIB() {
             const d = new Date(); 
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -1264,7 +1285,9 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             if (btnElement) btnElement.classList.add('active');
-            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'dashboard') {
+                setTimeout(renderDashboard, 100); 
+            }
         }
 
         function openModal(modalId) { document.getElementById(modalId).classList.add('show'); }
@@ -1285,7 +1308,7 @@
         function getImgSrc(f) {
             if (!f) return '';
             if (typeof f === 'string') {
-                if (f === '[object Object]') return ''; 
+                if (f === '[object Object]' || f.trim() === '') return ''; 
                 if (f.startsWith('data:') || f.startsWith('http')) return f;
                 return '';
             }
@@ -1406,7 +1429,7 @@
 
             laptopKatalogDB.forEach(l => { 
                 if(l.statusJual === 'Terjual') { 
-                    let d = l.tanggalTerjual || l.tanggal;
+                    let d = cleanDateForInput(l.tanggalTerjual || l.tanggal);
                     if (!startDate || !endDate || (d >= startDate && d <= endDate)) {
                         lapTerjual += parseInt(l.stok); 
                         omsetJual += parseInt(l.harga) || 0; 
@@ -1421,8 +1444,7 @@
             });
 
             servicesDB.forEach(s => {
-                let d = s.tanggalMasuk;
-                if(d.includes(' ')) d = d.split(' ')[0];
+                let d = cleanDateForInput(s.tanggalMasuk);
 
                 if (!startDate || !endDate || (d >= startDate && d <= endDate)) {
                     if(s.status === 'Masuk') srvMasuk++; 
@@ -1436,12 +1458,12 @@
             let sortedMerek = Object.entries(merkCount).sort((a,b) => b[1] - a[1]);
             let topMerek = sortedMerek.length > 0 ? sortedMerek[0][0] : '-';
 
-            document.getElementById('dashTotOmset').textContent = formatRupiahText(totalOmset.toString());
-            document.getElementById('dashTotJual').textContent = formatRupiahText(omsetJual.toString());
-            document.getElementById('dashTotServis').textContent = formatRupiahText(omsetServis.toString());
+            document.getElementById('dashTotOmset').textContent = formatRupiahText(totalOmset);
+            document.getElementById('dashTotJual').textContent = formatRupiahText(omsetJual);
+            document.getElementById('dashTotServis').textContent = formatRupiahText(omsetServis);
             document.getElementById('dashTotTransaksi').textContent = (lapTerjual + srvSelesai) + " Transaksi";
 
-            document.getElementById('dkOmset').textContent = formatRupiahText(omsetJual.toString());
+            document.getElementById('dkOmset').textContent = formatRupiahText(omsetJual);
             document.getElementById('dkTerjual').textContent = lapTerjual + " Unit";
             document.getElementById('dkTersedia').textContent = lapTersedia + " Unit";
             document.getElementById('dkTopMerek').textContent = topMerek;
@@ -1465,7 +1487,7 @@
             }
             document.getElementById('dashMerkListDetail').innerHTML = merkHtml || '<div style="color:var(--text-muted); font-size:0.85rem;">Belum ada penjualan di periode ini.</div>';
 
-            document.getElementById('dsOmset').textContent = formatRupiahText(omsetServis.toString());
+            document.getElementById('dsOmset').textContent = formatRupiahText(omsetServis);
             document.getElementById('dsSelesai').textContent = srvSelesai + " Tiket";
             document.getElementById('dsProses').textContent = srvProses + " Tiket";
             document.getElementById('dsMasuk').textContent = srvMasuk + " Tiket";
@@ -1474,17 +1496,19 @@
             document.getElementById('dtSrvSelesaiList').textContent = srvSelesai + " Tiket";
             document.getElementById('dtSrvBatalList').textContent = srvBatal + " Tiket";
 
-            const ctxSemua = document.getElementById('chartPendapatanSemua').getContext('2d'); 
-            const ctxServis = document.getElementById('chartServisStatus').getContext('2d');
+            const ctxSemua = document.getElementById('chartPendapatanSemua'); 
+            const ctxServis = document.getElementById('chartServisStatus');
+            if(!ctxSemua || !ctxServis) return;
+            
             Chart.defaults.color = '#94a3b8';
             if(chartSrvIns) chartSrvIns.destroy(); if(chartIncIns) chartIncIns.destroy();
 
-            chartIncIns = new Chart(ctxSemua, {
+            chartIncIns = new Chart(ctxSemua.getContext('2d'), {
                 type: 'doughnut', data: { labels: ['Penjualan Laptop', 'Jasa Servis'], datasets: [{ data: [omsetJual, omsetServis], backgroundColor: ['#8b5cf6', '#3b82f6'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend:{position:'bottom'}, title: { display: true, text: 'Komposisi Pendapatan Keuangan', color: '#f8fafc', font: {size: 16} } } }
             });
 
-            chartSrvIns = new Chart(ctxServis, {
+            chartSrvIns = new Chart(ctxServis.getContext('2d'), {
                 type: 'bar', data: { labels: ['Masuk', 'Diproses', 'Selesai', 'Batal'], datasets: [{ label: 'Jumlah Tiket', data: [srvMasuk, srvProses, srvSelesai, srvBatal], backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'], borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Statistik Data Servisan', color: '#f8fafc', font:{size: 16} } } }
             });
@@ -1505,7 +1529,7 @@
                 let ksr = String(l.penjual || 'Tidak Diketahui').trim();
                 if (ksr !== kasirName) return false;
                 
-                let d = l.tanggalTerjual || l.tanggal;
+                let d = cleanDateForInput(l.tanggalTerjual || l.tanggal);
                 if (!startDate || !endDate || (d >= startDate && d <= endDate)) {
                     return true;
                 }
@@ -1523,14 +1547,14 @@
                         <tr>
                             <td>${displayDateReadably(lap.tanggalTerjual || lap.tanggal)}</td>
                             <td><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--accent-color);">${lap.id}</span></td>
-                            <td style="color:var(--success-bg); font-weight:bold;">${formatRupiahText(String(lap.harga))}</td>
+                            <td style="color:var(--success-bg); font-weight:bold;">${formatRupiahText(lap.harga)}</td>
                             <td style="font-size:0.8rem; color:var(--text-muted);">${lap.catatanInternal || '-'}</td>
                         </tr>
                     `;
                 });
             }
 
-            document.getElementById('kasirDetailTotal').innerHTML = `Total Nominal: ${formatRupiahText(String(totalJualKasir))}`;
+            document.getElementById('kasirDetailTotal').innerHTML = `Total Nominal: ${formatRupiahText(totalJualKasir)}`;
             openModal('modalDetailKasir');
         }
 
@@ -1600,7 +1624,6 @@
             let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
             let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
             
-            // PERBAIKAN LOGIKA BIAYA
             let actualCost = found.biayaAkhir || found.biayaEstimasi || found.biaya || 0;
             let costDisplay = 'Belum ditentukan';
             if (found.status === 'Selesai' && (found.biayaAkhir === 0 || found.biayaAkhir === "0")) {
@@ -1608,7 +1631,7 @@
             } else if (actualCost && actualCost !== "0" && actualCost !== 0) {
                 let numCheck = String(actualCost).replace(/[^0-9]/g, '');
                 if (numCheck === String(actualCost)) {
-                    costDisplay = formatRupiahText(String(actualCost));
+                    costDisplay = formatRupiahText(actualCost);
                 } else {
                     costDisplay = actualCost;
                 }
@@ -1617,7 +1640,7 @@
             let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
 
             let chatHTML = '';
-            if (found.pesanChat && found.pesanChat.length > 0) {
+            if (Array.isArray(found.pesanChat) && found.pesanChat.length > 0) {
                 found.pesanChat.forEach(p => {
                     let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; 
                     let roleName = p.senderRole ? String(p.senderRole).toUpperCase() : 'TEKNISI';
@@ -1654,12 +1677,12 @@
             const srv = servicesDB.find(s => s.id === id); if (!srv) return;
             let text = textOverride || document.getElementById('inputPesanKonsumen_' + id).value; if(!text.trim()) return;
 
-            if(!srv.pesanChat) srv.pesanChat = [];
+            if(!Array.isArray(srv.pesanChat)) srv.pesanChat = [];
             srv.pesanChat.push({ sender: 'konsumen', text: text, time: formatDateWIB() });
             srv.unreadByAdmin = true; 
             if (textOverride && srv.butuhKonfirmasi) {
                 srv.butuhKonfirmasi = false;
-                if(!srv.history) srv.history = [];
+                if(!Array.isArray(srv.history)) srv.history = [];
                 srv.history.push({ time: formatDateWIB(), action: 'Konfirmasi Konsumen', note: text, by: 'Konsumen' });
             }
             sendToServer('saveService', srv); showToast('Pesan berhasil dikirim ke teknisi!'); renderDetailPencarianById(id);
@@ -1670,7 +1693,7 @@
             const text = document.getElementById('uSrvKirimPesan').value; const butuhKonfirm = document.getElementById('uSrvButuhKonfirmasi').checked;
 
             if(!text.trim() && !butuhKonfirm) return showToast('Pesan kosong. Ketik sesuatu atau centang konfirmasi.', true);
-            if(!srv.pesanChat) srv.pesanChat = [];
+            if(!Array.isArray(srv.pesanChat)) srv.pesanChat = [];
             if(text.trim()) { srv.pesanChat.push({ sender: 'teknisi', senderName: currentUser.nama, senderRole: currentUser.role, text: text, time: formatDateWIB() }); }
             srv.butuhKonfirmasi = butuhKonfirm; srv.unreadByCust = true; 
             sendToServer('saveService', srv); showToast('Pesan terkirim ke pelanggan!');
@@ -1686,11 +1709,11 @@
             
             if (currentUser && currentUser.role === 'admin') {
                 const filterContainer = document.getElementById('filterPesanAdmin'); filterContainer.style.display = 'flex';
-                let techs = [...new Set(servicesDB.filter(s => s.pesanChat && s.pesanChat.length > 0).map(s => s.techId))];
+                let techs = [...new Set(servicesDB.filter(s => Array.isArray(s.pesanChat) && s.pesanChat.length > 0).map(s => s.techId))];
                 let htmlFilter = `<button class="btn-sm" style="${currentPesanFilter === 'Semua' ? 'background:var(--accent-color); border:1px solid var(--accent-color);' : 'background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-muted);'}" onclick="setFilterPesan('Semua')">Semua Pesan</button>`;
                 
                 techs.forEach(t => {
-                    let unread = servicesDB.filter(s => s.techId === t && s.unreadByAdmin && s.pesanChat && s.pesanChat.length > 0).length;
+                    let unread = servicesDB.filter(s => s.techId === t && s.unreadByAdmin && Array.isArray(s.pesanChat) && s.pesanChat.length > 0).length;
                     let badge = unread > 0 ? ` <span style="background:var(--danger-bg); border-radius:4px; padding: 2px 5px; font-size:0.6rem; color:white;">${unread} Baru</span>` : '';
                     htmlFilter += `<button class="btn-sm" style="${currentPesanFilter === t ? 'background:var(--accent-color); border:1px solid var(--accent-color);' : 'background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-muted);'}" onclick="setFilterPesan('${t}')">${t}${badge}</button>`;
                 });
@@ -1701,7 +1724,7 @@
                 document.getElementById('filterPesanAdmin').style.display = 'none'; myData = myData.filter(s => s.techId === currentUser.username);
             }
             
-            let chatList = myData.filter(s => s.pesanChat && s.pesanChat.length > 0);
+            let chatList = myData.filter(s => Array.isArray(s.pesanChat) && s.pesanChat.length > 0);
             chatList.sort((a, b) => b.id.localeCompare(a.id));
 
             if (chatList.length === 0) { container.innerHTML = `<div style="text-align:center; padding: 30px; color: var(--text-muted); background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px dashed var(--border-color);">Belum ada pesan / obrolan aktif di kategori ini.</div>`; return; }
@@ -1750,7 +1773,7 @@
                 let btnText = lap.stok <= 0 ? '❌ Habis' : '🛒 Hubungi WhatsApp';
 
                 let imagesHTML = `<div class="katalog-img">💻</div>`; 
-                if (lap.fotos && lap.fotos.length > 0) {
+                if (Array.isArray(lap.fotos) && lap.fotos.length > 0) {
                     let mainImg = getImgSrc(lap.fotos[0]);
                     if (mainImg) {
                         let thumbs = lap.fotos.map((f, i) => `<img src="${getImgSrc(f)}" class="katalog-thumb" onclick="changeMainImg('${lap.id}', ${i})">`).join('');
@@ -1758,7 +1781,7 @@
                     }
                 }
 
-                grid.innerHTML += `<div class="katalog-card">${imagesHTML}<div class="katalog-content"><div class="katalog-title">${lap.merek} ${lap.tipe}</div><div class="katalog-garansi">${lap.garansi}</div><div class="katalog-spek"><strong style="color: var(--text-main);">Warna:</strong> ${lap.warna || '-'}<br>${lap.spek}</div>${badgeStok}<div class="katalog-harga">${formatRupiahText(String(lap.harga))}</div><a href="https://wa.me/6285250857087?text=Halo Banlie Computing, saya tertarik dengan laptop ${lap.merek} ${lap.tipe} warna ${lap.warna || '-'} (ID: ${lap.id})" target="_blank" class="btn-beli" style="${btnState}">${btnText}</a></div></div>`;
+                grid.innerHTML += `<div class="katalog-card">${imagesHTML}<div class="katalog-content"><div class="katalog-title">${lap.merek} ${lap.tipe}</div><div class="katalog-garansi">${lap.garansi}</div><div class="katalog-spek"><strong style="color: var(--text-main);">Warna:</strong> ${lap.warna || '-'}<br>${lap.spek}</div>${badgeStok}<div class="katalog-harga">${formatRupiahText(lap.harga)}</div><a href="https://wa.me/6285250857087?text=Halo Banlie Computing, saya tertarik dengan laptop ${lap.merek} ${lap.tipe} warna ${lap.warna || '-'} (ID: ${lap.id})" target="_blank" class="btn-beli" style="${btnState}">${btnText}</a></div></div>`;
             });
             if (sortValue === 'baru') tersediaDB.reverse(); 
         }
@@ -1780,7 +1803,7 @@
             let countTersedia = 0, countTerjual = 0;
 
             filteredDB.forEach((lap) => {
-                let imgThumbSrc = (lap.fotos && lap.fotos.length > 0) ? getImgSrc(lap.fotos[0]) : '';
+                let imgThumbSrc = (Array.isArray(lap.fotos) && lap.fotos.length > 0) ? getImgSrc(lap.fotos[0]) : '';
                 let imgThumb = imgThumbSrc ? `<img src="${imgThumbSrc}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; cursor:zoom-in;" onclick="viewImagePopup(this.src)">` : `<div style="width:40px; height:40px; background:var(--border-color); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px;">💻</div>`;
                 
                 let aksiTersediaHTML = `<button class="btn-sm btn-jual" onclick="bukaModalJual('${lap.id}')">🛒 Jual</button>`;
@@ -1793,10 +1816,10 @@
 
                 if(lap.statusJual === 'Tersedia') {
                     countTersedia++;
-                    tbTersedia.innerHTML += `<tr><td><div style="display:flex; align-items:center; gap:10px;">${imgThumb}<div><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--accent-color);">ID: ${lap.id}</span></div></div></td><td><span style="font-size:0.8rem; color:var(--text-muted);">Warna: ${lap.warna || '-'}</span><br><span style="font-size:0.75rem; color:var(--text-muted);">Masuk: ${displayDateReadably(lap.tanggal)}</span></td><td><strong style="color:var(--success-bg);">${formatRupiahText(String(lap.harga))}</strong><br><span style="font-size:0.75rem;">${lap.garansi}</span></td><td style="vertical-align: middle;"><span style="font-weight:bold; font-size: 1.1rem; color:${lap.stok > 0 ? 'var(--text-main)' : 'var(--danger-bg)'}">${lap.stok}</span> Unit</td><td><div style="display:flex; flex-wrap:wrap; gap:6px;">${aksiTersediaHTML}</div></td></tr>`;
+                    tbTersedia.innerHTML += `<tr><td><div style="display:flex; align-items:center; gap:10px;">${imgThumb}<div><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--accent-color);">ID: ${lap.id}</span></div></div></td><td><span style="font-size:0.8rem; color:var(--text-muted);">Warna: ${lap.warna || '-'}</span><br><span style="font-size:0.75rem; color:var(--text-muted);">Masuk: ${displayDateReadably(lap.tanggal)}</span></td><td><strong style="color:var(--success-bg);">${formatRupiahText(lap.harga)}</strong><br><span style="font-size:0.75rem;">${lap.garansi}</span></td><td style="vertical-align: middle;"><span style="font-weight:bold; font-size: 1.1rem; color:${lap.stok > 0 ? 'var(--text-main)' : 'var(--danger-bg)'}">${lap.stok}</span> Unit</td><td><div style="display:flex; flex-wrap:wrap; gap:6px;">${aksiTersediaHTML}</div></td></tr>`;
                 } else {
                     countTerjual++;
-                    tbTerjual.innerHTML += `<tr><td><div style="display:flex; align-items:center; gap:10px;">${imgThumb}<div><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--danger-bg);">ID: ${lap.id}</span></div></div></td><td><strong style="color:var(--success-bg);">${formatRupiahText(String(lap.harga))}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">Tgl Jual: ${displayDateReadably(lap.tanggalTerjual)}</span><br><span style="font-size:0.75rem; color:var(--text-muted);">Kasir: <strong style="color:var(--accent-color);">${lap.penjual || '-'}</strong></span></td><td><div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; border:1px dashed var(--danger-bg);"><span style="color:var(--text-muted);">Email:</span> ${lap.email || '-'}<br><span style="color:var(--text-muted);">Pass:</span> <code style="color:var(--text-main);">${lap.pass || '-'}</code><br><span style="color:var(--text-muted);">Catatan:</span> ${lap.catatanInternal || '-'}</div></td><td><div style="display:flex; flex-wrap:wrap; gap:6px;">${aksiTerjualHTML || '<span style="color:var(--text-muted); font-size:10px;">(Hanya Admin)</span>'}</div></td></tr>`;
+                    tbTerjual.innerHTML += `<tr><td><div style="display:flex; align-items:center; gap:10px;">${imgThumb}<div><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--danger-bg);">ID: ${lap.id}</span></div></div></td><td><strong style="color:var(--success-bg);">${formatRupiahText(lap.harga)}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">Tgl Jual: ${displayDateReadably(lap.tanggalTerjual)}</span><br><span style="font-size:0.75rem; color:var(--text-muted);">Kasir: <strong style="color:var(--accent-color);">${lap.penjual || '-'}</strong></span></td><td><div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; border:1px dashed var(--danger-bg);"><span style="color:var(--text-muted);">Email:</span> ${lap.email || '-'}<br><span style="color:var(--text-muted);">Pass:</span> <code style="color:var(--text-main);">${lap.pass || '-'}</code><br><span style="color:var(--text-muted);">Catatan:</span> ${lap.catatanInternal || '-'}</div></td><td><div style="display:flex; flex-wrap:wrap; gap:6px;">${aksiTerjualHTML || '<span style="color:var(--text-muted); font-size:10px;">(Hanya Admin)</span>'}</div></td></tr>`;
                 }
             });
 
@@ -1816,7 +1839,7 @@
             if(lap.stok <= 0) { showToast('Stok habis!', true); return; }
 
             document.getElementById('jLapId').value = lapId; document.getElementById('jTanggalJual').value = getTodayDate();
-            document.getElementById('jHargaJual').value = formatRupiahText(String(lap.harga)); 
+            document.getElementById('jHargaJual').value = formatRupiahText(lap.harga); 
             document.getElementById('jPenjual').innerHTML = getPenjualOptions(); document.getElementById('jPenjual').value = currentUser.nama;
             document.getElementById('jEmail').value = ''; document.getElementById('jPass').value = ''; document.getElementById('jCatatan').value = '';
             openModal('modalJualLaptop');
@@ -1854,10 +1877,10 @@
         function openModalEditInventory(lapId) {
             currentEditLapId = lapId; const lap = laptopKatalogDB.find(l => l.id === lapId);
             document.getElementById('mEditMerek').value = lap.merek; document.getElementById('mEditTipe').value = lap.tipe;
-            document.getElementById('mEditHarga').value = formatRupiahText(String(lap.harga)); document.getElementById('mEditStok').value = lap.stok;
+            document.getElementById('mEditHarga').value = formatRupiahText(lap.harga); document.getElementById('mEditStok').value = lap.stok;
             document.getElementById('mEditWarna').value = lap.warna || '';
             document.getElementById('mEditSpek').value = lap.spek; document.getElementById('mEditGaransi').value = lap.garansi;
-            document.getElementById('mEditTgl').value = lap.tanggal; 
+            document.getElementById('mEditTgl').value = cleanDateForInput(lap.tanggal); 
             document.getElementById('mEditFotos').value = ""; 
 
             tempEditFotos = lap.fotos && Array.isArray(lap.fotos) ? [...lap.fotos] : [];
@@ -1958,8 +1981,8 @@
         function openModalEditTerjual(lapId) {
             currentEditLapId = lapId; const lap = laptopKatalogDB.find(l => l.id === lapId);
             document.getElementById('etMerek').value = lap.merek; document.getElementById('etTipe').value = lap.tipe;
-            document.getElementById('etTanggalJual').value = lap.tanggalTerjual || getTodayDate();
-            document.getElementById('etHarga').value = formatRupiahText(String(lap.harga));
+            document.getElementById('etTanggalJual').value = cleanDateForInput(lap.tanggalTerjual || lap.tanggal);
+            document.getElementById('etHarga').value = formatRupiahText(lap.harga);
             document.getElementById('etPenjual').innerHTML = getPenjualOptions();
             if (lap.penjual) document.getElementById('etPenjual').value = lap.penjual; else document.getElementById('etPenjual').value = currentUser.nama;
             document.getElementById('etEmail').value = lap.email; document.getElementById('etPass').value = lap.pass;
@@ -2024,7 +2047,7 @@
                 if (s.unreadByAdmin) badgeStatus += ` <span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite; margin-top:5px; display:inline-block;">💬 Pesan Baru</span>`;
 
                 let compactHistoryHTML = '';
-                if(s.history && s.history.length > 0) {
+                if(Array.isArray(s.history) && s.history.length > 0) {
                     compactHistoryHTML = '<div class="history-list" style="margin-top: 10px; border-left: 2px solid var(--accent-color); padding-left: 10px;">';
                     let displayHistory = s.history.slice(-3); 
                     if(s.history.length > 3) compactHistoryHTML += `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px;"><i>Menampilkan 3 aktivitas terakhir...</i></div>`;
@@ -2098,7 +2121,6 @@
         function parseWaTemplate(rawTemplate, s) {
             if(!s) return rawTemplate;
             
-            // PERBAIKAN LOGIKA BIAYA
             let actualCost = s.biayaAkhir || s.biayaEstimasi || s.biaya || 0;
             let costDisplay = 'Belum ditentukan';
             if (s.status === 'Selesai' && (s.biayaAkhir === 0 || s.biayaAkhir === "0")) {
@@ -2106,7 +2128,7 @@
             } else if (actualCost && actualCost !== "0" && actualCost !== 0) {
                 let numCheck = String(actualCost).replace(/[^0-9]/g, '');
                 if (numCheck === String(actualCost)) {
-                    costDisplay = formatRupiahText(String(actualCost));
+                    costDisplay = formatRupiahText(actualCost);
                 } else {
                     costDisplay = actualCost;
                 }
@@ -2236,11 +2258,11 @@
             
             document.getElementById('uSrvId').value = id; document.getElementById('uSrvStatus').value = s.status;
             document.getElementById('uSrvBiayaEstimasi').value = s.biayaEstimasi || s.biaya || '';
-            document.getElementById('uSrvBiayaAkhir').value = hargaTampil ? formatRupiahText(String(hargaTampil)) : '';
+            document.getElementById('uSrvBiayaAkhir').value = hargaTampil ? formatRupiahText(hargaTampil) : '';
             toggleBiayaAkhir(); document.getElementById('uSrvGaransi').value = s.garansi || ''; document.getElementById('uSrvCatatan').value = ''; 
             
             const chatArea = document.getElementById('techChatArea'); let chatHTML = '';
-            if (s.pesanChat && s.pesanChat.length > 0) {
+            if (Array.isArray(s.pesanChat) && s.pesanChat.length > 0) {
                 s.pesanChat.forEach(p => {
                     let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust'; 
                     let senderName = '';
@@ -2287,7 +2309,7 @@
             
             let finalActionLog = logMessages.length > 0 ? logMessages.join(' | ') : 'Pembaruan Progres';
             if (newCatatan.trim() || logMessages.length > 0) {
-                if(!servicesDB[idx].history) servicesDB[idx].history = [];
+                if(!Array.isArray(servicesDB[idx].history)) servicesDB[idx].history = [];
                 servicesDB[idx].history.push({ time: formatDateWIB(), action: finalActionLog, note: newCatatan, by: currentUser.username });
             }
             showToast(`Update & Log Timeline berhasil disimpan!`); this.reset(); closeModal('modalUpdateServis'); renderServisan();
@@ -2308,7 +2330,7 @@
             servicesDB[idx].merek = document.getElementById('eSrvMerek').value.toUpperCase(); servicesDB[idx].tipe = document.getElementById('eSrvTipe').value.toUpperCase(); servicesDB[idx].snid = document.getElementById('eSrvSNID').value;
             servicesDB[idx].kelengkapan = document.getElementById('eSrvKelengkapan').value; servicesDB[idx].masalah = document.getElementById('eSrvMasalah').value; servicesDB[idx].deskripsi = document.getElementById('eSrvDeskripsi').value;
 
-            if(!servicesDB[idx].history) servicesDB[idx].history = [];
+            if(!Array.isArray(servicesDB[idx].history)) servicesDB[idx].history = [];
             servicesDB[idx].history.push({ time: formatDateWIB(), action: 'Edit Data Detail', note: 'Admin/Teknisi memperbarui detail informasi perangkat ini.', by: currentUser.username });
             showToast(`Detail Perangkat berhasil diubah!`); closeModal('modalEditDataServis'); populateDatalists(); renderServisan(); sendToServer('saveService', servicesDB[idx]);
         });
@@ -2324,7 +2346,7 @@
             const s = servicesDB.find(x => x.id === id); if(!s) return;
             document.getElementById('hSrvTitle').textContent = `Servis ID: ${s.id} - ${s.merek} ${s.tipe}`;
             let html = '<div style="margin-bottom: 20px;"><h4 style="color:var(--info-bg); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">💬 Riwayat Chat & Konfirmasi</h4>';
-            if(s.pesanChat && s.pesanChat.length > 0) {
+            if(Array.isArray(s.pesanChat) && s.pesanChat.length > 0) {
                 html += '<div class="chat-area" style="max-height:200px; margin-bottom: 20px;">';
                 s.pesanChat.forEach(p => { 
                     let cls = p.sender === 'teknisi' ? 'chat-tech' : 'chat-cust';
@@ -2334,7 +2356,7 @@
                 html += '</div>';
             } else { html += '<div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Belum ada riwayat percakapan.</div>'; }
             html += '<h4 style="color:var(--accent-color); margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">📜 Timeline Aktivitas Sistem</h4><div class="history-list" style="border-left: 2px solid var(--accent-color); padding-left: 10px;">';
-            if(s.history && s.history.length > 0) { s.history.forEach(h => { html += `<div class="history-item" style="margin-bottom: 15px;"><div class="history-time" style="font-size:0.75rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">Operator: ${h.by}</span></div><div class="history-action" style="font-size:0.9rem; color:var(--accent-color); font-weight:bold;">${h.action}</div>${h.note ? `<div class="history-note" style="font-size:0.85rem; color:var(--text-main); margin-top:4px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">"${h.note}"</div>` : ''}</div>`; }); } else { html += '<div style="color: var(--text-muted); font-size: 0.85rem;">Belum ada riwayat log.</div>'; }
+            if(Array.isArray(s.history) && s.history.length > 0) { s.history.forEach(h => { html += `<div class="history-item" style="margin-bottom: 15px;"><div class="history-time" style="font-size:0.75rem;">${h.time} <span class="history-by" style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">Operator: ${h.by}</span></div><div class="history-action" style="font-size:0.9rem; color:var(--accent-color); font-weight:bold;">${h.action}</div>${h.note ? `<div class="history-note" style="font-size:0.85rem; color:var(--text-main); margin-top:4px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">"${h.note}"</div>` : ''}</div>`; }); } else { html += '<div style="color: var(--text-muted); font-size: 0.85rem;">Belum ada riwayat log.</div>'; }
             document.getElementById('hSrvContainer').innerHTML = html + '</div></div>'; openModal('modalHistoryServis');
         }
 
