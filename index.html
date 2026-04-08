@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banlie Computing - Store & Service v2.2.6 (Stable Sync)</title>
+    <title>Banlie Computing - Store & Service v2.2.8 (Stable Sync)</title>
     
     <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1775473744461-6ce0dbd2-a423-456a-aea5-ac571a08addb.ico">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -220,7 +220,7 @@
     <div id="loginPage" class="main-container" style="display: none;">
         <div class="header-title">
             <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
-            <h2>Banlie Computing Portal <span class="version-badge">v2.2.6</span></h2>
+            <h2>Banlie Computing Portal <span class="version-badge">v2.2.8</span></h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
 
@@ -247,7 +247,7 @@
                 <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
                 <div>
                     <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">Banlie Computing</span>
-                    <span class="version-badge">v2.2.6</span>
+                    <span class="version-badge">v2.2.8</span>
                     <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
                 </div>
             </div>
@@ -266,8 +266,7 @@
             <button id="tabPesan" class="tab-btn internal-only" onclick="openTab('pesan', this); renderPesan();" style="display: none;">💬 Pesan</button>
             
             <button id="tabDashboard" class="tab-btn admin-only" onclick="openTab('dashboard', this); renderDashboard();" style="display: none;">📊 Dashboard</button>
-            <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">👥 Teknisi</button>
-            <button id="tabPengaturan" class="tab-btn admin-only" onclick="openTab('pengaturan', this); renderPengaturan();" style="display: none;">⚙️ Pengaturan</button>
+            <button id="tabPengaturan" class="tab-btn admin-only" onclick="openTab('pengaturan', this);" style="display: none;">⚙️ Pengaturan</button>
         </div>
 
         <!-- ================= HALAMAN KONTEN ================= -->
@@ -362,7 +361,7 @@
 
             <!-- Sub Menu Dashboard -->
             <div style="display:flex; gap:10px; margin-bottom:20px; overflow-x:auto; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
-                <button class="btn-sm btn-filter-dash" style="background:var(--accent-color); border:1px solid var(--accent-color);" onclick="setFilterDash('Semua', this)">Semua Ringkasan</button>
+                <button class="btn-sm btn-filter-dash active" style="background:var(--accent-color); border:1px solid var(--accent-color);" onclick="setFilterDash('Semua', this)">Semua Ringkasan</button>
                 <button class="btn-sm btn-filter-dash" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterDash('Katalog', this)">Katalog & Penjualan</button>
                 <button class="btn-sm btn-filter-dash" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterDash('Servis', this)">Data Servisan</button>
             </div>
@@ -437,7 +436,7 @@
 
             <!-- Sub Menu Filter -->
             <div style="display:flex; gap:10px; margin-bottom:15px; overflow-x:auto; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
-                <button class="btn-sm btn-filter-srv" style="background:var(--accent-color); border:1px solid var(--accent-color);" onclick="setFilterSrv('Semua', this)">Semua Data</button>
+                <button class="btn-sm btn-filter-srv active" style="background:var(--accent-color); border:1px solid var(--accent-color);" onclick="setFilterSrv('Semua', this)">Semua Data</button>
                 <button class="btn-sm btn-filter-srv" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterSrv('Masuk', this)">📥 Masuk (Antrean)</button>
                 <button class="btn-sm btn-filter-srv" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterSrv('Proses', this)">⚙️ Sedang Proses</button>
                 <button class="btn-sm btn-filter-srv" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterSrv('SelesaiBatal', this)">✅ Selesai / ❌ Batal</button>
@@ -462,46 +461,51 @@
             <div id="listPesanContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
 
-        <!-- 5. KELOLA TEKNISI / USER (Hanya Admin) -->
-        <div id="kelola-user" class="page-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div class="header-title" style="margin-bottom: 0; text-align: left;">
-                    <h2 style="font-size: 1.3rem;">Kelola Karyawan</h2>
-                    <p>Ubah hak akses atau password tim Anda</p>
-                </div>
-                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahUser')">+ Tambah Karyawan</button>
-            </div>
-            <div class="table-responsive">
-                <table>
-                    <thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Password</th><th>Aksi</th></tr></thead>
-                    <tbody id="tbodyUsers"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 6. PENGATURAN SISTEM (Hanya Admin) -->
+        <!-- PENGATURAN SISTEM & KELOLA USER (Hanya Admin) -->
         <div id="pengaturan" class="page-content">
             <div class="header-title" style="margin-bottom: 20px; text-align: left;">
-                <h2 style="font-size: 1.3rem;">Pengaturan Sistem & Kamus</h2>
-                <p>Ubah saran kata (Suggestion) pada form secara permanen dan simpan ke Spreadsheet</p>
+                <h2 style="font-size: 1.3rem;">Pengaturan Sistem</h2>
+                <p>Manajemen hak akses karyawan dan kamus aplikasi</p>
             </div>
             
-            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                <p style="font-size:0.85rem; color:var(--warning-bg); margin-bottom:15px;">Gunakan tanda koma (,) untuk memisahkan setiap kata/item.</p>
-                
-                <div class="input-group">
-                    <label>Kamus Merek Laptop/HP (Tampil di form tambah/edit)</label>
-                    <textarea id="setKamusMerek" rows="2" class="input-catatan"></textarea>
+            <!-- Sub Navigation Pengaturan -->
+            <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                <button class="btn-sm btn-filter-set active" style="background:var(--accent-color); border:1px solid var(--accent-color);" onclick="setFilterPengaturan('teknisi', this)">👥 Kelola Teknisi & Karyawan</button>
+                <button class="btn-sm btn-filter-set" style="background:var(--input-bg); border:1px solid var(--border-color);" onclick="setFilterPengaturan('kamus', this)">📚 Sistem & Kamus</button>
+            </div>
+
+            <!-- View 1: Kelola Teknisi -->
+            <div id="viewSetTeknisi" style="display:block; animation: fadeIn 0.3s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <p style="font-size:0.85rem; color:var(--text-muted);">Ubah hak akses atau password tim Anda.</p>
+                    <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahUser')">+ Tambah Karyawan</button>
                 </div>
-                <div class="input-group">
-                    <label>Kamus Kelengkapan</label>
-                    <textarea id="setKamusKelengkapan" rows="2" class="input-catatan"></textarea>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Password</th><th>Aksi</th></tr></thead>
+                        <tbody id="tbodyUsers"></tbody>
+                    </table>
                 </div>
-                <div class="input-group">
-                    <label>Kamus Masalah / Keluhan Utama</label>
-                    <textarea id="setKamusMasalah" rows="3" class="input-catatan"></textarea>
+            </div>
+
+            <!-- View 2: Pengaturan Kamus -->
+            <div id="viewSetKamus" style="display:none; animation: fadeIn 0.3s ease;">
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                    <p style="font-size:0.85rem; color:var(--warning-bg); margin-bottom:15px;">Gunakan tanda koma (,) untuk memisahkan setiap kata/item.</p>
+                    <div class="input-group">
+                        <label>Kamus Merek Laptop/HP (Tampil di form tambah/edit)</label>
+                        <textarea id="setKamusMerek" rows="2" class="input-catatan"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Kamus Kelengkapan</label>
+                        <textarea id="setKamusKelengkapan" rows="2" class="input-catatan"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Kamus Masalah / Keluhan Utama</label>
+                        <textarea id="setKamusMasalah" rows="3" class="input-catatan"></textarea>
+                    </div>
+                    <button type="button" class="submit-btn" style="background: var(--success-bg); margin-top:10px;" onclick="simpanKamusServer()">💾 Simpan Kamus ke Spreadsheet</button>
                 </div>
-                <button type="button" class="submit-btn" style="background: var(--success-bg); margin-top:10px;" onclick="simpanKamusServer()">💾 Simpan Kamus ke Spreadsheet</button>
             </div>
         </div>
     </div>
@@ -554,6 +558,20 @@
                     <input type="file" id="lapFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
                 </div>
                 <button type="submit" id="btnSimpanLaptop" class="submit-btn" style="margin-top: 10px;">+ Simpan ke Etalase</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH USER / TEKNISI BARU -->
+    <div id="modalTambahUser" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close-modal" onclick="closeModal('modalTambahUser')">&times;</span>
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tambah Karyawan Baru</h3>
+            <form id="formAddUser">
+                <div class="input-group"><label>Username <span class="req-star">*</span></label><input type="text" id="newUsername" required placeholder="Cth: udin_tech"></div>
+                <div class="input-group"><label>Nama Lengkap <span class="req-star">*</span></label><input type="text" id="newNama" required placeholder="Cth: Udin Sedunia"></div>
+                <div class="input-group"><label>Password <span class="req-star">*</span></label><input type="password" id="newPass" required placeholder="Minimal 4 karakter"></div>
+                <button type="submit" class="submit-btn" style="margin-top: 10px;">Simpan Karyawan</button>
             </form>
         </div>
     </div>
@@ -1128,6 +1146,16 @@
                 }) : [];
 
                 laptopKatalogDB = Array.isArray(resKatalog) ? resKatalog.filter(l => l.id && String(l.id).trim() !== '').map(l => {
+                    // SAFEGUARD: Jika kolom Spreadsheet bergeser & gambar nyasar ke catatan internal
+                    let rawCtt = String(l.catatanInternal || '');
+                    if (rawCtt.startsWith('[') && rawCtt.includes('data:image')) {
+                        try {
+                            let parsed = JSON.parse(rawCtt);
+                            if (Array.isArray(parsed) && parsed.length > 0) l.fotos = parsed;
+                        } catch(e) {}
+                        l.catatanInternal = '-'; // Bersihkan teks base64 dari catatan
+                    }
+
                     l.fotos = ensureArray(l.fotos);
                     if (l.tanggal) l.tanggal = cleanDateForInput(l.tanggal);
                     if (l.tanggalTerjual) l.tanggalTerjual = cleanDateForInput(l.tanggalTerjual);
@@ -1446,15 +1474,18 @@
             let merkCount = {}; let kasirCount = {};
 
             laptopKatalogDB.forEach(l => { 
-                if(l.statusJual === 'Terjual') { 
+                let st = String(l.statusJual || '').trim().toLowerCase();
+                let isTerjual = (st === 'terjual') || (parseInt(l.stok) <= 0 && st !== 'tersedia');
+
+                if(isTerjual) { 
                     let d = cleanDateForInput(l.tanggalTerjual || l.tanggal);
                     if (!startDate || !endDate || (d >= startDate && d <= endDate)) {
-                        lapTerjual += parseInt(l.stok); 
+                        lapTerjual += parseInt(l.stok > 0 ? l.stok : 1); 
                         omsetJual += parseInt(l.harga) || 0; 
                         let mrk = String(l.merek).toUpperCase().trim(); 
-                        merkCount[mrk] = (merkCount[mrk] || 0) + parseInt(l.stok);
+                        merkCount[mrk] = (merkCount[mrk] || 0) + parseInt(l.stok > 0 ? l.stok : 1);
                         let ksr = String(l.penjual || 'Tidak Diketahui').trim(); 
-                        kasirCount[ksr] = (kasirCount[ksr] || 0) + parseInt(l.stok);
+                        kasirCount[ksr] = (kasirCount[ksr] || 0) + parseInt(l.stok > 0 ? l.stok : 1);
                     }
                 } else { 
                     lapTersedia += parseInt(l.stok); 
@@ -1541,7 +1572,10 @@
             let totalJualKasir = 0;
 
             let terjualOlehKasir = laptopKatalogDB.filter(l => {
-                if (l.statusJual !== 'Terjual') return false;
+                let st = String(l.statusJual || '').trim().toLowerCase();
+                let isTerjual = (st === 'terjual') || (parseInt(l.stok) <= 0 && st !== 'tersedia');
+                if (!isTerjual) return false;
+                
                 let ksr = String(l.penjual || 'Tidak Diketahui').trim();
                 if (ksr !== kasirName) return false;
                 
@@ -1745,10 +1779,14 @@
 
             chatList.forEach(s => {
                 let lastMsg = s.pesanChat[s.pesanChat.length - 1];
+                if (!lastMsg) return; // Safeguard anti-crash
+                
                 let unreadBadge = s.unreadByAdmin ? `<span class="badge" style="background:var(--danger-bg); animation: pulseGlow 2s infinite;">Pesan Baru</span>` : '';
                 let senderDisp = '👤 Konsumen';
                 if (lastMsg.sender === 'teknisi') { senderDisp = (lastMsg.senderName === currentUser.nama) ? '👨‍🔧 Anda' : `👨‍🔧 ${lastMsg.senderName || 'Staff'}`; }
-                let textSnippet = lastMsg.text.length > 70 ? lastMsg.text.substring(0, 70) + '...' : lastMsg.text;
+                
+                let safeText = lastMsg.text || "";
+                let textSnippet = safeText.length > 70 ? safeText.substring(0, 70) + '...' : safeText;
 
                 container.innerHTML += `
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onclick="openModalUpdateServis('${s.id}')" onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
@@ -1768,7 +1806,12 @@
 
         function renderKatalogPublik() {
             const grid = document.getElementById('katalogGrid'); grid.innerHTML = '';
-            let tersediaDB = laptopKatalogDB.filter(l => l.statusJual === 'Tersedia');
+            
+            // Safeguard Filter Status
+            let tersediaDB = laptopKatalogDB.filter(l => {
+                let st = String(l.statusJual || '').trim().toLowerCase();
+                return st === 'tersedia' || (st !== 'terjual' && parseInt(l.stok) > 0);
+            });
 
             const filterMerekValue = document.getElementById('filterMerek').value.toUpperCase();
             if(filterMerekValue) { tersediaDB = tersediaDB.filter(l => String(l.merek).toUpperCase().trim() === filterMerekValue); }
@@ -1826,12 +1869,21 @@
                     aksiTerjualHTML += `<button class="btn-sm btn-edit" onclick="openModalEditTerjual('${lap.id}')">✏️ Edit</button><button class="btn-sm btn-danger" onclick="hapusLaptop('${lap.id}')">🗑️</button>`;
                 }
 
-                if(lap.statusJual === 'Tersedia') {
+                let st = String(lap.statusJual || '').trim().toLowerCase();
+                let isTerjual = (st === 'terjual') || (parseInt(lap.stok) <= 0 && st !== 'tersedia');
+                
+                // Mencegah Base64 Tampil sebagai teks super panjang di tabel
+                let cttVisual = lap.catatanInternal || '-';
+                if(cttVisual.length > 100 && (cttVisual.includes('data:image') || cttVisual.includes('base64'))) {
+                    cttVisual = '(Data Tersembunyi/Invalid)';
+                }
+
+                if(!isTerjual) {
                     countTersedia++;
                     tbTersedia.innerHTML += `<tr><td><div style="display:flex; align-items:center; gap:10px;">${imgThumb}<div><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--accent-color);">ID: ${lap.id}</span></div></div></td><td><span style="font-size:0.8rem; color:var(--text-muted);">Warna: ${lap.warna || '-'}</span><br><span style="font-size:0.75rem; color:var(--text-muted);">Masuk: ${displayDateReadably(lap.tanggal)}</span></td><td><strong style="color:var(--success-bg);">${formatRupiahText(lap.harga)}</strong><br><span style="font-size:0.75rem;">${lap.garansi}</span></td><td style="vertical-align: middle;"><span style="font-weight:bold; font-size: 1.1rem; color:${lap.stok > 0 ? 'var(--text-main)' : 'var(--danger-bg)'}">${lap.stok}</span> Unit</td><td><div style="display:flex; flex-wrap:wrap; gap:6px;">${aksiTersediaHTML}</div></td></tr>`;
                 } else {
                     countTerjual++;
-                    tbTerjual.innerHTML += `<tr><td><div style="display:flex; align-items:center; gap:10px;">${imgThumb}<div><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--danger-bg);">ID: ${lap.id}</span></div></div></td><td><strong style="color:var(--success-bg);">${formatRupiahText(lap.harga)}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">Tgl Jual: ${displayDateReadably(lap.tanggalTerjual)}</span><br><span style="font-size:0.75rem; color:var(--text-muted);">Kasir: <strong style="color:var(--accent-color);">${lap.penjual || '-'}</strong></span></td><td><div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; border:1px dashed var(--danger-bg);"><span style="color:var(--text-muted);">Email:</span> ${lap.email || '-'}<br><span style="color:var(--text-muted);">Pass:</span> <code style="color:var(--text-main);">${lap.pass || '-'}</code><br><span style="color:var(--text-muted);">Catatan:</span> ${lap.catatanInternal || '-'}</div></td><td><div style="display:flex; flex-wrap:wrap; gap:6px;">${aksiTerjualHTML || '<span style="color:var(--text-muted); font-size:10px;">(Hanya Admin)</span>'}</div></td></tr>`;
+                    tbTerjual.innerHTML += `<tr><td><div style="display:flex; align-items:center; gap:10px;">${imgThumb}<div><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--danger-bg);">ID: ${lap.id}</span></div></div></td><td><strong style="color:var(--success-bg);">${formatRupiahText(lap.harga)}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">Tgl Jual: ${displayDateReadably(lap.tanggalTerjual)}</span><br><span style="font-size:0.75rem; color:var(--text-muted);">Kasir: <strong style="color:var(--accent-color);">${lap.penjual || '-'}</strong></span></td><td><div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; border:1px dashed var(--danger-bg);"><span style="color:var(--text-muted);">Email:</span> ${lap.email || '-'}<br><span style="color:var(--text-muted);">Pass:</span> <code style="color:var(--text-main);">${lap.pass || '-'}</code><br><span style="color:var(--text-muted);">Catatan:</span> <span style="word-break: break-all;">${cttVisual}</span></div></td><td><div style="display:flex; flex-wrap:wrap; gap:6px;">${aksiTerjualHTML || '<span style="color:var(--text-muted); font-size:10px;">(Hanya Admin)</span>'}</div></td></tr>`;
                 }
             });
 
@@ -1995,8 +2047,12 @@
             document.getElementById('etHarga').value = formatRupiahText(lap.harga);
             document.getElementById('etPenjual').innerHTML = getPenjualOptions();
             if (lap.penjual) document.getElementById('etPenjual').value = lap.penjual; else document.getElementById('etPenjual').value = currentUser.nama;
-            document.getElementById('etEmail').value = lap.email; document.getElementById('etPass').value = lap.pass;
-            document.getElementById('etCatatan').value = lap.catatanInternal; openModal('modalEditTerjual');
+            document.getElementById('etEmail').value = lap.email || ''; document.getElementById('etPass').value = lap.pass || '';
+            
+            let notes = lap.catatanInternal || '';
+            if(notes.length > 100 && notes.includes('data:image')) notes = '';
+            document.getElementById('etCatatan').value = notes; 
+            openModal('modalEditTerjual');
         }
 
         document.getElementById('formEditTerjual')?.addEventListener('submit', function(e) {
@@ -2366,6 +2422,19 @@
         }
 
         // ================= LOGIKA KELOLA USER & PENGATURAN =================
+        function setFilterPengaturan(view, btnElement) {
+            document.querySelectorAll('.btn-filter-set').forEach(b => {
+                b.style.background = 'var(--input-bg)'; b.style.borderColor = 'var(--border-color)';
+            });
+            btnElement.style.background = 'var(--accent-color)'; btnElement.style.borderColor = 'var(--accent-color)';
+
+            document.getElementById('viewSetTeknisi').style.display = view === 'teknisi' ? 'block' : 'none';
+            document.getElementById('viewSetKamus').style.display = view === 'kamus' ? 'block' : 'none';
+            
+            if(view === 'teknisi') renderUsers();
+            if(view === 'kamus') renderPengaturan();
+        }
+
         function renderUsers() {
             const tbody = document.getElementById('tbodyUsers'); tbody.innerHTML = '';
             usersDB.forEach((u, index) => {
