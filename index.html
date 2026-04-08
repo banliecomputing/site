@@ -66,6 +66,7 @@
 
         .input-group { margin-bottom: 1.1rem; }
         .input-group label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+        .req-star { color: var(--danger-bg); font-weight: bold; margin-left: 3px; }
         .input-group input, .input-group select, .input-group textarea {
             width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--border-color);
             background-color: var(--input-bg); color: var(--text-main); font-size: 0.95rem; outline: none; resize: vertical;
@@ -189,6 +190,12 @@
         .konfirmasi-btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
         .konfirmasi-btn-group button { flex: 1 1 auto; min-width: 140px; padding: 12px 15px; font-size: 0.85rem; }
 
+        .kasir-row { cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px; border-radius: 6px; }
+        .kasir-row:hover { background: rgba(255,255,255,0.05); transform: translateX(5px); }
+
+        .quick-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent-color); color: var(--text-main); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .quick-chip:hover { background: var(--accent-color); color: white; }
+
         @media (max-width: 600px) { .form-row { flex-direction: column; gap: 1.1rem; } .chart-container { height: 250px; } }
     </style>
 </head>
@@ -216,11 +223,11 @@
 
         <form id="formLogin">
             <div class="input-group">
-                <label>Username / ID Karyawan</label>
+                <label>Username / ID Karyawan <span class="req-star">*</span></label>
                 <input type="text" id="loginUsername" placeholder="Cth: admin" required>
             </div>
             <div class="input-group">
-                <label>Password</label>
+                <label>Password <span class="req-star">*</span></label>
                 <input type="password" id="loginPassword" required>
             </div>
             <button type="submit" class="submit-btn">Login Internal</button>
@@ -378,7 +385,7 @@
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px;">
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                        <h3 style="font-size: 1.1rem; color: var(--success-bg); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">🏆 Statistik Penjual / Kasir</h3>
+                        <h3 style="font-size: 1.1rem; color: var(--success-bg); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">🏆 Statistik Penjual / Kasir (Klik Nama)</h3>
                         <div id="dashKasirListDetail" style="max-height: 250px; overflow-y: auto;"></div>
                     </div>
                     <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
@@ -416,7 +423,7 @@
                     <h2 style="font-size: 1.3rem;">Data Servisan</h2>
                     <p>Pantau dan kelola tiket pelanggan</p>
                 </div>
-                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModal('modalTambahServis')">+ Buat Tiket Servis</button>
+                <button class="submit-btn" style="width: auto; padding: 10px 20px; font-size: 0.9rem;" onclick="openModalTambahServis()">+ Buat Tiket Servis</button>
             </div>
 
             <div class="input-group" style="margin-bottom: 15px;">
@@ -488,16 +495,16 @@
             <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tambah Stok Laptop (Etalase)</h3>
             <form id="formPenjualan">
                 <div class="form-row">
-                    <div class="input-group"><label>Merek</label><input type="text" id="lapMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
-                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="lapTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Merek <span class="req-star">*</span></label><input type="text" id="lapMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe / Model <span class="req-star">*</span></label><input type="text" id="lapTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="input-group">
-                    <label>Deskripsi & Spesifikasi (Ditampilkan ke publik)</label>
+                    <label>Deskripsi & Spesifikasi (Ditampilkan ke publik) <span class="req-star">*</span></label>
                     <textarea id="lapSpek" rows="3" required></textarea>
                 </div>
                 <div class="form-row">
-                    <div class="input-group"><label>Harga Jual</label><input type="text" id="lapHarga" class="input-rupiah" inputmode="numeric" placeholder="Rp" required></div>
-                    <div class="input-group"><label>Total Stok Baru</label><input type="number" id="lapStok" inputmode="numeric" value="1" min="1" required></div>
+                    <div class="input-group"><label>Harga Jual <span class="req-star">*</span></label><input type="text" id="lapHarga" class="input-rupiah" inputmode="numeric" placeholder="Rp" required></div>
+                    <div class="input-group"><label>Total Stok Baru <span class="req-star">*</span></label><input type="number" id="lapStok" inputmode="numeric" value="1" min="1" required></div>
                     <div class="input-group"><label>Warna</label><input type="text" id="lapWarna" placeholder="Hitam/Silver"></div>
                 </div>
                 <div class="form-row">
@@ -527,15 +534,15 @@
             <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Edit Detail Inventory & Foto</h3>
             <form id="formEditLaptop">
                 <div class="form-row">
-                    <div class="input-group"><label>Merek</label><input type="text" id="mEditMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
-                    <div class="input-group"><label>Tipe</label><input type="text" id="mEditTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Merek <span class="req-star">*</span></label><input type="text" id="mEditMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe <span class="req-star">*</span></label><input type="text" id="mEditTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group"><label>Harga Dasar</label><input type="text" id="mEditHarga" class="input-rupiah" inputmode="numeric" required></div>
-                    <div class="input-group"><label>Sisa Stok</label><input type="number" id="mEditStok" inputmode="numeric" min="1" required></div>
+                    <div class="input-group"><label>Harga Dasar <span class="req-star">*</span></label><input type="text" id="mEditHarga" class="input-rupiah" inputmode="numeric" required></div>
+                    <div class="input-group"><label>Sisa Stok <span class="req-star">*</span></label><input type="number" id="mEditStok" inputmode="numeric" min="1" required></div>
                     <div class="input-group"><label>Warna</label><input type="text" id="mEditWarna" placeholder="Hitam/Silver"></div>
                 </div>
-                <div class="input-group"><label>Spesifikasi</label><textarea id="mEditSpek" rows="2" required></textarea></div>
+                <div class="input-group"><label>Spesifikasi <span class="req-star">*</span></label><textarea id="mEditSpek" rows="2" required></textarea></div>
                 
                 <div class="form-row">
                     <div class="input-group">
@@ -575,8 +582,8 @@
             <form id="formJualLaptop">
                 <input type="hidden" id="jLapId">
                 <div class="form-row">
-                    <div class="input-group"><label>Tanggal Terjual</label><input type="date" id="jTanggalJual" required></div>
-                    <div class="input-group"><label>Harga Deal / Akhir</label><input type="text" id="jHargaJual" class="input-rupiah" inputmode="numeric" required></div>
+                    <div class="input-group"><label>Tanggal Terjual <span class="req-star">*</span></label><input type="date" id="jTanggalJual" required></div>
+                    <div class="input-group"><label>Harga Deal / Akhir <span class="req-star">*</span></label><input type="text" id="jHargaJual" class="input-rupiah" inputmode="numeric" required></div>
                 </div>
                 
                 <div class="input-group">
@@ -591,7 +598,7 @@
                         <div class="input-group" style="margin-bottom: 0;"><label>Password Microsoft</label><input type="text" id="jPass" placeholder="Boleh kosong"></div>
                     </div>
                     <div class="input-group" style="margin-top: 10px; margin-bottom: 0;">
-                        <label>Catatan Pembeli</label>
+                        <label>Catatan Pembeli <span class="req-star">*</span></label>
                         <input type="text" id="jCatatan" placeholder="Nama pembeli, WA, bonus mouse, dll..." required>
                     </div>
                 </div>
@@ -608,12 +615,12 @@
             <form id="formEditTerjual">
                 <input type="hidden" id="etLapId">
                 <div class="form-row">
-                    <div class="input-group"><label>Merek</label><input type="text" id="etMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
-                    <div class="input-group"><label>Tipe</label><input type="text" id="etTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Merek <span class="req-star">*</span></label><input type="text" id="etMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe <span class="req-star">*</span></label><input type="text" id="etTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group"><label>Tanggal Terjual (Revisi)</label><input type="date" id="etTanggalJual" required></div>
-                    <div class="input-group"><label>Harga Akhir</label><input type="text" id="etHarga" class="input-rupiah" inputmode="numeric" required></div>
+                    <div class="input-group"><label>Tanggal Terjual (Revisi) <span class="req-star">*</span></label><input type="date" id="etTanggalJual" required></div>
+                    <div class="input-group"><label>Harga Akhir <span class="req-star">*</span></label><input type="text" id="etHarga" class="input-rupiah" inputmode="numeric" required></div>
                 </div>
                 <div class="input-group">
                     <label>Penjual</label>
@@ -634,6 +641,23 @@
         </div>
     </div>
 
+    <!-- MODAL DETAIL KASIR (DASHBOARD) -->
+    <div id="modalDetailKasir" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close-modal" onclick="closeModal('modalDetailKasir')">&times;</span>
+            <h3 style="margin-bottom: 5px; color: var(--success-bg);">Detail Transaksi Kasir</h3>
+            <p id="kasirDetailName" style="font-size: 1rem; color: var(--text-main); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"></p>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Tanggal Jual</th><th>Nama Produk (ID)</th><th>Harga Jual</th><th>Pembeli / Catatan</th></tr></thead>
+                    <tbody id="tbodyKasirDetail"></tbody>
+                </table>
+            </div>
+            <div id="kasirDetailTotal" style="text-align: right; margin-top: 15px; font-size: 1.1rem; font-weight: bold; color: var(--success-bg);"></div>
+        </div>
+    </div>
+
     <!-- MODAL 3A: TAMBAH TIKET SERVIS -->
     <div id="modalTambahServis" class="modal-overlay">
         <div class="modal-content">
@@ -641,29 +665,37 @@
             <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Buat Tiket Servis Baru</h3>
             <form id="formServisan">
                 <div class="form-row">
-                    <div class="input-group"><label>Nama Pelanggan</label><input type="text" id="srvNama" required></div>
-                    <div class="input-group"><label>Kontak (WA)</label><input type="tel" id="srvWA" inputmode="numeric" required></div>
+                    <div class="input-group"><label>Nama Pelanggan <span class="req-star">*</span></label><input type="text" id="srvNama" required></div>
+                    <div class="input-group"><label>Kontak (WA) <span class="req-star">*</span></label><input type="tel" id="srvWA" inputmode="numeric" required></div>
                 </div>
                 <div class="form-row">
+                    <div class="input-group"><label>Tanggal Masuk <span class="req-star">*</span></label><input type="date" id="srvTanggalMasuk" required></div>
                     <div class="input-group">
-                        <label>Jenis Perangkat</label>
+                        <label>Jenis Perangkat <span class="req-star">*</span></label>
                         <select id="srvJenis" required><option value="Laptop">Laptop</option><option value="Handphone">Handphone</option><option value="PC">PC/Komputer</option><option value="Printer">Printer</option><option value="Lainnya">Lainnya</option></select>
                     </div>
-                    <div class="input-group"><label>Merek</label><input type="text" id="srvMerek" list="dlMerek" placeholder="Cth: SAMSUNG, ASUS" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="srvTipe" list="dlTipe" placeholder="Cth: S23 ULTRA" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Merek <span class="req-star">*</span></label><input type="text" id="srvMerek" list="dlMerek" placeholder="Cth: SAMSUNG, ASUS" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe / Model <span class="req-star">*</span></label><input type="text" id="srvTipe" list="dlTipe" placeholder="Cth: S23 ULTRA" oninput="this.value = this.value.toUpperCase()" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group"><label>Kelengkapan <span class="req-star">*</span></label><input type="text" id="srvKelengkapan" list="dlKelengkapan" placeholder="Cth: Unit, Dus, Charger" required></div>
                     <div class="input-group"><label>SNID / Serial Number</label><input type="text" id="srvSNID" placeholder="Opsional"></div>
                 </div>
-                <div class="form-row">
-                    <div class="input-group"><label>Kelengkapan</label><input type="text" id="srvKelengkapan" list="dlKelengkapan" placeholder="Cth: Unit, Dus, Charger" required></div>
-                    <div class="input-group"><label>Estimasi Biaya</label><input type="text" id="srvBiaya" placeholder="Cth: 200.000 s/d 500.000"></div>
-                </div>
-                <div class="input-group"><label>Masalah Utama</label><input type="text" id="srvMasalah" list="dlMasalah" placeholder="Cth: Mati Total, Ganti LCD" required></div>
+                
                 <div class="input-group">
-                    <label>Deskripsi Detail (Kronologi / Catatan Fisik)</label>
+                    <label>Masalah Utama <span class="req-star">*</span></label>
+                    <input type="text" id="srvMasalah" list="dlMasalah" placeholder="Ketik atau pilih dari saran di bawah..." required>
+                    <div id="quickMasalahContainer" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                        <!-- Di-generate otomatis dari Kamus Sistem -->
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Deskripsi Detail (Kronologi / Catatan Fisik) <span class="req-star">*</span></label>
                     <textarea id="srvDeskripsi" rows="2" placeholder="Jelaskan detail kerusakan, goresan fisik, dll..." required></textarea>
                 </div>
+                <div class="input-group"><label>Estimasi Biaya Awal</label><input type="text" id="srvBiaya" placeholder="Cth: 200.000 s/d 500.000"></div>
                 <button type="submit" class="submit-btn" style="margin-top: 10px;">Buat Tiket Servis</button>
             </form>
         </div>
@@ -677,24 +709,24 @@
             <form id="formEditDataServis">
                 <input type="hidden" id="eSrvId">
                 <div class="form-row">
-                    <div class="input-group"><label>Nama Pelanggan</label><input type="text" id="eSrvNama" required></div>
-                    <div class="input-group"><label>Kontak (WA)</label><input type="tel" id="eSrvWA" inputmode="numeric" required></div>
+                    <div class="input-group"><label>Nama Pelanggan <span class="req-star">*</span></label><input type="text" id="eSrvNama" required></div>
+                    <div class="input-group"><label>Kontak (WA) <span class="req-star">*</span></label><input type="tel" id="eSrvWA" inputmode="numeric" required></div>
                 </div>
                 <div class="form-row">
                     <div class="input-group">
-                        <label>Jenis Perangkat</label>
+                        <label>Jenis Perangkat <span class="req-star">*</span></label>
                         <select id="eSrvJenis" required><option value="Laptop">Laptop</option><option value="Handphone">Handphone</option><option value="PC">PC/Komputer</option><option value="Printer">Printer</option><option value="Lainnya">Lainnya</option></select>
                     </div>
-                    <div class="input-group"><label>Merek</label><input type="text" id="eSrvMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Merek <span class="req-star">*</span></label><input type="text" id="eSrvMerek" list="dlMerek" oninput="this.value = this.value.toUpperCase()" required></div>
                 </div>
                 <div class="form-row">
-                    <div class="input-group"><label>Tipe / Model</label><input type="text" id="eSrvTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
+                    <div class="input-group"><label>Tipe / Model <span class="req-star">*</span></label><input type="text" id="eSrvTipe" list="dlTipe" oninput="this.value = this.value.toUpperCase()" required></div>
                     <div class="input-group"><label>SNID / Serial</label><input type="text" id="eSrvSNID"></div>
                 </div>
-                <div class="input-group"><label>Kelengkapan</label><input type="text" id="eSrvKelengkapan" list="dlKelengkapan" required></div>
-                <div class="input-group"><label>Masalah Utama</label><input type="text" id="eSrvMasalah" list="dlMasalah" required></div>
+                <div class="input-group"><label>Kelengkapan <span class="req-star">*</span></label><input type="text" id="eSrvKelengkapan" list="dlKelengkapan" required></div>
+                <div class="input-group"><label>Masalah Utama <span class="req-star">*</span></label><input type="text" id="eSrvMasalah" list="dlMasalah" required></div>
                 <div class="input-group">
-                    <label>Deskripsi Detail</label>
+                    <label>Deskripsi Detail <span class="req-star">*</span></label>
                     <textarea id="eSrvDeskripsi" rows="2" required></textarea>
                 </div>
                 <button type="submit" class="submit-btn" style="margin-top: 10px; background: var(--success-bg);">Simpan Perubahan Data</button>
@@ -708,9 +740,9 @@
             <span class="close-modal" onclick="closeModal('modalTambahUser')">&times;</span>
             <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tambah Karyawan Baru</h3>
             <form id="formAddUser">
-                <div class="input-group"><label>Username</label><input type="text" id="newUsername" placeholder="Cth: andi22" required></div>
-                <div class="input-group"><label>Nama Lengkap</label><input type="text" id="newNama" placeholder="Nama asli" required></div>
-                <div class="input-group"><label>Password Akun</label><input type="password" id="newPass" required></div>
+                <div class="input-group"><label>Username <span class="req-star">*</span></label><input type="text" id="newUsername" placeholder="Cth: andi22" required></div>
+                <div class="input-group"><label>Nama Lengkap <span class="req-star">*</span></label><input type="text" id="newNama" placeholder="Nama asli" required></div>
+                <div class="input-group"><label>Password Akun <span class="req-star">*</span></label><input type="password" id="newPass" required></div>
                 <button type="submit" class="submit-btn" style="margin-top: 10px;">+ Daftarkan Akun</button>
             </form>
         </div>
@@ -787,6 +819,23 @@
         </div>
     </div>
 
+    <!-- MODAL DIRECT CHAT WA (BARU) -->
+    <div id="modalTemplateWA" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="closeModal('modalTemplateWA')">&times;</span>
+            <h3 style="margin-bottom: 10px; color: var(--success-bg); display:flex; align-items:center; gap:8px;">💬 Kirim Update ke WhatsApp</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Pesan sudah di-generate otomatis berdasarkan status. Anda bisa mengeditnya sebelum mengirim.</p>
+            
+            <input type="hidden" id="waSrvPhone">
+            <div class="input-group">
+                <label>Pesan WhatsApp:</label>
+                <textarea id="waMessageText" rows="6" style="font-size: 0.9rem; line-height: 1.5;"></textarea>
+            </div>
+            
+            <button type="button" class="submit-btn" style="background: var(--success-bg); display:flex; justify-content:center; align-items:center; gap:8px;" onclick="kirimKeWA()">Kirim Sekarang (Buka WA)</button>
+        </div>
+    </div>
+
     <!-- MODAL 7: PREVIEW GAMBAR ZOOM -->
     <div id="modalImagePreview" class="modal-overlay" onclick="closeModal('modalImagePreview')">
         <div style="display:flex; justify-content:center; align-items:center; height:100%; position:relative;">
@@ -799,9 +848,17 @@
     <div id="toast" class="toast">Notifikasi!</div>
 
     <script>
-        // ================= KONEKSI DATABASE SERVER =================
+        // ================= KONEKSI DATABASE SERVER & KAMUS SISTEM =================
         const API_URL = "https://script.google.com/macros/s/AKfycbwa8s0Xv7x_eNuHVdZgvblB1uf4Zpvuj4EfkAH-up_D_cI9nf6N3kSm2Gi7di0o8P54Lw/exec";
         const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 Menit
+
+        // KAMUS DEFAULT (Akan di-merge otomatis dengan data yang diketik teknisi)
+        const kamusSistem = {
+            merek: ['ASUS', 'ACER', 'LENOVO', 'HP', 'DELL', 'APPLE', 'SAMSUNG', 'MSI', 'AXIOO'],
+            tipe: [], // Biarkan kosong, biar ngambil dari history DB saja karena terlalu banyak variasi
+            kelengkapan: ['Unit Saja', 'Unit + Charger', 'Unit + Charger + Dus', 'Lengkap'],
+            masalah: ['Mati Total', 'Ganti LCD', 'No Display (Nyala tidak nampil)', 'Lupa Password / Kunci', 'Install Ulang OS', 'Ganti Baterai', 'Keyboard Error/Ganti', 'Engsel Patah', 'Ganti SSD/RAM']
+        };
 
         let usersDB = [];
         let servicesDB = [];
@@ -809,7 +866,7 @@
 
         let currentUser = null; 
         let currentEditLapId = null;
-        let tempEditFotos = []; // ARRAY SEMENTARA UNTUK IMAGE MANAGER
+        let tempEditFotos = []; 
         let lastFoundArray = []; 
         let currentSrvFilter = 'Semua';
         let currentDashFilter = 'Semua';
@@ -834,6 +891,14 @@
                 return `${parts[2]} ${m[parseInt(parts[1])-1]} ${parts[0]}`;
             }
             return dateStr;
+        }
+
+        function getGreetingTime() {
+            let hour = new Date().getHours();
+            if (hour < 11) return 'Pagi';
+            if (hour < 15) return 'Siang';
+            if (hour < 18) return 'Sore';
+            return 'Malam';
         }
 
         function updateActivity() {
@@ -895,8 +960,12 @@
             showPublicView();
         }
 
+        // --- SISTEM KAMUS & AUTOSUGGEST MERGE ---
         function populateDatalists() {
-            let mereks = new Set(); let tipes = new Set(); let kelengkapans = new Set(); let masalahs = new Set();
+            let mereks = new Set(kamusSistem.merek.map(x => x.toUpperCase())); 
+            let tipes = new Set(kamusSistem.tipe.map(x => x.toUpperCase())); 
+            let kelengkapans = new Set(kamusSistem.kelengkapan); 
+            let masalahs = new Set(kamusSistem.masalah);
             
             laptopKatalogDB.forEach(l => { 
                 if(l.merek) mereks.add(String(l.merek).toUpperCase().trim()); 
@@ -916,6 +985,17 @@
             document.getElementById('dlKelengkapan').innerHTML = [...kelengkapans].sort().map(k => `<option value="${k}">`).join('');
             document.getElementById('dlMasalah').innerHTML = [...masalahs].sort().map(m => `<option value="${m}">`).join('');
 
+            // Render Quick Chips untuk Masalah (Ambil 4 teratas dari dictionary asli/tergabung)
+            const quickContainer = document.getElementById('quickMasalahContainer');
+            if(quickContainer) {
+                let chipsHtml = '';
+                let displayChips = [...masalahs].slice(0, 4); // Ambil 4 saran pertama
+                displayChips.forEach(chip => {
+                    chipsHtml += `<div class="quick-chip" onclick="pilihQuickMasalah('${chip}')">${chip}</div>`;
+                });
+                quickContainer.innerHTML = chipsHtml;
+            }
+
             const filterEl = document.getElementById('filterMerek');
             if(filterEl) {
                 let currentVal = filterEl.value;
@@ -924,6 +1004,10 @@
                 filterEl.innerHTML = optHtml;
                 filterEl.value = currentVal; 
             }
+        }
+
+        function pilihQuickMasalah(teks) {
+            document.getElementById('srvMasalah').value = teks;
         }
 
         async function fetchInitialData() {
@@ -1277,9 +1361,16 @@
             document.getElementById('dkTersedia').textContent = lapTersedia + " Unit";
             document.getElementById('dkTopMerek').textContent = topMerek;
 
+            // Render Kasir Clickable
             let kasirHtml = ''; 
             for (const [ksr, qty] of Object.entries(kasirCount).sort((a,b)=>b[1]-a[1])) { 
-                kasirHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:var(--text-muted);">${ksr}</span><strong style="color:var(--success-bg); font-size:1.1rem;">${qty} Unit</strong></div>`; 
+                kasirHtml += `<div class="kasir-row" onclick="showKasirDetail('${ksr}')">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="color:var(--text-main); font-weight:bold;">${ksr}</span>
+                                    <strong style="color:var(--success-bg); font-size:1.05rem;">${qty} Unit</strong>
+                                </div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">🔍 Klik untuk lihat detail penjualan</div>
+                              </div>`; 
             }
             document.getElementById('dashKasirListDetail').innerHTML = kasirHtml || '<div style="color:var(--text-muted); font-size:0.85rem;">Belum ada penjualan di periode ini.</div>';
 
@@ -1312,6 +1403,50 @@
                 type: 'bar', data: { labels: ['Masuk', 'Diproses', 'Selesai', 'Batal'], datasets: [{ label: 'Jumlah Tiket', data: [srvMasuk, srvProses, srvSelesai, srvBatal], backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'], borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Statistik Data Servisan', color: '#f8fafc', font:{size: 16} } } }
             });
+        }
+
+        // Tampilkan Detail Transaksi Kasir
+        function showKasirDetail(kasirName) {
+            document.getElementById('kasirDetailName').innerHTML = `👤 Kasir / Penjual: <strong>${kasirName}</strong>`;
+            const tbody = document.getElementById('tbodyKasirDetail');
+            tbody.innerHTML = '';
+
+            let startDate = document.getElementById('filterStart').value;
+            let endDate = document.getElementById('filterEnd').value;
+            let totalJualKasir = 0;
+
+            let terjualOlehKasir = laptopKatalogDB.filter(l => {
+                if (l.statusJual !== 'Terjual') return false;
+                let ksr = String(l.penjual || 'Tidak Diketahui').trim();
+                if (ksr !== kasirName) return false;
+                
+                let d = l.tanggalTerjual || l.tanggal;
+                if (!startDate || !endDate || (d >= startDate && d <= endDate)) {
+                    return true;
+                }
+                return false;
+            });
+
+            if (terjualOlehKasir.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tidak ada data terperinci.</td></tr>';
+            } else {
+                terjualOlehKasir.sort((a,b) => new Date(b.tanggalTerjual||b.tanggal) - new Date(a.tanggalTerjual||a.tanggal));
+                
+                terjualOlehKasir.forEach(lap => {
+                    totalJualKasir += parseInt(lap.harga) || 0;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${displayDateReadably(lap.tanggalTerjual || lap.tanggal)}</td>
+                            <td><strong style="color:var(--text-main);">${lap.merek} ${lap.tipe}</strong><br><span style="font-size:0.75rem; color:var(--accent-color);">${lap.id}</span></td>
+                            <td style="color:var(--success-bg); font-weight:bold;">${formatRupiahText(String(lap.harga))}</td>
+                            <td style="font-size:0.8rem; color:var(--text-muted);">${lap.catatanInternal || '-'}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('kasirDetailTotal').innerHTML = `Total Nominal: ${formatRupiahText(String(totalJualKasir))}`;
+            openModal('modalDetailKasir');
         }
 
         // ================= PENCARIAN FLEKSIBEL & ALUR TAMPILAN =================
@@ -1627,10 +1762,8 @@
             document.getElementById('mEditTgl').value = lap.tanggal; 
             document.getElementById('mEditFotos').value = ""; 
 
-            // Load foto lama ke array sementara
             tempEditFotos = lap.fotos && Array.isArray(lap.fotos) ? [...lap.fotos] : [];
             renderEditFotos();
-
             openModal('modalEditLaptop');
         }
 
@@ -1645,7 +1778,7 @@
 
             tempEditFotos.forEach((f, idx) => {
                 let src = getImgSrc(f);
-                if(!src) return; // Skip broken images
+                if(!src) return; 
                 let isMain = idx === 0;
                 
                 let btnUtama = isMain ? 
@@ -1666,17 +1799,16 @@
 
         function setFotoUtama(idx) {
             let selected = tempEditFotos.splice(idx, 1)[0];
-            tempEditFotos.unshift(selected); // Pindahkan ke array paling depan (index 0)
+            tempEditFotos.unshift(selected);
             renderEditFotos();
         }
 
         function hapusTempFoto(idx) {
             tempEditFotos.splice(idx, 1);
             renderEditFotos();
-            document.getElementById('mEditFotos').value = ""; // Reset input biar bisa masukin file yang sama lagi
+            document.getElementById('mEditFotos').value = ""; 
         }
 
-        // Event saat pilih file foto baru di Modal Edit (Otomatis masuk preview tanpa perlu disubmit dulu)
         document.getElementById('mEditFotos')?.addEventListener('change', async function(e) {
             let files = this.files;
             if(files.length === 0) return;
@@ -1693,12 +1825,11 @@
 
             for (let i = 0; i < limit; i++) {
                 let fileBase64String = await getBase64File(files[i]);
-                tempEditFotos.push(fileBase64String); // Tambahkan ke paling akhir
+                tempEditFotos.push(fileBase64String); 
             }
 
             renderEditFotos();
-            this.value = ''; // Bersihkan input file lagi
-            
+            this.value = ''; 
             btn.textContent = 'Simpan Perubahan'; btn.disabled = false;
         });
 
@@ -1716,7 +1847,6 @@
                 laptopKatalogDB[idx].spek = document.getElementById('mEditSpek').value; laptopKatalogDB[idx].garansi = document.getElementById('mEditGaransi').value;
                 laptopKatalogDB[idx].tanggal = cleanDateForInput(document.getElementById('mEditTgl').value) || getTodayDate();
                 
-                // Simpan urutan foto final dari temp array ke database
                 laptopKatalogDB[idx].fotos = [...tempEditFotos];
 
                 showToast('Etalase dan susunan foto diperbarui.'); 
@@ -1806,14 +1936,32 @@
 
                 let infoTeknisi = currentUser.role === 'admin' ? `<br><span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: var(--info-bg); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block;">Teknisi: ${s.techId}</span>` : '';
 
-                tbody.innerHTML += `<tr><td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${displayDateReadably(s.tanggalMasuk)}</span>${infoTeknisi}</td><td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td><td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td><td><div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">💬 Update Progres</button><button class="btn-sm btn-success" onclick="openModalEditDataServis('${s.id}')">📝 Edit Detail</button><button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 Full History</button><button class="btn-sm btn-danger" onclick="hapusServisPrompt('${s.id}')">🗑️</button></div></td></tr>`;
+                tbody.innerHTML += `<tr>
+                    <td><strong style="color: var(--accent-color); font-family: monospace;">${s.id}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${displayDateReadably(s.tanggalMasuk)}</span>${infoTeknisi}</td>
+                    <td><div style="font-weight: 600;">${s.nama}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">📞 ${s.wa}</div></td>
+                    <td><div style="font-weight: 600; color: var(--text-main);">${s.merek} ${s.tipe}</div><div style="font-size: 0.8rem; color: var(--text-muted);">Jenis: ${s.jenis}</div><div style="font-size: 0.8rem; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top:6px;"><strong>Masalah:</strong> ${s.masalah}</div></td>
+                    <td><div style="margin-bottom: 5px;">Status saat ini: ${badgeStatus}</div>${compactHistoryHTML}
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">
+                            <button class="btn-sm" style="background: #25D366; color:white; border:none;" onclick="bukaModalWA('${s.id}')">💬 Info WA</button>
+                            <button class="btn-sm btn-edit" onclick="openModalUpdateServis('${s.id}')">Update Progres</button>
+                            <button class="btn-sm btn-success" onclick="openModalEditDataServis('${s.id}')">📝 Edit Detail</button>
+                            <button class="btn-sm" style="background: var(--bg-color); border: 1px solid var(--border-color);" onclick="openModalHistory('${s.id}')">📜 History</button>
+                            <button class="btn-sm btn-danger" onclick="hapusServisPrompt('${s.id}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
             });
+        }
+
+        function openModalTambahServis() {
+            document.getElementById('srvTanggalMasuk').value = getTodayDate();
+            openModal('modalTambahServis');
         }
 
         document.getElementById('formServisan')?.addEventListener('submit', function(e) {
             e.preventDefault();
             const newSrv = {
-                id: generateID('SRV'), tanggalMasuk: getTodayDate(), nama: document.getElementById('srvNama').value, wa: document.getElementById('srvWA').value,
+                id: generateID('SRV'), tanggalMasuk: document.getElementById('srvTanggalMasuk').value || getTodayDate(), nama: document.getElementById('srvNama').value, wa: document.getElementById('srvWA').value,
                 jenis: document.getElementById('srvJenis').value, merek: document.getElementById('srvMerek').value.toUpperCase(),
                 tipe: document.getElementById('srvTipe').value.toUpperCase(), snid: document.getElementById('srvSNID').value,
                 kelengkapan: document.getElementById('srvKelengkapan').value, masalah: document.getElementById('srvMasalah').value,
@@ -1825,6 +1973,46 @@
             this.reset(); closeModal('modalTambahServis'); renderServisan();
             if(currentUser.role === 'admin') { renderDashboard(); } sendToServer('saveService', newSrv);
         });
+
+        // --- SISTEM WHATSAPP SHARE ---
+        function bukaModalWA(id) {
+            const s = servicesDB.find(x => x.id === id); if(!s) return;
+            
+            let templateText = "";
+            let sapaan = getGreetingTime();
+            
+            if (s.status === 'Masuk') {
+                templateText = `Halo Bpk/Ibu ${s.nama}, perangkat ${s.merek} ${s.tipe} Anda telah kami terima pada tanggal ${displayDateReadably(s.tanggalMasuk)} dan saat ini sedang dalam antrean pengecekan teknisi kami.\n\nNomor ID Tiket Anda: *${s.id}*\nAnda dapat mengecek status secara berkala melalui website kami.\nTerima kasih.`;
+            } 
+            else if (s.status === 'Proses') {
+                templateText = `Halo Bpk/Ibu ${s.nama}, kami informasikan bahwa perangkat ${s.merek} ${s.tipe} Anda saat ini sedang dikerjakan/diproses oleh teknisi kami. \n\nKami akan segera menghubungi Anda kembali jika ada perkembangan lebih lanjut atau jika perbaikan sudah selesai.`;
+            } 
+            else if (s.status === 'Selesai') {
+                let biayaFixed = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biayaEstimasi || 'Gratis/Menunggu');
+                templateText = `Selamat ${sapaan} Bpk/ibu ${s.nama}, ${s.merek} ${s.tipe} sudah Selesai dikerjakan dan sudah bisa diambil, dengan total biaya *${biayaFixed}*.\n\nTerima Kasih telah mempercayakan perbaikan di Banlie Computing.`;
+            }
+            else if (s.status === 'Batal') {
+                templateText = `Halo Bpk/Ibu ${s.nama}, mohon maaf menginformasikan bahwa perbaikan untuk perangkat ${s.merek} ${s.tipe} Anda tidak dapat dilanjutkan (Dibatalkan).\n\nSilakan datang ke toko untuk mengambil kembali perangkat Anda. Terima kasih.`;
+            }
+
+            // Bersihkan nomor HP agar formatnya 628...
+            let noWa = String(s.wa).replace(/[^0-9]/g, '');
+            if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
+
+            document.getElementById('waSrvPhone').value = noWa;
+            document.getElementById('waMessageText').value = templateText;
+            
+            openModal('modalTemplateWA');
+        }
+
+        function kirimKeWA() {
+            let noWa = document.getElementById('waSrvPhone').value;
+            let teksPesan = document.getElementById('waMessageText').value;
+            let encodedText = encodeURIComponent(teksPesan);
+            
+            window.open(`https://wa.me/${noWa}?text=${encodedText}`, '_blank');
+            closeModal('modalTemplateWA');
+        }
 
         function toggleBiayaAkhir() {
             const status = document.getElementById('uSrvStatus').value;
