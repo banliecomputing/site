@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banlie Computing - Store & Service v2.1</title>
+    <title>Banlie Computing - Store & Service v2.2</title>
     
     <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1775473744461-6ce0dbd2-a423-456a-aea5-ac571a08addb.ico">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -213,14 +213,14 @@
         <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
         <div class="spinner"></div>
         <h2 style="color:var(--text-main); font-size: 1.2rem;">Menyinkronkan Database...</h2>
-        <p style="color:var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Banlie Computing System <span class="version-badge">v2.1</span></p>
+        <p style="color:var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Banlie Computing System <span class="version-badge">v2.2</span></p>
     </div>
 
     <!-- HALAMAN LOGIN -->
     <div id="loginPage" class="main-container" style="display: none;">
         <div class="header-title">
             <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
-            <h2>Banlie Computing Portal <span class="version-badge">v2.1</span></h2>
+            <h2>Banlie Computing Portal <span class="version-badge">v2.2</span></h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
 
@@ -247,7 +247,7 @@
                 <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
                 <div>
                     <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">Banlie Computing</span>
-                    <span class="version-badge">v2.1</span>
+                    <span class="version-badge">v2.2</span>
                     <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
                 </div>
             </div>
@@ -266,7 +266,8 @@
             <button id="tabPesan" class="tab-btn internal-only" onclick="openTab('pesan', this); renderPesan();" style="display: none;">💬 Pesan</button>
             
             <button id="tabDashboard" class="tab-btn admin-only" onclick="openTab('dashboard', this); renderDashboard();" style="display: none;">📊 Dashboard</button>
-            <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">Kelola Teknisi</button>
+            <button id="tabKelolaUser" class="tab-btn admin-only" onclick="openTab('kelola-user', this); renderUsers();" style="display: none;">👥 Teknisi</button>
+            <button id="tabPengaturan" class="tab-btn admin-only" onclick="openTab('pengaturan', this); renderPengaturan();" style="display: none;">⚙️ Pengaturan</button>
         </div>
 
         <!-- ================= HALAMAN KONTEN ================= -->
@@ -420,7 +421,7 @@
             </div>
         </div>
 
-        <!-- 4. GABUNGAN DATA SERVISAN (Admin & Teknisi dengan Sub-Menu) -->
+        <!-- 4. GABUNGAN DATA SERVISAN (Admin & Teknisi) -->
         <div id="data-servis" class="page-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div class="header-title" style="margin-bottom: 0; text-align: left;">
@@ -450,7 +451,7 @@
             </div>
         </div>
         
-        <!-- HALAMAN BARU: PESAN & CHAT KONSUMEN -->
+        <!-- HALAMAN PESAN & CHAT KONSUMEN -->
         <div id="pesan" class="page-content">
             <div class="header-title" style="text-align: left; margin-bottom: 20px;">
                 <h2 style="font-size: 1.3rem;">Ruang Pesan & Diskusi</h2>
@@ -475,6 +476,32 @@
                     <thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Password</th><th>Aksi</th></tr></thead>
                     <tbody id="tbodyUsers"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- 6. PENGATURAN SISTEM (Hanya Admin) -->
+        <div id="pengaturan" class="page-content admin-only">
+            <div class="header-title" style="margin-bottom: 20px; text-align: left;">
+                <h2 style="font-size: 1.3rem;">Pengaturan Sistem & Kamus</h2>
+                <p>Ubah saran kata (Suggestion) pada form secara permanen dan simpan ke Spreadsheet</p>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                <p style="font-size:0.85rem; color:var(--warning-bg); margin-bottom:15px;">Gunakan tanda koma (,) untuk memisahkan setiap kata/item.</p>
+                
+                <div class="input-group">
+                    <label>Kamus Merek Laptop/HP (Tampil di form tambah/edit)</label>
+                    <textarea id="setKamusMerek" rows="2" class="input-catatan"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Kamus Kelengkapan</label>
+                    <textarea id="setKamusKelengkapan" rows="2" class="input-catatan"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Kamus Masalah / Keluhan Utama</label>
+                    <textarea id="setKamusMasalah" rows="3" class="input-catatan"></textarea>
+                </div>
+                <button type="button" class="submit-btn" style="background: var(--success-bg); margin-top:10px;" onclick="simpanKamusServer()">💾 Simpan Kamus ke Spreadsheet</button>
             </div>
         </div>
     </div>
@@ -531,7 +558,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2A: EDIT LAPTOP LENGKAP DENGAN IMAGE MANAGER -->
+    <!-- MODAL 2A: EDIT LAPTOP LENGKAP -->
     <div id="modalEditLaptop" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('modalEditLaptop')">&times;</span>
@@ -563,10 +590,7 @@
                 <!-- IMAGE MANAGER SECTION -->
                 <div class="input-group">
                     <label>Kelola Foto (Klik "Jadikan Utama" agar tampil di depan)</label>
-                    <div id="mEditFotoPreview" style="display:flex; gap:12px; overflow-x:auto; padding:15px 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom: 8px;">
-                        <!-- Thumbs rendered by JS -->
-                    </div>
-                    
+                    <div id="mEditFotoPreview" style="display:flex; gap:12px; overflow-x:auto; padding:15px 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom: 8px;"></div>
                     <label style="font-size:0.8rem; margin-top:10px;">+ Tambah Foto Susulan (Maks Total 4 Foto)</label>
                     <input type="file" id="mEditFotos" accept="image/*" multiple style="padding: 0.5rem; background: var(--input-bg); border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main); width: 100%;">
                 </div>
@@ -691,9 +715,7 @@
                 <div class="input-group">
                     <label>Masalah Utama <span class="req-star">*</span></label>
                     <input type="text" id="srvMasalah" list="dlMasalah" placeholder="Ketik atau pilih dari saran di bawah..." required>
-                    <div id="quickMasalahContainer" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-                        <!-- Di-generate otomatis dari Kamus Sistem -->
-                    </div>
+                    <div id="quickMasalahContainer" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;"></div>
                 </div>
                 <div class="input-group">
                     <label>Deskripsi Detail (Kronologi / Catatan Fisik) <span class="req-star">*</span></label>
@@ -734,20 +756,6 @@
                     <textarea id="eSrvDeskripsi" rows="2" required></textarea>
                 </div>
                 <button type="submit" class="submit-btn" style="margin-top: 10px; background: var(--success-bg);">Simpan Perubahan Data</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL 4: TAMBAH USER/TEKNISI -->
-    <div id="modalTambahUser" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-modal" onclick="closeModal('modalTambahUser')">&times;</span>
-            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Tambah Karyawan Baru</h3>
-            <form id="formAddUser">
-                <div class="input-group"><label>Username <span class="req-star">*</span></label><input type="text" id="newUsername" placeholder="Cth: andi22" required></div>
-                <div class="input-group"><label>Nama Lengkap <span class="req-star">*</span></label><input type="text" id="newNama" placeholder="Nama asli" required></div>
-                <div class="input-group"><label>Password Akun <span class="req-star">*</span></label><input type="password" id="newPass" required></div>
-                <button type="submit" class="submit-btn" style="margin-top: 10px;">+ Daftarkan Akun</button>
             </form>
         </div>
     </div>
@@ -828,7 +836,7 @@
         <div class="modal-content" style="max-width: 600px;">
             <span class="close-modal" onclick="closeModal('modalTemplateWA')">&times;</span>
             <h3 style="margin-bottom: 10px; color: var(--success-bg); display:flex; align-items:center; gap:8px;">💬 Kirim Update ke WhatsApp</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Pilih kategori template, ubah isi teksnya, dan simpan agar bisa dipakai seterusnya.</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Pilih kategori template, ubah isi teksnya, dan simpan agar bisa dipakai seterusnya oleh semua perangkat.</p>
             
             <input type="hidden" id="waSrvPhone">
             
@@ -864,8 +872,8 @@
             </div>
             
             <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom: 15px;">
-                <button type="button" class="btn-sm btn-danger" onclick="resetTemplateWA()" style="padding: 6px 12px; font-weight:normal;">🔄 Reset Template Ini</button>
-                <button type="button" class="btn-sm btn-edit" onclick="simpanTemplateWA()" style="padding: 6px 12px;">💾 Simpan sbg Template</button>
+                <button type="button" class="btn-sm btn-danger" onclick="resetTemplateWA()" style="padding: 6px 12px; font-weight:normal;">🔄 Reset Template</button>
+                <button type="button" class="btn-sm btn-edit" onclick="simpanTemplateWA()" style="padding: 6px 12px;">💾 Simpan ke Server</button>
             </div>
 
             <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px dashed var(--success-bg); margin-bottom: 15px;">
@@ -890,7 +898,7 @@
 
     <script>
         // ================= KONEKSI DATABASE SERVER & KAMUS SISTEM =================
-        const API_URL = "https://script.google.com/macros/s/AKfycbwa8s0Xv7x_eNuHVdZgvblB1uf4Zpvuj4EfkAH-up_D_cI9nf6N3kSm2Gi7di0o8P54Lw/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxjSEe-W5UzrzFjdc6qb-QfEp7sxort7tisYEnGamy0sX8dAQVojprGtM9EFX39aXMxPw/exec";
         const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 Menit
 
         // KAMUS DEFAULT
@@ -915,6 +923,9 @@
         let usersDB = [];
         let servicesDB = [];
         let laptopKatalogDB = [];
+
+        let baseKamusDB = null; 
+        let waTemplatesDB = null;
 
         let currentUser = null; 
         let currentEditLapId = null;
@@ -1014,11 +1025,14 @@
         }
 
         function populateDatalists() {
-            let mereks = new Set(kamusSistem.merek.map(x => x.toUpperCase())); 
-            let tipes = new Set(kamusSistem.tipe.map(x => x.toUpperCase())); 
-            let kelengkapans = new Set(kamusSistem.kelengkapan); 
-            let masalahs = new Set(kamusSistem.masalah);
+            let activeKamus = baseKamusDB || kamusSistem;
             
+            let mereks = new Set(activeKamus.merek.map(x => x.toUpperCase())); 
+            let tipes = new Set((activeKamus.tipe || []).map(x => x.toUpperCase())); 
+            let kelengkapans = new Set(activeKamus.kelengkapan); 
+            let masalahs = new Set(activeKamus.masalah);
+            
+            // Gabung dengan DB agar dinamis
             laptopKatalogDB.forEach(l => { 
                 if(l.merek) mereks.add(String(l.merek).toUpperCase().trim()); 
                 if(l.tipe) tipes.add(String(l.tipe).toUpperCase().trim()); 
@@ -1063,6 +1077,11 @@
 
         async function fetchInitialData() {
             try {
+                // Fetch Settings from API, tangani agar tidak crash jika API lama
+                let resSettings = null;
+                try { resSettings = await fetch(API_URL + "?action=getSettings").then(r => r.json()); } 
+                catch(e) { console.warn("API Settings belum didukung"); }
+
                 const [resUsers, resServices, resKatalog] = await Promise.all([
                     fetch(API_URL + "?action=getUsers").then(r => r.json()),
                     fetch(API_URL + "?action=getServices").then(r => r.json()),
@@ -1094,6 +1113,20 @@
                     usersDB.push(defaultAdmin);
                     sendToServer('saveUser', defaultAdmin);
                 }
+
+                // Terapan Settings (Kamus dan WA) dari Server
+                if (resSettings && !resSettings.error) {
+                    waTemplatesDB = resSettings.waTemplates || null;
+                    if (resSettings.kamus && resSettings.kamus.merek && resSettings.kamus.merek.length > 0) {
+                        baseKamusDB = resSettings.kamus;
+                    }
+                }
+                
+                // Fallback LocalStorage jika server belum siap
+                if (!waTemplatesDB || Object.keys(waTemplatesDB).length === 0) {
+                    waTemplatesDB = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
+                }
+                if (!baseKamusDB) baseKamusDB = kamusSistem;
 
                 document.getElementById('globalLoader').style.display = 'none';
                 populateDatalists();
@@ -1566,9 +1599,22 @@
 
             let step3Label = found.status === 'Batal' ? 'Dibatalkan' : 'Selesai / Diambil';
             let garansiHTML = (found.status === 'Selesai' && found.garansi) ? `<strong style="color: var(--success-bg);">✅ ${found.garansi}</strong><br>` : '';
-            let actualFixedCost = found.biayaAkhir || found.biaya || 0;
+            
+            // PERBAIKAN LOGIKA BIAYA
+            let actualCost = found.biayaAkhir || found.biayaEstimasi || found.biaya || 0;
+            let costDisplay = 'Belum ditentukan';
+            if (found.status === 'Selesai' && (found.biayaAkhir === 0 || found.biayaAkhir === "0")) {
+                costDisplay = '<span style="color:var(--success-bg);">Rp 0 (Gratis)</span>';
+            } else if (actualCost && actualCost !== "0" && actualCost !== 0) {
+                let numCheck = String(actualCost).replace(/[^0-9]/g, '');
+                if (numCheck === String(actualCost)) {
+                    costDisplay = formatRupiahText(String(actualCost));
+                } else {
+                    costDisplay = actualCost;
+                }
+            }
+            
             let costLabel = found.status === 'Selesai' ? 'Biaya Akhir (Fixed)' : 'Estimasi Biaya';
-            let costValue = found.status === 'Selesai' ? (actualFixedCost != 0 ? formatRupiahText(String(actualFixedCost)) : '<span style="color:var(--success-bg);">Gratis / Menunggu</span>') : (found.biayaEstimasi || found.biaya || '-');
 
             let chatHTML = '';
             if (found.pesanChat && found.pesanChat.length > 0) {
@@ -1586,7 +1632,7 @@
             html += `
                 <div class="tracking-card" style="margin-top:0;">
                     <div class="tracking-header"><div><h3 style="margin: 0; color: var(--text-main); font-size: 1.1rem;">${found.merek} ${found.tipe}</h3><span style="font-size: 0.8rem; color: var(--text-muted);">${found.jenis} | A/n: ${found.nama}</span></div><span class="tracking-id">${found.id}</span></div>
-                    <div style="font-size: 0.9rem; margin-bottom: 20px;"><strong>Tgl Masuk:</strong> ${displayDateReadably(found.tanggalMasuk)} <br><strong>Kelengkapan:</strong> ${found.kelengkapan} <br><strong>SNID:</strong> ${found.snid || '-'} <br><br><strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br><span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>${garansiHTML}<strong>${costLabel}:</strong> ${costValue}</div>
+                    <div style="font-size: 0.9rem; margin-bottom: 20px;"><strong>Tgl Masuk:</strong> ${displayDateReadably(found.tanggalMasuk)} <br><strong>Kelengkapan:</strong> ${found.kelengkapan} <br><strong>SNID:</strong> ${found.snid || '-'} <br><br><strong style="color: var(--accent-color);">Keluhan Utama:</strong> ${found.masalah}<br><span style="font-size: 0.85rem; color: var(--text-muted);">${found.deskripsi}</span><br><br>${garansiHTML}<strong>${costLabel}:</strong> <span style="color:var(--success-bg); font-weight:bold;">${costDisplay}</span></div>
                     <div class="timeline"><div class="timeline-step ${s1}"><div class="step-circle"></div><div class="step-label">Masuk</div></div><div class="timeline-step ${s2}"><div class="step-circle"></div><div class="step-label">Proses</div></div><div class="timeline-step ${s3}"><div class="step-circle"></div><div class="step-label">${step3Label}</div></div></div>
                     <div style="margin-top: 30px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
                         <h4 style="margin-bottom: 10px; font-size:0.95rem; color:var(--text-main);">Ruang Pesan & Konfirmasi</h4>
@@ -1943,7 +1989,7 @@
             });
         }
 
-        // ================= LOGIKA SERVISAN (PENGGABUNGAN TAB) =================
+        // ================= LOGIKA SERVISAN =================
         function setFilterSrv(status, btnElement) {
             currentSrvFilter = status;
             document.querySelectorAll('.btn-filter-srv').forEach(b => {
@@ -2032,22 +2078,39 @@
             let key = document.getElementById('waTemplateSelect').value;
             if (key === 'auto') {
                 const s = servicesDB.find(x => x.id === currentWaServisId);
-                key = s ? s.status : 'Masuk'; // Default to Masuk if undefined
+                key = s ? s.status : 'Masuk'; 
             }
             return key;
         }
 
         function dapatkanIsiTemplate(key) {
-            let savedTemplates = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
-            if (savedTemplates[key]) {
-                return savedTemplates[key];
+            // Ambil dari DB yang disync dengan server, fallback local/default
+            if (waTemplatesDB && waTemplatesDB[key]) {
+                return waTemplatesDB[key];
+            }
+            let savedTemplatesLocal = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
+            if (savedTemplatesLocal[key]) {
+                return savedTemplatesLocal[key];
             }
             return defaultWaTemplates[key] || defaultWaTemplates['custom'];
         }
 
         function parseWaTemplate(rawTemplate, s) {
             if(!s) return rawTemplate;
-            let biayaFixed = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biayaEstimasi || 'Gratis/Menunggu');
+            
+            // PERBAIKAN LOGIKA BIAYA
+            let actualCost = s.biayaAkhir || s.biayaEstimasi || s.biaya || 0;
+            let costDisplay = 'Belum ditentukan';
+            if (s.status === 'Selesai' && (s.biayaAkhir === 0 || s.biayaAkhir === "0")) {
+                costDisplay = 'Rp 0 (Gratis)';
+            } else if (actualCost && actualCost !== "0" && actualCost !== 0) {
+                let numCheck = String(actualCost).replace(/[^0-9]/g, '');
+                if (numCheck === String(actualCost)) {
+                    costDisplay = formatRupiahText(String(actualCost));
+                } else {
+                    costDisplay = actualCost;
+                }
+            }
             
             return rawTemplate
                 .replace(/{Sapaan}/g, getGreetingTime())
@@ -2056,7 +2119,7 @@
                 .replace(/{Tipe}/g, s.tipe || '')
                 .replace(/{ID}/g, s.id || '')
                 .replace(/{Tanggal}/g, displayDateReadably(s.tanggalMasuk) || '')
-                .replace(/{Biaya}/g, biayaFixed)
+                .replace(/{Biaya}/g, costDisplay)
                 .replace(/{Status}/g, s.status || '');
         }
 
@@ -2078,12 +2141,11 @@
             document.getElementById('waMessageRaw').value = rawTemplate;
             updateWaPreview();
 
-            // LOGIKA FORMAT NOMOR WA (Agar angka 0/8 tidak masalah)
             let noWa = String(s.wa).replace(/[^0-9]/g, '');
             if (noWa.startsWith('0')) {
-                noWa = '62' + noWa.substring(1); // Jika 0812... jadi 62812...
+                noWa = '62' + noWa.substring(1); 
             } else if (noWa.startsWith('8')) {
-                noWa = '62' + noWa; // Jika angka 0 terhapus di sheet menjadi 812... jadi 62812...
+                noWa = '62' + noWa; 
             }
             document.getElementById('waSrvPhone').value = noWa;
         }
@@ -2112,20 +2174,30 @@
             let key = dapatkanTemplateKey();
             let rawText = document.getElementById('waMessageRaw').value;
             
-            let savedTemplates = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
-            savedTemplates[key] = rawText;
-            localStorage.setItem('waTemplatesSettings', JSON.stringify(savedTemplates));
+            if(!waTemplatesDB) waTemplatesDB = {};
+            waTemplatesDB[key] = rawText;
             
-            showToast('Sip! Template berhasil disimpan untuk dipakai seterusnya.');
+            // Simpan ke DB Server Spreadsheet
+            sendToServer('saveWaTemplate', { key: key, text: rawText });
+
+            // Backup LocalStorage
+            let savedTemplatesLocal = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
+            savedTemplatesLocal[key] = rawText;
+            localStorage.setItem('waTemplatesSettings', JSON.stringify(savedTemplatesLocal));
+            
+            showToast('Sip! Template berhasil disimpan ke Server & Browser.');
         }
 
         function resetTemplateWA() {
             let key = dapatkanTemplateKey();
-            let savedTemplates = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
             
-            if(savedTemplates[key]) {
-                delete savedTemplates[key];
-                localStorage.setItem('waTemplatesSettings', JSON.stringify(savedTemplates));
+            if(waTemplatesDB && waTemplatesDB[key]) {
+                delete waTemplatesDB[key];
+            }
+            let savedTemplatesLocal = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
+            if(savedTemplatesLocal[key]) {
+                delete savedTemplatesLocal[key];
+                localStorage.setItem('waTemplatesSettings', JSON.stringify(savedTemplatesLocal));
             }
             
             document.getElementById('waMessageRaw').value = defaultWaTemplates[key] || defaultWaTemplates['custom'];
@@ -2266,7 +2338,7 @@
             document.getElementById('hSrvContainer').innerHTML = html + '</div></div>'; openModal('modalHistoryServis');
         }
 
-        // ================= LOGIKA KELOLA USER =================
+        // ================= LOGIKA KELOLA USER & PENGATURAN =================
         function renderUsers() {
             const tbody = document.getElementById('tbodyUsers'); tbody.innerHTML = '';
             usersDB.forEach((u, index) => {
@@ -2298,6 +2370,31 @@
             customConfirm('Yakin ingin menghapus karyawan ini?', () => { 
                 const uname = usersDB[index].username; usersDB.splice(index, 1); showToast('Karyawan dihapus!'); renderUsers(); sendToServer('deleteUser', { username: uname }); 
             });
+        }
+
+        // --- TAB PENGATURAN ADMIN (KAMUS SERVER) ---
+        function renderPengaturan() {
+            let activeKamus = baseKamusDB || kamusSistem;
+            document.getElementById('setKamusMerek').value = activeKamus.merek.join(', ');
+            document.getElementById('setKamusKelengkapan').value = activeKamus.kelengkapan.join(', ');
+            document.getElementById('setKamusMasalah').value = activeKamus.masalah.join(', ');
+        }
+
+        function simpanKamusServer() {
+            let valMerek = document.getElementById('setKamusMerek').value;
+            let valKlp = document.getElementById('setKamusKelengkapan').value;
+            let valMasalah = document.getElementById('setKamusMasalah').value;
+
+            baseKamusDB = {
+                merek: valMerek.split(',').map(s=>s.trim()).filter(s=>s),
+                kelengkapan: valKlp.split(',').map(s=>s.trim()).filter(s=>s),
+                masalah: valMasalah.split(',').map(s=>s.trim()).filter(s=>s),
+                tipe: []
+            };
+
+            populateDatalists(); // Perbarui datalist di UI
+            sendToServer('saveKamus', baseKamusDB); // Kirim ke server
+            showToast('Kamus Sistem berhasil diupdate dan disimpan ke Server!');
         }
         
         window.onload = function() { fetchInitialData(); };
