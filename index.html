@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banlie Computing - Store & Service</title>
+    <title>Banlie Computing - Store & Service v2.1</title>
     
     <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1775473744461-6ce0dbd2-a423-456a-aea5-ac571a08addb.ico">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -61,7 +61,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .header-title { text-align: center; margin-bottom: 1.5rem; }
-        .header-title h2 { font-size: 1.5rem; font-weight: 700; color: var(--accent-color); }
+        .header-title h2 { font-size: 1.5rem; font-weight: 700; color: var(--accent-color); display: flex; align-items: center; justify-content: center; gap: 8px;}
         .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
 
         .input-group { margin-bottom: 1.1rem; }
@@ -196,6 +196,8 @@
         .quick-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent-color); color: var(--text-main); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .quick-chip:hover { background: var(--accent-color); color: white; }
 
+        .version-badge { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; color: var(--text-muted); margin-left: 8px; vertical-align: middle;}
+
         @media (max-width: 600px) { .form-row { flex-direction: column; gap: 1.1rem; } .chart-container { height: 250px; } }
     </style>
 </head>
@@ -206,18 +208,19 @@
     <datalist id="dlKelengkapan"></datalist>
     <datalist id="dlMasalah"></datalist>
 
-    <!-- LAYAR LOADING -->
+    <!-- LAYAR LOADING DENGAN LOGO -->
     <div id="globalLoader" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
         <div class="spinner"></div>
         <h2 style="color:var(--text-main); font-size: 1.2rem;">Menyinkronkan Database...</h2>
-        <p style="color:var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Terhubung dengan Server</p>
+        <p style="color:var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Banlie Computing System <span class="version-badge">v2.1</span></p>
     </div>
 
     <!-- HALAMAN LOGIN -->
     <div id="loginPage" class="main-container" style="display: none;">
         <div class="header-title">
             <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
-            <h2>Banlie Computing Portal</h2>
+            <h2>Banlie Computing Portal <span class="version-badge">v2.1</span></h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
 
@@ -244,6 +247,7 @@
                 <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
                 <div>
                     <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">Banlie Computing</span>
+                    <span class="version-badge">v2.1</span>
                     <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
                 </div>
             </div>
@@ -819,28 +823,54 @@
         </div>
     </div>
 
-    <!-- MODAL DIRECT CHAT WA (DENGAN MENU CUSTOM) -->
+    <!-- MODAL DIRECT CHAT WA DENGAN EDITOR TEMPLATE -->
     <div id="modalTemplateWA" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 600px;">
             <span class="close-modal" onclick="closeModal('modalTemplateWA')">&times;</span>
             <h3 style="margin-bottom: 10px; color: var(--success-bg); display:flex; align-items:center; gap:8px;">💬 Kirim Update ke WhatsApp</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Pilih template pesan atau tulis manual. Anda dapat mengedit teks sebelum mengirim.</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Pilih kategori template, ubah isi teksnya, dan simpan agar bisa dipakai seterusnya.</p>
             
             <input type="hidden" id="waSrvPhone">
             
             <div class="input-group">
-                <label>Pilih Template Pesan:</label>
+                <label>Kategori Pesan / Status:</label>
                 <select id="waTemplateSelect" class="input-catatan" style="padding:10px; font-weight:bold; color:var(--accent-color);" onchange="gantiTemplateWA()">
-                    <option value="auto">📌 Otomatis (Sesuai Status Servis)</option>
-                    <option value="part">🔧 Info Ganti Part / Biaya Tambahan</option>
-                    <option value="tanya">🔒 Tanya Password / Pola Layar</option>
-                    <option value="custom">✏️ Tulis Pesan Bebas / Custom</option>
+                    <option value="auto">📌 Otomatis (Mengikuti Status Saat Ini)</option>
+                    <option value="Masuk">📥 Saat Barang Masuk / Antrean</option>
+                    <option value="Proses">⚙️ Saat Sedang Diproses</option>
+                    <option value="Selesai">✅ Saat Perbaikan Selesai</option>
+                    <option value="Batal">❌ Saat Batal / Tidak Bisa</option>
+                    <option value="part">🔧 Info Ganti Part / Biaya</option>
+                    <option value="tanya">🔒 Tanya Password / Pola</option>
+                    <option value="custom">✏️ Pesan Bebas (Custom)</option>
                 </select>
             </div>
 
-            <div class="input-group">
-                <label>Pesan WhatsApp:</label>
-                <textarea id="waMessageText" rows="6" style="font-size: 0.9rem; line-height: 1.5;"></textarea>
+            <div class="input-group" style="margin-bottom: 8px;">
+                <label style="display:flex; justify-content:space-between;">
+                    <span>Editor Template Pesan (Klik variabel untuk menyisipkan):</span>
+                </label>
+                <div id="waVariables" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; padding:8px; background: rgba(0,0,0,0.2); border-radius:6px; border:1px solid var(--border-color);">
+                    <button class="quick-chip" onclick="insertWaVar('{Sapaan}')">{Sapaan}</button>
+                    <button class="quick-chip" onclick="insertWaVar('{Nama}')">{Nama}</button>
+                    <button class="quick-chip" onclick="insertWaVar('{Merek}')">{Merek}</button>
+                    <button class="quick-chip" onclick="insertWaVar('{Tipe}')">{Tipe}</button>
+                    <button class="quick-chip" onclick="insertWaVar('{ID}')">{ID}</button>
+                    <button class="quick-chip" onclick="insertWaVar('{Tanggal}')">{Tanggal}</button>
+                    <button class="quick-chip" onclick="insertWaVar('{Biaya}')">{Biaya}</button>
+                    <button class="quick-chip" onclick="insertWaVar('{Status}')">{Status}</button>
+                </div>
+                <textarea id="waMessageRaw" rows="6" style="font-size: 0.9rem; line-height: 1.5; font-family: monospace; padding:10px;" oninput="updateWaPreview()"></textarea>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom: 15px;">
+                <button type="button" class="btn-sm btn-danger" onclick="resetTemplateWA()" style="padding: 6px 12px; font-weight:normal;">🔄 Reset Template Ini</button>
+                <button type="button" class="btn-sm btn-edit" onclick="simpanTemplateWA()" style="padding: 6px 12px;">💾 Simpan sbg Template</button>
+            </div>
+
+            <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px dashed var(--success-bg); margin-bottom: 15px;">
+                <strong style="font-size: 0.85rem; color: var(--success-bg); margin-bottom: 8px; display: block;">👀 Preview Akhir Pesan:</strong>
+                <div id="waMessagePreview" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap;"></div>
             </div>
             
             <button type="button" class="submit-btn" style="background: var(--success-bg); display:flex; justify-content:center; align-items:center; gap:8px;" onclick="kirimKeWA()">Kirim Sekarang (Buka WA)</button>
@@ -863,12 +893,23 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbwa8s0Xv7x_eNuHVdZgvblB1uf4Zpvuj4EfkAH-up_D_cI9nf6N3kSm2Gi7di0o8P54Lw/exec";
         const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 Menit
 
-        // KAMUS DEFAULT (Akan di-merge otomatis dengan data yang diketik teknisi)
+        // KAMUS DEFAULT
         const kamusSistem = {
             merek: ['ASUS', 'ACER', 'LENOVO', 'HP', 'DELL', 'APPLE', 'SAMSUNG', 'MSI', 'AXIOO'],
-            tipe: [], // Biarkan kosong, biar ngambil dari history DB saja karena terlalu banyak variasi
+            tipe: [], 
             kelengkapan: ['Unit Saja', 'Unit + Charger', 'Unit + Charger + Dus', 'Lengkap'],
             masalah: ['Mati Total', 'Ganti LCD', 'No Display (Nyala tidak nampil)', 'Lupa Password / Kunci', 'Install Ulang OS', 'Ganti Baterai', 'Keyboard Error/Ganti', 'Engsel Patah', 'Ganti SSD/RAM']
+        };
+
+        // TEMPLATE WHATSAPP DEFAULT
+        const defaultWaTemplates = {
+            Masuk: "Halo Bpk/Ibu {Nama}, perangkat {Merek} {Tipe} Anda telah kami terima pada tanggal {Tanggal} dan saat ini sedang dalam antrean pengecekan teknisi kami.\n\nNomor ID Tiket Anda: *{ID}*\nAnda dapat mengecek status secara berkala melalui website kami.\nTerima kasih.",
+            Proses: "Halo Bpk/Ibu {Nama}, kami informasikan bahwa perangkat {Merek} {Tipe} Anda saat ini sedang dikerjakan/diproses oleh teknisi kami. \n\nKami akan segera menghubungi Anda kembali jika ada perkembangan lebih lanjut atau jika perbaikan sudah selesai.",
+            Selesai: "Selamat {Sapaan} Bpk/ibu {Nama}, {Merek} {Tipe} sudah Selesai dikerjakan dan sudah bisa diambil, dengan total biaya *{Biaya}*.\n\nTerima Kasih telah mempercayakan perbaikan di Banlie Computing.",
+            Batal: "Halo Bpk/Ibu {Nama}, mohon maaf menginformasikan bahwa perbaikan untuk perangkat {Merek} {Tipe} Anda tidak dapat dilanjutkan (Dibatalkan).\n\nSilakan datang ke toko untuk mengambil kembali perangkat Anda. Terima kasih.",
+            part: "Halo Bpk/Ibu {Nama}, dari hasil pengecekan teknisi untuk perangkat {Merek} {Tipe} (ID: {ID}), terdapat part yang perlu diganti yaitu: [TULIS NAMA PART].\n\nEstimasi biaya tambahan sekitar [TULIS BIAYA]. Apakah perbaikan ingin dilanjutkan?",
+            tanya: "Halo Bpk/Ibu {Nama}, untuk keperluan pengecekan dan pengetesan perangkat {Merek} {Tipe} (ID: {ID}), mohon informasikan password / pola kunci layarnya ya.\n\nTerima kasih.",
+            custom: "Halo Bpk/Ibu {Nama},\n\n[Silakan tulis pesan Anda di sini]"
         };
 
         let usersDB = [];
@@ -877,7 +918,7 @@
 
         let currentUser = null; 
         let currentEditLapId = null;
-        let currentWaServisId = null; // Menyimpan ID servis saat modal WA dibuka
+        let currentWaServisId = null; 
         let tempEditFotos = []; 
         let lastFoundArray = []; 
         let currentSrvFilter = 'Semua';
@@ -972,7 +1013,6 @@
             showPublicView();
         }
 
-        // --- SISTEM KAMUS & AUTOSUGGEST MERGE ---
         function populateDatalists() {
             let mereks = new Set(kamusSistem.merek.map(x => x.toUpperCase())); 
             let tipes = new Set(kamusSistem.tipe.map(x => x.toUpperCase())); 
@@ -997,11 +1037,10 @@
             document.getElementById('dlKelengkapan').innerHTML = [...kelengkapans].sort().map(k => `<option value="${k}">`).join('');
             document.getElementById('dlMasalah').innerHTML = [...masalahs].sort().map(m => `<option value="${m}">`).join('');
 
-            // Render Quick Chips untuk Masalah (Ambil 4 teratas dari dictionary asli/tergabung)
             const quickContainer = document.getElementById('quickMasalahContainer');
             if(quickContainer) {
                 let chipsHtml = '';
-                let displayChips = [...masalahs].slice(0, 4); // Ambil 4 saran pertama
+                let displayChips = [...masalahs].slice(0, 4); 
                 displayChips.forEach(chip => {
                     chipsHtml += `<div class="quick-chip" onclick="pilihQuickMasalah('${chip}')">${chip}</div>`;
                 });
@@ -1200,6 +1239,7 @@
             document.getElementById(modalId).classList.remove('show');
             if(modalId === 'modalEditLaptop') { currentEditLapId = null; tempEditFotos = []; }
             if(modalId === 'modalEditTerjual' || modalId === 'modalJualLaptop') currentEditLapId = null;
+            if(modalId === 'modalTemplateWA') currentWaServisId = null;
         }
 
         function viewImagePopup(src) {
@@ -1987,9 +2027,42 @@
         });
 
         // --- SISTEM WHATSAPP SHARE & CUSTOM TEMPLATE ---
+        
+        function dapatkanTemplateKey() {
+            let key = document.getElementById('waTemplateSelect').value;
+            if (key === 'auto') {
+                const s = servicesDB.find(x => x.id === currentWaServisId);
+                key = s ? s.status : 'Masuk'; // Default to Masuk if undefined
+            }
+            return key;
+        }
+
+        function dapatkanIsiTemplate(key) {
+            let savedTemplates = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
+            if (savedTemplates[key]) {
+                return savedTemplates[key];
+            }
+            return defaultWaTemplates[key] || defaultWaTemplates['custom'];
+        }
+
+        function parseWaTemplate(rawTemplate, s) {
+            if(!s) return rawTemplate;
+            let biayaFixed = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biayaEstimasi || 'Gratis/Menunggu');
+            
+            return rawTemplate
+                .replace(/{Sapaan}/g, getGreetingTime())
+                .replace(/{Nama}/g, s.nama || '')
+                .replace(/{Merek}/g, s.merek || '')
+                .replace(/{Tipe}/g, s.tipe || '')
+                .replace(/{ID}/g, s.id || '')
+                .replace(/{Tanggal}/g, displayDateReadably(s.tanggalMasuk) || '')
+                .replace(/{Biaya}/g, biayaFixed)
+                .replace(/{Status}/g, s.status || '');
+        }
+
         function bukaModalWA(id) {
             currentWaServisId = id;
-            document.getElementById('waTemplateSelect').value = 'auto'; // Set default ke Otomatis
+            document.getElementById('waTemplateSelect').value = 'auto'; 
             gantiTemplateWA(); 
             openModal('modalTemplateWA');
         }
@@ -1999,46 +2072,74 @@
             const s = servicesDB.find(x => x.id === currentWaServisId);
             if (!s) return;
 
-            let tipe = document.getElementById('waTemplateSelect').value;
-            let templateText = "";
-            let sapaan = getGreetingTime();
+            let templateKey = dapatkanTemplateKey();
+            let rawTemplate = dapatkanIsiTemplate(templateKey);
 
-            if (tipe === 'auto') {
-                if (s.status === 'Masuk') {
-                    templateText = `Halo Bpk/Ibu ${s.nama}, perangkat ${s.merek} ${s.tipe} Anda telah kami terima pada tanggal ${displayDateReadably(s.tanggalMasuk)} dan saat ini sedang dalam antrean pengecekan teknisi kami.\n\nNomor ID Tiket Anda: *${s.id}*\nAnda dapat mengecek status secara berkala melalui website kami.\nTerima kasih.`;
-                } else if (s.status === 'Proses') {
-                    templateText = `Halo Bpk/Ibu ${s.nama}, kami informasikan bahwa perangkat ${s.merek} ${s.tipe} Anda saat ini sedang dikerjakan/diproses oleh teknisi kami. \n\nKami akan segera menghubungi Anda kembali jika ada perkembangan lebih lanjut atau jika perbaikan sudah selesai.`;
-                } else if (s.status === 'Selesai') {
-                    let biayaFixed = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biayaEstimasi || 'Gratis/Menunggu');
-                    templateText = `Selamat ${sapaan} Bpk/ibu ${s.nama}, ${s.merek} ${s.tipe} sudah Selesai dikerjakan dan sudah bisa diambil, dengan total biaya *${biayaFixed}*.\n\nTerima Kasih telah mempercayakan perbaikan di Banlie Computing.`;
-                } else if (s.status === 'Batal') {
-                    templateText = `Halo Bpk/Ibu ${s.nama}, mohon maaf menginformasikan bahwa perbaikan untuk perangkat ${s.merek} ${s.tipe} Anda tidak dapat dilanjutkan (Dibatalkan).\n\nSilakan datang ke toko untuk mengambil kembali perangkat Anda. Terima kasih.`;
-                }
-            } else if (tipe === 'part') {
-                templateText = `Halo Bpk/Ibu ${s.nama}, dari hasil pengecekan teknisi untuk perangkat ${s.merek} ${s.tipe} (ID: ${s.id}), terdapat part yang perlu diganti yaitu: [TULIS NAMA PART].\n\nEstimasi biaya tambahan sekitar [TULIS BIAYA]. Apakah perbaikan ingin dilanjutkan?`;
-            } else if (tipe === 'tanya') {
-                templateText = `Halo Bpk/Ibu ${s.nama}, untuk keperluan pengecekan dan pengetesan perangkat ${s.merek} ${s.tipe} (ID: ${s.id}), mohon informasikan password / pola kunci layarnya ya.\n\nTerima kasih.`;
-            } else if (tipe === 'custom') {
-                templateText = `Halo Bpk/Ibu ${s.nama},\n\n[Silakan tulis pesan Anda di sini]`;
-            }
+            document.getElementById('waMessageRaw').value = rawTemplate;
+            updateWaPreview();
 
-            // PERBAIKAN LOGIKA FORMAT NOMOR WA (Agar angka 0/8 tidak masalah)
+            // LOGIKA FORMAT NOMOR WA (Agar angka 0/8 tidak masalah)
             let noWa = String(s.wa).replace(/[^0-9]/g, '');
             if (noWa.startsWith('0')) {
                 noWa = '62' + noWa.substring(1); // Jika 0812... jadi 62812...
             } else if (noWa.startsWith('8')) {
                 noWa = '62' + noWa; // Jika angka 0 terhapus di sheet menjadi 812... jadi 62812...
             }
-
             document.getElementById('waSrvPhone').value = noWa;
-            document.getElementById('waMessageText').value = templateText;
+        }
+
+        function updateWaPreview() {
+            const s = servicesDB.find(x => x.id === currentWaServisId);
+            let rawText = document.getElementById('waMessageRaw').value;
+            let parsedText = parseWaTemplate(rawText, s);
+            document.getElementById('waMessagePreview').innerHTML = parsedText.replace(/\n/g, '<br>');
+        }
+
+        function insertWaVar(variableName) {
+            const textarea = document.getElementById('waMessageRaw');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            
+            textarea.value = text.substring(0, start) + variableName + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + variableName.length;
+            
+            updateWaPreview();
+        }
+
+        function simpanTemplateWA() {
+            let key = dapatkanTemplateKey();
+            let rawText = document.getElementById('waMessageRaw').value;
+            
+            let savedTemplates = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
+            savedTemplates[key] = rawText;
+            localStorage.setItem('waTemplatesSettings', JSON.stringify(savedTemplates));
+            
+            showToast('Sip! Template berhasil disimpan untuk dipakai seterusnya.');
+        }
+
+        function resetTemplateWA() {
+            let key = dapatkanTemplateKey();
+            let savedTemplates = JSON.parse(localStorage.getItem('waTemplatesSettings') || '{}');
+            
+            if(savedTemplates[key]) {
+                delete savedTemplates[key];
+                localStorage.setItem('waTemplatesSettings', JSON.stringify(savedTemplates));
+            }
+            
+            document.getElementById('waMessageRaw').value = defaultWaTemplates[key] || defaultWaTemplates['custom'];
+            updateWaPreview();
+            showToast('Template dikembalikan ke teks bawaan sistem.');
         }
 
         function kirimKeWA() {
             let noWa = document.getElementById('waSrvPhone').value;
-            let teksPesan = document.getElementById('waMessageText').value;
-            let encodedText = encodeURIComponent(teksPesan);
+            const s = servicesDB.find(x => x.id === currentWaServisId);
+            let rawText = document.getElementById('waMessageRaw').value;
+            let teksPesan = parseWaTemplate(rawText, s);
             
+            let encodedText = encodeURIComponent(teksPesan);
             window.open(`https://wa.me/${noWa}?text=${encodedText}`, '_blank');
             closeModal('modalTemplateWA');
         }
