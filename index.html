@@ -819,14 +819,25 @@
         </div>
     </div>
 
-    <!-- MODAL DIRECT CHAT WA (BARU) -->
+    <!-- MODAL DIRECT CHAT WA (DENGAN MENU CUSTOM) -->
     <div id="modalTemplateWA" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px;">
             <span class="close-modal" onclick="closeModal('modalTemplateWA')">&times;</span>
             <h3 style="margin-bottom: 10px; color: var(--success-bg); display:flex; align-items:center; gap:8px;">💬 Kirim Update ke WhatsApp</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Pesan sudah di-generate otomatis berdasarkan status. Anda bisa mengeditnya sebelum mengirim.</p>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">Pilih template pesan atau tulis manual. Anda dapat mengedit teks sebelum mengirim.</p>
             
             <input type="hidden" id="waSrvPhone">
+            
+            <div class="input-group">
+                <label>Pilih Template Pesan:</label>
+                <select id="waTemplateSelect" class="input-catatan" style="padding:10px; font-weight:bold; color:var(--accent-color);" onchange="gantiTemplateWA()">
+                    <option value="auto">📌 Otomatis (Sesuai Status Servis)</option>
+                    <option value="part">🔧 Info Ganti Part / Biaya Tambahan</option>
+                    <option value="tanya">🔒 Tanya Password / Pola Layar</option>
+                    <option value="custom">✏️ Tulis Pesan Bebas / Custom</option>
+                </select>
+            </div>
+
             <div class="input-group">
                 <label>Pesan WhatsApp:</label>
                 <textarea id="waMessageText" rows="6" style="font-size: 0.9rem; line-height: 1.5;"></textarea>
@@ -866,6 +877,7 @@
 
         let currentUser = null; 
         let currentEditLapId = null;
+        let currentWaServisId = null; // Menyimpan ID servis saat modal WA dibuka
         let tempEditFotos = []; 
         let lastFoundArray = []; 
         let currentSrvFilter = 'Semua';
@@ -1974,35 +1986,52 @@
             if(currentUser.role === 'admin') { renderDashboard(); } sendToServer('saveService', newSrv);
         });
 
-        // --- SISTEM WHATSAPP SHARE ---
+        // --- SISTEM WHATSAPP SHARE & CUSTOM TEMPLATE ---
         function bukaModalWA(id) {
-            const s = servicesDB.find(x => x.id === id); if(!s) return;
-            
+            currentWaServisId = id;
+            document.getElementById('waTemplateSelect').value = 'auto'; // Set default ke Otomatis
+            gantiTemplateWA(); 
+            openModal('modalTemplateWA');
+        }
+
+        function gantiTemplateWA() {
+            if (!currentWaServisId) return;
+            const s = servicesDB.find(x => x.id === currentWaServisId);
+            if (!s) return;
+
+            let tipe = document.getElementById('waTemplateSelect').value;
             let templateText = "";
             let sapaan = getGreetingTime();
-            
-            if (s.status === 'Masuk') {
-                templateText = `Halo Bpk/Ibu ${s.nama}, perangkat ${s.merek} ${s.tipe} Anda telah kami terima pada tanggal ${displayDateReadably(s.tanggalMasuk)} dan saat ini sedang dalam antrean pengecekan teknisi kami.\n\nNomor ID Tiket Anda: *${s.id}*\nAnda dapat mengecek status secara berkala melalui website kami.\nTerima kasih.`;
-            } 
-            else if (s.status === 'Proses') {
-                templateText = `Halo Bpk/Ibu ${s.nama}, kami informasikan bahwa perangkat ${s.merek} ${s.tipe} Anda saat ini sedang dikerjakan/diproses oleh teknisi kami. \n\nKami akan segera menghubungi Anda kembali jika ada perkembangan lebih lanjut atau jika perbaikan sudah selesai.`;
-            } 
-            else if (s.status === 'Selesai') {
-                let biayaFixed = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biayaEstimasi || 'Gratis/Menunggu');
-                templateText = `Selamat ${sapaan} Bpk/ibu ${s.nama}, ${s.merek} ${s.tipe} sudah Selesai dikerjakan dan sudah bisa diambil, dengan total biaya *${biayaFixed}*.\n\nTerima Kasih telah mempercayakan perbaikan di Banlie Computing.`;
-            }
-            else if (s.status === 'Batal') {
-                templateText = `Halo Bpk/Ibu ${s.nama}, mohon maaf menginformasikan bahwa perbaikan untuk perangkat ${s.merek} ${s.tipe} Anda tidak dapat dilanjutkan (Dibatalkan).\n\nSilakan datang ke toko untuk mengambil kembali perangkat Anda. Terima kasih.`;
+
+            if (tipe === 'auto') {
+                if (s.status === 'Masuk') {
+                    templateText = `Halo Bpk/Ibu ${s.nama}, perangkat ${s.merek} ${s.tipe} Anda telah kami terima pada tanggal ${displayDateReadably(s.tanggalMasuk)} dan saat ini sedang dalam antrean pengecekan teknisi kami.\n\nNomor ID Tiket Anda: *${s.id}*\nAnda dapat mengecek status secara berkala melalui website kami.\nTerima kasih.`;
+                } else if (s.status === 'Proses') {
+                    templateText = `Halo Bpk/Ibu ${s.nama}, kami informasikan bahwa perangkat ${s.merek} ${s.tipe} Anda saat ini sedang dikerjakan/diproses oleh teknisi kami. \n\nKami akan segera menghubungi Anda kembali jika ada perkembangan lebih lanjut atau jika perbaikan sudah selesai.`;
+                } else if (s.status === 'Selesai') {
+                    let biayaFixed = s.biayaAkhir ? formatRupiahText(String(s.biayaAkhir)) : (s.biayaEstimasi || 'Gratis/Menunggu');
+                    templateText = `Selamat ${sapaan} Bpk/ibu ${s.nama}, ${s.merek} ${s.tipe} sudah Selesai dikerjakan dan sudah bisa diambil, dengan total biaya *${biayaFixed}*.\n\nTerima Kasih telah mempercayakan perbaikan di Banlie Computing.`;
+                } else if (s.status === 'Batal') {
+                    templateText = `Halo Bpk/Ibu ${s.nama}, mohon maaf menginformasikan bahwa perbaikan untuk perangkat ${s.merek} ${s.tipe} Anda tidak dapat dilanjutkan (Dibatalkan).\n\nSilakan datang ke toko untuk mengambil kembali perangkat Anda. Terima kasih.`;
+                }
+            } else if (tipe === 'part') {
+                templateText = `Halo Bpk/Ibu ${s.nama}, dari hasil pengecekan teknisi untuk perangkat ${s.merek} ${s.tipe} (ID: ${s.id}), terdapat part yang perlu diganti yaitu: [TULIS NAMA PART].\n\nEstimasi biaya tambahan sekitar [TULIS BIAYA]. Apakah perbaikan ingin dilanjutkan?`;
+            } else if (tipe === 'tanya') {
+                templateText = `Halo Bpk/Ibu ${s.nama}, untuk keperluan pengecekan dan pengetesan perangkat ${s.merek} ${s.tipe} (ID: ${s.id}), mohon informasikan password / pola kunci layarnya ya.\n\nTerima kasih.`;
+            } else if (tipe === 'custom') {
+                templateText = `Halo Bpk/Ibu ${s.nama},\n\n[Silakan tulis pesan Anda di sini]`;
             }
 
-            // Bersihkan nomor HP agar formatnya 628...
+            // PERBAIKAN LOGIKA FORMAT NOMOR WA (Agar angka 0/8 tidak masalah)
             let noWa = String(s.wa).replace(/[^0-9]/g, '');
-            if (noWa.startsWith('0')) noWa = '62' + noWa.substring(1);
+            if (noWa.startsWith('0')) {
+                noWa = '62' + noWa.substring(1); // Jika 0812... jadi 62812...
+            } else if (noWa.startsWith('8')) {
+                noWa = '62' + noWa; // Jika angka 0 terhapus di sheet menjadi 812... jadi 62812...
+            }
 
             document.getElementById('waSrvPhone').value = noWa;
             document.getElementById('waMessageText').value = templateText;
-            
-            openModal('modalTemplateWA');
         }
 
         function kirimKeWA() {
