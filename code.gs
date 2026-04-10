@@ -1,5 +1,5 @@
 // =========================================================================
-// BANLIE COMPUTING - BACKEND API v2.2.5 (Stable Sync)
+// BANLIE COMPUTING - BACKEND API v2.2.5 (Stable Sync) wiht 2.8.8 html
 // =========================================================================
 
 function doPost(e) {
