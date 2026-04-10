@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banlie Computing - Store & Service v2.2.8 (Stable Sync)</title>
+    <title>Banlie Computing - Store & Service v2.2.9 (Stable Sync)</title>
     
     <link rel="icon" type="image/png" href="https://image2url.com/r2/default/images/1775473744461-6ce0dbd2-a423-456a-aea5-ac571a08addb.ico">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -220,7 +220,7 @@
     <div id="loginPage" class="main-container" style="display: none;">
         <div class="header-title">
             <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 60px; margin-bottom: 10px; border-radius: 8px;">
-            <h2>Banlie Computing Portal <span class="version-badge">v2.2.8</span></h2>
+            <h2>Banlie Computing Portal <span class="version-badge">v2.2.9</span></h2>
             <p>Sistem Internal Admin & Teknisi</p>
         </div>
 
@@ -247,7 +247,7 @@
                 <img src="https://image2url.com/r2/default/images/1775474036175-a407ad46-1d5b-4d2e-a14a-ff03b610952f.png" alt="Logo" style="height: 35px; margin-right: 12px; border-radius: 6px;">
                 <div>
                     <span id="welcomeText" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">Banlie Computing</span>
-                    <span class="version-badge">v2.2.8</span>
+                    <span class="version-badge">v2.2.9</span>
                     <div id="userRoleDisplay" class="badge" style="background: var(--accent-color); margin-left: 5px; display: none;">Role</div>
                 </div>
             </div>
@@ -1324,7 +1324,11 @@
             t.classList.add('show'); setTimeout(() => t.classList.remove('show'), duration);
         }
 
-        function generateID(prefix) { return prefix + '-' + Math.floor(Math.random() * 9000 + 1000); }
+        // PERBAIKAN GENERATE ID ANTI TABRAKAN
+        function generateID(prefix) { 
+            // Menggabungkan Timestamp agar unik dan mustahil tertimpa satu sama lain
+            return prefix + '-' + Date.now().toString().slice(-4) + Math.floor(Math.random() * 90 + 10); 
+        }
 
         function openTab(tabId, btnElement = null) {
             document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
@@ -1363,6 +1367,7 @@
             return '';
         }
 
+        // PERBAIKAN KOMPRESI EKSTRA MENCEGAH LIMIT SPREADSHEET (50 RIBU KARAKTER/CELL)
         function getBase64File(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1372,7 +1377,8 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 400; const MAX_HEIGHT = 400;
+                        // Diperkecil menjadi 250px agar sangat aman di bawah limit GSheet
+                        const MAX_WIDTH = 250; const MAX_HEIGHT = 250; 
                         let width = img.width; let height = img.height;
 
                         if (width > height) {
@@ -1385,7 +1391,8 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                        // Kualitas dikurangi jadi 35% agar array Base64 tetap muat di 1 sel GSheet
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.35); 
                         resolve(compressedDataUrl);
                     };
                     img.onerror = () => reject(new Error("Gagal memuat gambar"));
